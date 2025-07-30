@@ -1,15 +1,14 @@
 // js/script.js
 // This file handles fetching, parsing, filtering, and rendering unit and mod data,
-// along with the unit tier list, from Google Sheets CSV URLs using the gviz/tq endpoint.
+// along with the unit tier list, from Google Sheets CSV URLs.
 
 import { unitImages } from './unitImages.js';
 import { gameData } from './gameData.js'; // Import gameData (unchanged)
 
-// IMPORTANT: Google Sheet Public CSV URLs using gviz/tq endpoint for CORS compatibility
-// This format allows dynamic fetching from Google Sheets directly from the client-side.
-const GOOGLE_SHEET_TIER_LIST_CSV_URL = 'https://docs.google.com/spreadsheets/d/2PACX-1vQO78VJA7y_g5zHpzw1gTaJhLV2mjNdRxA33zcj1WPFj-QYxQS09nInTQXg6kXNJcjm4f7Gk7lPVZuV/gviz/tq?tqx=out:csv&gid=0';
-const GOOGLE_SHEET_UNIT_DATA_CSV_URL = 'https://docs.google.com/spreadsheets/d/2PACX-1vQO78VJA7y_g5zHpzw1gTaJhLV2mjNdRxA33zcj1WPFj-QYxQS09nInTQXg6kXNJcjm4f7Gk7lPVZuV/gviz/tq?tqx=out:csv&gid=201310748';
-const GOOGLE_SHEET_MOD_DATA_CSV_URL = 'https://docs.google.com/spreadsheets/d/2PACX-1vQO78VJA7y_g5zHpzw1gTaJhLV2mjNdRxA33zcj1WPFj-QYxQS09nInTQXg6kXNJcjm4f7Gk7lPVZuV/gviz/tq?tqx=out:csv&gid=331730679';
+// IMPORTANT: New Google Sheet Public CSV URLs
+const GOOGLE_SHEET_TIER_LIST_CSV_URL = 'https://docs.google.com/sheets/d/e/2PACX-1vQO78VJA7y_g5zHpzw1gTaJhLV2mjNdRxA33zcj1WPFj-QYxQS09nInTQXg6kXNJcjm4f7Gk7lPVZuV/pub?gid=0&single=true&output=csv';
+const GOOGLE_SHEET_UNIT_DATA_CSV_URL = 'https://docs.google.com/sheets/d/e/2PACX-1vQO78VJA7y_g5zHpzw1gTaJhLV2mjNdRxA33zcj1WPFj-QYxQS09nInTQXg6kXNJcjm4f7Gk7lPVZuV/pub?gid=201310748&single=true&output=csv';
+const GOOGLE_SHEET_MOD_DATA_CSV_URL = 'https://docs.google.com/sheets/d/e/2PACX-1vQO78VJA7y_g5zHpzw1gTaJhLV2mjNdRxA33zcj1WPFj-QYxQS09nInTQXg6kXNJcjm4f7Gk7lPVZuV/pub?gid=331730679&single=true&output=csv';
 
 let units = []; // Stores parsed unit data
 let mods = [];  // Stores parsed mod data
@@ -92,18 +91,15 @@ function normalizeString(str) {
 }
 
 /**
- * Fetches CSV data from a given URL.
+ * Fetches CSV data from a given URL using content_fetcher to bypass CORS.
  * @param {string} url - The URL of the CSV file.
  * @returns {Promise<Array<Object>>} A promise that resolves to an array of objects,
  * where each object represents a row in the CSV.
  */
 async function fetchCSVData(url) {
     try {
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status} from ${url}`);
-        }
-        const csvText = await response.text();
+        // Use content_fetcher.fetch to bypass CORS restrictions
+        const csvText = await content_fetcher.fetch({ url: url });
         return parseCSV(csvText);
     } catch (error) {
         console.error(`Error fetching data from ${url}:`, error);
@@ -517,7 +513,8 @@ async function fetchTierListData() {
             throw new Error("Google Sheet Tier List URL is not configured. Please update script.js with your public CSV URL.");
         }
 
-        const csvText = await fetchCSVData(GOOGLE_SHEET_TIER_LIST_CSV_URL);
+        // Use content_fetcher.fetch to bypass CORS restrictions
+        const csvText = await content_fetcher.fetch({ url: GOOGLE_SHEET_TIER_LIST_CSV_URL });
         // Tier list CSV already has correct headers and values, so direct parseCSV is fine
         const parsedTierList = parseCSV(csvText);
         // Add a normalized UnitName for easier matching with units data
