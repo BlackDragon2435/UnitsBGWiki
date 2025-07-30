@@ -53,8 +53,14 @@ const unitColumnOrder = [
 ];
 
 // Define ALL possible unit stats for the detailed dropdown view
+// Removed: Distance, CritChance, CritDamage, AttackEffect, AttackEffectType,
+// AttackEffectLifesteal, AttackEffectKey, Knockback, Accuracy, EvadeChance,
+// HPOffset, ShadowStepDistance, ShadowStepCooldown
 const allUnitStatsForDropdown = [
-    'Label', 'Class', 'Rarity', 'HP', 'Damage', 'Cooldown'
+    'Label', 'Class', 'Rarity', 'HP', 'Damage', 'Cooldown', 'Distance',
+    'CritChance', 'CritDamage', 'AttackEffect', 'AttackEffectType',
+    'AttackEffectLifesteal', 'AttackEffectKey', 'Knockback', 'Accuracy',
+    'EvadeChance', 'HPOffset', 'ShadowStepDistance', 'ShadowStepCooldown'
 ];
 
 
@@ -678,8 +684,12 @@ function toggleUnitDetails(unit, clickedRow, index) {
         const li = document.createElement('li');
         let displayValue = unit[key];
         // Apply specific formatting for percentages and numbers (only HP, Damage, Cooldown remain here)
-        if (['Cooldown', 'HP', 'Damage'].includes(key)) {
+        if (['Cooldown', 'HP', 'Damage', 'Distance', 'CritChance', 'CritDamage', 'AttackEffectLifesteal', 'Knockback', 'Accuracy', 'EvadeChance'].includes(key)) {
             displayValue = typeof displayValue === 'number' ? displayValue.toFixed(2) : displayValue;
+        }
+        // Special formatting for percentage values
+        if (['CritChance', 'EvadeChance', 'Accuracy'].includes(key) && typeof displayValue === 'number') {
+            displayValue = (displayValue * 100).toFixed(2) + '%';
         }
         li.textContent = `${key}: ${displayValue !== undefined ? displayValue : 'N/A'}`;
         baseStatsList.appendChild(li);
@@ -853,9 +863,13 @@ function updateAppliedStats(baseUnit, selectedMods, listElement, showMaxStats, s
     allUnitStatsForDropdown.forEach(key => {
         const li = document.createElement('li');
         let displayValue = unitToDisplay[key];
-        // Apply specific formatting for percentages and numbers (only HP, Damage, Cooldown remain here)
-        if (['Cooldown', 'HP', 'Damage'].includes(key)) {
+        // Apply specific formatting for percentages and numbers
+        if (['Cooldown', 'HP', 'Damage', 'Distance', 'CritChance', 'CritDamage', 'AttackEffectLifesteal', 'Knockback', 'Accuracy', 'EvadeChance'].includes(key)) {
             displayValue = typeof displayValue === 'number' ? displayValue.toFixed(2) : displayValue;
+        }
+        // Special formatting for percentage values
+        if (['CritChance', 'EvadeChance', 'Accuracy'].includes(key) && typeof displayValue === 'number') {
+            displayValue = (displayValue * 100).toFixed(2) + '%';
         }
         li.textContent = `${key}: ${displayValue !== undefined ? displayValue : 'N/A'}`;
 
@@ -926,8 +940,16 @@ function sortData(column) {
         // Custom sort for CommunityRanking (assuming A, B, C, D, F where A is best)
         if (column === 'CommunityRanking') {
             const rankingOrder = ['S+', 'S', 'A+', 'A', 'B+', 'B', 'C+', 'C', 'D+', 'D', 'F', 'N/A'];
-            const indexA = rankingOrder.indexOf(valA);
-            const indexB = rankingOrder.indexOf(valB);
+            // Find tier for unit A
+            const tierInfoA = tierList.find(tierUnit => tierUnit['Unit Name'] === a.Label);
+            const tierA = tierInfoA ? tierInfoA.Tier : 'N/A';
+            const indexA = rankingOrder.indexOf(tierA);
+
+            // Find tier for unit B
+            const tierInfoB = tierList.find(tierUnit => tierUnit['Unit Name'] === b.Label);
+            const tierB = tierInfoB ? tierInfoB.Tier : 'N/A';
+            const indexB = rankingOrder.indexOf(tierB);
+
             return currentSortDirection === 'asc' ? indexA - indexB : indexB - indexA;
         }
 
