@@ -27,19 +27,54 @@ th {
     white-space: nowrap;
 }
 
-/* Columns that should NOT wrap (except Label, which now wraps) */
-#unitTable tbody td:nth-child(1), /* Image */
-/* #unitTable tbody td:nth-child(2), /* Label - now wraps, so removed from this nowrap list */
-#unitTable tbody td:nth-child(3), /* Class */
-#unitTable tbody td:nth-child(4), /* Rarity */
-#unitTable tbody td:nth-child(5), /* Community Ranking */
-#unitTable tbody td:nth-child(6), /* HP */
-#unitTable tbody td:nth-child(7), /* Damage */
-#unitTable tbody td:nth-child(8) { /* Cooldown */
-    white-space: nowrap;
+/* --- Responsive Table Column Hiding --- */
+
+/* Default (mobile-first): Only Image and Label are visible */
+#unitTable th:nth-child(1), /* Image */
+#unitTable td:nth-child(1), /* Image */
+#unitTable th:nth-child(2), /* Label */
+#unitTable td:nth-child(2) { /* Label */
+    display: table-cell; /* Ensure these are always visible */
 }
 
-/* Adjust widths for specific columns to make them fit better */
+/* Hide all other columns by default */
+#unitTable th:nth-child(n+3), /* Class, Rarity, Community Ranking, HP, Damage, Cooldown */
+#unitTable td:nth-child(n+3) { /* Class, Rarity, Community Ranking, HP, Damage, Cooldown */
+    display: none;
+}
+
+/* Small screens (sm): Show Class and Rarity */
+@media (min-width: 640px) {
+    #unitTable th:nth-child(3), /* Class */
+    #unitTable td:nth-child(3), /* Class */
+    #unitTable th:nth-child(4), /* Rarity */
+    #unitTable td:nth-child(4) { /* Rarity */
+        display: table-cell;
+    }
+}
+
+/* Medium screens (md): Show Community Ranking */
+@media (min-width: 768px) {
+    #unitTable th:nth-child(5), /* Community Ranking */
+    #unitTable td:nth-child(5) { /* Community Ranking */
+        display: table-cell;
+    }
+}
+
+/* Large screens (lg): Show HP, Damage, Cooldown */
+@media (min-width: 1024px) {
+    #unitTable th:nth-child(6), /* HP */
+    #unitTable td:nth-child(6), /* HP */
+    #unitTable th:nth-child(7), /* Damage */
+    #unitTable td:nth-child(7), /* Damage */
+    #unitTable th:nth-child(8), /* Cooldown */
+    #unitTable td:nth-child(8) { /* Cooldown */
+        display: table-cell;
+    }
+}
+
+/* --- Column Widths (Adjusted for visible columns) --- */
+/* These widths will apply when the columns are visible */
 #unitTable tbody td:nth-child(1) { /* Image */
     width: 60px;
     min-width: 60px;
@@ -277,17 +312,17 @@ th {
 }
 
 /* Style for mod checkboxes and max stats checkbox in detailed view */
-#modCheckboxesContainer label, #toggleMaxStats + label, #toggleMaxLevelUnit + label {
+#modCheckboxesContainer label, #toggleMaxLevelUnit + label { /* Removed #toggleMaxStats + label */
     margin-right: 1rem;
     font-size: 0.95rem; /* text-base for labels */
     color: #374151; /* Default text color for labels */
 }
 
-.dark #modCheckboxesContainer label, .dark #toggleMaxStats + label, .dark #toggleMaxLevelUnit + label {
+.dark #modCheckboxesContainer label, .dark #toggleMaxLevelUnit + label { /* Removed .dark #toggleMaxStats + label */
     color: #e5e7eb; /* Light text color for labels in dark mode */
 }
 
-#modCheckboxesContainer input[type="checkbox"], #toggleMaxStats, #toggleMaxLevelUnit {
+#modCheckboxesContainer input[type="checkbox"], #toggleMaxLevelUnit { /* Removed #toggleMaxStats */
     cursor: pointer;
 }
 
