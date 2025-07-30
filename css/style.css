@@ -27,9 +27,9 @@ th {
     white-space: nowrap;
 }
 
-/* Columns that should NOT wrap */
-/* Removed white-space: nowrap from Label column (td:nth-child(2)) to allow wrapping */
+/* Columns that should NOT wrap (except Label, which now wraps) */
 #unitTable tbody td:nth-child(1), /* Image */
+/* #unitTable tbody td:nth-child(2), /* Label - now wraps, so removed from this nowrap list */
 #unitTable tbody td:nth-child(3), /* Class */
 #unitTable tbody td:nth-child(4), /* Rarity */
 #unitTable tbody td:nth-child(5), /* Community Ranking */
@@ -46,8 +46,8 @@ th {
     padding: 0.5rem;
 }
 #unitTable tbody td:nth-child(2) { /* Label - allow text wrapping */
-    width: 150px; /* Increased width to give more room for wrapping */
-    min-width: 120px;
+    width: 200px; /* Increased width to give more room for wrapping */
+    min-width: 180px; /* Ensure a minimum width for wrapping */
     white-space: normal; /* Allow text to wrap */
 }
 #unitTable tbody td:nth-child(3), /* Class */
@@ -56,14 +56,14 @@ th {
     min-width: 80px;
 }
 #unitTable tbody td:nth-child(5) { /* Community Ranking */
-    width: 100px;
-    min-width: 100px;
+    width: 120px; /* Increased width to prevent header truncation */
+    min-width: 120px;
     text-align: center;
 }
 /* Numerical stats (HP, Damage, Cooldown) */
 #unitTable tbody td:nth-child(n+6):nth-child(-n+8) { /* HP to Cooldown */
-    width: 65px; /* Adjust as needed */
-    min-width: 65px;
+    width: 80px; /* Increased width to prevent header truncation */
+    min-width: 80px;
     text-align: center;
 }
 
