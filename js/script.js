@@ -601,7 +601,7 @@ function renderTierListTable(dataToRender) {
 
     // Define the order of columns for the tier list table
     // Corrected to match the actual CSV headers from the screenshot
-    const tierListColumnOrder = ['UNIT NAME', 'TIER', 'REASONING'];
+    const tierListColumnOrder = ['UnitName', 'Tier', 'Notes'];
 
     dataToRender.forEach(item => {
         const row = tierListTableBody.insertRow();
