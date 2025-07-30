@@ -34,6 +34,7 @@ const modsTableBody = document.getElementById('modsTableBody'); // Make sure thi
 const loadingSpinner = document.getElementById('loadingSpinner');
 const toggleModEffects = document.getElementById('toggleModEffects');
 const toggleMaxLevel = document.getElementById('toggleMaxLevel');
+const unitTableContainer = document.getElementById('unitTableContainer'); // Added for visibility toggle
 
 // Utility function to debounce input for better performance
 const debounce = (func, delay) => {
@@ -51,18 +52,31 @@ const debounce = (func, delay) => {
  * @returns {Promise<Array<Object>>} A promise that resolves to an array of objects.
  */
 async function fetchAndParseCSV(url) {
+    console.log(`Attempting to fetch CSV from: ${url}`);
     try {
         const response = await fetch(url);
         if (!response.ok) {
+            console.error(`HTTP error! status: ${response.status} from ${url}`);
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const csvText = await response.text();
+        console.log(`Successfully fetched CSV text from ${url}. Length: ${csvText.length}`);
+
         const lines = csvText.trim().split('\n');
+        if (lines.length === 0) {
+            console.warn(`CSV from ${url} is empty.`);
+            return [];
+        }
+
         const headers = lines[0].split(',').map(header => header.trim());
         const data = [];
 
         for (let i = 1; i < lines.length; i++) {
             const values = lines[i].split(',').map(value => value.trim());
+            if (values.length !== headers.length) {
+                console.warn(`Skipping malformed row ${i + 1} in ${url}: Expected ${headers.length} columns, got ${values.length}.`);
+                continue; // Skip malformed rows
+            }
             const row = {};
             headers.forEach((header, index) => {
                 let value = values[index];
@@ -77,6 +91,7 @@ async function fetchAndParseCSV(url) {
             });
             data.push(row);
         }
+        console.log(`Successfully parsed ${data.length} rows from ${url}.`);
         return data;
     } catch (error) {
         console.error(`Error fetching or parsing CSV from ${url}:`, error);
@@ -160,6 +175,7 @@ function calculateModifiedStat(unit, mod, statKey, baseValue) {
     return modifiedValue;
 }
 
+
 /**
  * Applies selected mods and global effects to unit stats.
  * @param {Object} unit - The original unit object.
@@ -219,8 +235,16 @@ function applyModsAndLevelEffects(unit, selectedModIds, applyMaxLevel) {
  * Renders the units table based on current filters and sort order.
  */
 function renderUnitsTable() {
+    console.log('Rendering units table...');
+    if (!unitTableBody) {
+        console.error("unitTableBody element not found. Cannot render units table.");
+        return;
+    }
     unitTableBody.innerHTML = ''; // Clear existing rows
-    unitDetailsContainer.innerHTML = ''; // Clear unit details
+    if (unitDetailsContainer) { // Check if element exists before clearing
+        unitDetailsContainer.innerHTML = ''; // Clear unit details
+    }
+
 
     const searchQuery = searchInput.value.toLowerCase();
     const selectedRarity = rarityFilter.value;
@@ -228,8 +252,8 @@ function renderUnitsTable() {
 
     let filteredUnits = units.filter(unit => {
         const matchesSearch = unit.Label.toLowerCase().includes(searchQuery);
-        const matchesRarity = selectedRarity === 'All' || unit.Rarity === selectedRarity;
-        const matchesClass = selectedClass === 'All' || unit.Class === selectedClass;
+        const matchesRarity = selectedRarity === '' || unit.Rarity === selectedRarity; // Changed 'All' to '' for filter value
+        const matchesClass = selectedClass === '' || unit.Class === selectedClass; // Changed 'All' to '' for filter value
         return matchesSearch && matchesRarity && matchesClass;
     });
 
@@ -257,6 +281,14 @@ function renderUnitsTable() {
         return applyModsAndLevelEffects(unit, selectedModIds, maxLevelGlobalEnabled);
     });
 
+    if (unitsToRender.length === 0) {
+        document.getElementById('noResultsMessage').classList.remove('hidden');
+        unitTableContainer.classList.add('hidden'); // Hide table if no results
+    } else {
+        document.getElementById('noResultsMessage').classList.add('hidden');
+        unitTableContainer.classList.remove('hidden'); // Show table if results
+    }
+
     unitsToRender.forEach(unit => {
         const row = document.createElement('tr');
         row.className = 'hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer transition-colors duration-200';
@@ -267,19 +299,27 @@ function renderUnitsTable() {
             <td class="py-3 px-6 whitespace-nowrap font-medium text-gray-900 dark:text-gray-100">${unit.Label}</td>
             <td class="py-3 px-6 whitespace-nowrap">${unit.Class}</td>
             <td class="py-3 px-6 whitespace-nowrap">${unit.Rarity}</td>
+            <td class="py-3 px-6 whitespace-nowrap">${unit.CommunityRanking !== 'N/A' ? unit.CommunityRanking : 'N/A'}</td>
             <td class="py-3 px-6 whitespace-nowrap">${unit.HP !== 'N/A' ? unit.HP.toFixed(2) : 'N/A'}</td>
             <td class="py-3 px-6 whitespace-nowrap">${unit.Damage !== 'N/A' ? unit.Damage.toFixed(2) : 'N/A'}</td>
             <td class="py-3 px-6 whitespace-nowrap">${unit.Cooldown !== 'N/A' ? unit.Cooldown.toFixed(2) : 'N/A'}</td>
+            <!-- Add other unit properties as needed -->
+        `;
+        // Check if CritChance, CritDamage, Accuracy, EvadeChance, Distance, Knockback exist before adding
+        // This makes the table dynamic based on available data, though for now, keeping fixed columns for simplicity.
+        // If you want to add these back, ensure the <thead> also has corresponding <th> elements.
+        /*
             <td class="py-3 px-6 whitespace-nowrap">${unit.CritChance !== 'N/A' ? (unit.CritChance * 100).toFixed(2) + '%' : 'N/A'}</td>
             <td class="py-3 px-6 whitespace-nowrap">${unit.CritDamage !== 'N/A' ? unit.CritDamage.toFixed(2) : 'N/A'}</td>
             <td class="py-3 px-6 whitespace-nowrap">${unit.Accuracy !== 'N/A' ? unit.Accuracy.toFixed(2) : 'N/A'}</td>
             <td class="py-3 px-6 whitespace-nowrap">${unit.EvadeChance !== 'N/A' ? (unit.EvadeChance * 100).toFixed(2) + '%' : 'N/A'}</td>
             <td class="py-3 px-6 whitespace-nowrap">${unit.Distance !== 'N/A' ? unit.Distance.toFixed(2) : 'N/A'}</td>
             <td class="py-3 px-6 whitespace-nowrap">${unit.Knockback !== 'N/A' ? unit.Knockback.toFixed(2) : 'N/A'}</td>
-        `;
+        */
         row.addEventListener('click', () => displayUnitDetails(unit.id)); // Use unit.id for details
         unitTableBody.appendChild(row);
     });
+    console.log('Finished rendering units table.');
 }
 
 /**
@@ -287,9 +327,13 @@ function renderUnitsTable() {
  * @param {string} unitId - The ID of the unit to display details for.
  */
 function displayUnitDetails(unitId) {
+    console.log(`Displaying details for unit ID: ${unitId}`);
     const originalUnit = units.find(u => u.id === unitId);
     if (!originalUnit) {
-        unitDetailsContainer.innerHTML = '<p class="text-red-500">Unit not found.</p>';
+        console.error(`Unit with ID ${unitId} not found.`);
+        if (unitDetailsContainer) {
+            unitDetailsContainer.innerHTML = '<p class="text-red-500">Unit not found.</p>';
+        }
         return;
     }
 
@@ -345,7 +389,9 @@ function displayUnitDetails(unitId) {
             </div>
         </div>
     `;
-    unitDetailsContainer.innerHTML = detailsHtml;
+    if (unitDetailsContainer) { // Check if element exists before setting innerHTML
+        unitDetailsContainer.innerHTML = detailsHtml;
+    }
 }
 
 
@@ -353,6 +399,11 @@ function displayUnitDetails(unitId) {
  * Renders the mod checkboxes for filtering.
  */
 function renderModCheckboxes() {
+    console.log('Rendering mod checkboxes...');
+    if (!modCheckboxesContainer) {
+        console.error("modCheckboxesContainer element not found. Cannot render mod checkboxes.");
+        return;
+    }
     modCheckboxesContainer.innerHTML = ''; // Clear existing checkboxes
 
     // Group mods by rarity
@@ -387,12 +438,18 @@ function renderModCheckboxes() {
             modCheckboxesContainer.appendChild(rarityGroup);
         }
     });
+    console.log('Finished rendering mod checkboxes.');
 }
 
 /**
  * Renders the mods table.
  */
 function renderModsTable() {
+    console.log('Rendering mods table...');
+    if (!modsTableBody) {
+        console.error("modsTableBody element not found. Cannot render mods table.");
+        return;
+    }
     modsTableBody.innerHTML = ''; // Clear existing rows
     mods.forEach(mod => {
         const row = document.createElement('tr');
@@ -404,18 +461,21 @@ function renderModsTable() {
         `;
         modsTableBody.appendChild(row);
     });
+    console.log('Finished rendering mods table.');
 }
 
 /**
  * Filters and re-renders units based on current search and filter criteria.
  */
 function filterAndRenderUnits() {
+    console.log('Starting filterAndRenderUnits...');
     // Small delay to show spinner for a moment even if data loads fast
     loadingSpinner.classList.remove('hidden');
     setTimeout(() => {
         renderUnitsTable();
         loadingSpinner.classList.add('hidden');
-    }, 50);
+        console.log('Finished filterAndRenderUnits.');
+    }, 50); // Reduced delay for faster feedback
 }
 
 /**
@@ -423,6 +483,7 @@ function filterAndRenderUnits() {
  * @param {string} column - The column to sort by.
  */
 function sortData(column) {
+    console.log(`Sorting by column: ${column}, current direction: ${currentSortDirection}`);
     if (currentSortColumn === column) {
         currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
     } else {
@@ -439,6 +500,7 @@ function toggleDarkMode() {
     document.documentElement.classList.toggle('dark');
     const isDarkMode = document.documentElement.classList.contains('dark');
     localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
+    console.log(`Dark mode toggled to: ${isDarkMode}`);
 }
 
 /**
@@ -446,6 +508,7 @@ function toggleDarkMode() {
  * @param {string} activeTabId - The ID of the tab to activate ('unitsTab' or 'modsTab').
  */
 function switchTab(activeTabId) {
+    console.log(`Switching to tab: ${activeTabId}`);
     // Deactivate all tabs and hide all content sections
     unitsTab.classList.remove('border-blue-500', 'text-blue-500');
     modsTab.classList.remove('border-blue-500', 'text-blue-500');
@@ -466,55 +529,81 @@ function switchTab(activeTabId) {
  * Initializes the application by fetching data and setting up event listeners.
  */
 async function init() {
+    console.log('Initializing application...');
     loadingSpinner.classList.remove('hidden'); // Show spinner on init
 
-    // Fetch and parse unit data from Google Sheet
-    const fetchedUnitData = await fetchAndParseCSV(GOOGLE_SHEET_UNIT_DATA_CSV_URL);
-    units = parseUnitData(fetchedUnitData);
+    try {
+        // Fetch and parse unit data from Google Sheet
+        const fetchedUnitData = await fetchAndParseCSV(GOOGLE_SHEET_UNIT_DATA_CSV_URL);
+        units = parseUnitData(fetchedUnitData);
+        console.log('Units data loaded:', units.length, 'units');
 
-    // Fetch and parse mod data from Google Sheet
-    const fetchedModData = await fetchAndParseCSV(GOOGLE_SHEET_MOD_DATA_CSV_URL);
-    mods = parseModData(fetchedModData);
+        // Fetch and parse mod data from Google Sheet
+        const fetchedModData = await fetchAndParseCSV(GOOGLE_SHEET_MOD_DATA_CSV_URL);
+        mods = parseModData(fetchedModData);
+        console.log('Mods data loaded:', mods.length, 'mods');
 
-    // Populate filters (only if data is available)
-    if (units.length > 0) {
-        const rarities = [...new Set(units.map(unit => unit.Rarity))];
-        rarities.forEach(rarity => {
-            const option = document.createElement('option');
-            option.value = rarity;
-            option.textContent = rarity;
-            rarityFilter.appendChild(option);
-        });
+        // Populate filters (only if data is available)
+        if (units.length > 0) {
+            const rarities = [...new Set(units.map(unit => unit.Rarity))].sort(); // Sort rarities
+            rarityFilter.innerHTML = '<option value="">All Rarity</option>'; // Reset and add default
+            rarities.forEach(rarity => {
+                const option = document.createElement('option');
+                option.value = rarity;
+                option.textContent = rarity;
+                rarityFilter.appendChild(option);
+            });
 
-        const classes = [...new Set(units.map(unit => unit.Class))];
-        classes.forEach(unitClass => {
-            const option = document.createElement('option');
-            option.value = unitClass;
-            option.textContent = unitClass;
-            classFilter.appendChild(option);
-        });
+            const classes = [...new Set(units.map(unit => unit.Class))].sort(); // Sort classes
+            classFilter.innerHTML = '<option value="">All Classes</option>'; // Reset and add default
+            classes.forEach(unitClass => {
+                const option = document.createElement('option');
+                option.value = unitClass;
+                option.textContent = unitClass;
+                classFilter.appendChild(option);
+            });
+            console.log('Filters populated.');
+        } else {
+            console.warn('No units data loaded, filters will not be populated.');
+        }
+
+        // Render initial tables and checkboxes
+        renderModCheckboxes();
+        renderModsTable();
+        filterAndRenderUnits(); // Initial render of units table
+
+    } catch (error) {
+        console.error('Initialization failed:', error);
+        // Display a user-friendly message if initialization fails
+        if (unitTableBody) {
+            unitTableBody.innerHTML = '<tr><td colspan="8" class="text-center text-red-500 py-4">Failed to load data. Please check console for details.</td></tr>';
+        }
+        document.getElementById('noResultsMessage').classList.remove('hidden'); // Show no results message
+    } finally {
+        // Ensure spinner is hidden regardless of success or failure
+        loadingSpinner.classList.add('hidden');
+        console.log('Initialization complete. Spinner hidden.');
     }
 
-    // Render initial tables and checkboxes
-    renderModCheckboxes();
-    renderModsTable();
-    filterAndRenderUnits(); // Initial render of units table
-
-    // Hide spinner after initial render
-    loadingSpinner.classList.add('hidden');
 
     // Set initial theme based on localStorage or system preference
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
         document.documentElement.classList.add('dark');
+        document.getElementById('moonIcon').classList.remove('hidden');
+        document.getElementById('sunIcon').classList.add('hidden');
+    } else {
+        document.getElementById('moonIcon').classList.add('hidden');
+        document.getElementById('sunIcon').classList.remove('hidden');
     }
+
 
     // Event Listeners
     // Search and Filter Events (debounced for performance)
     const debouncedFilterAndRenderUnits = debounce(filterAndRenderUnits, 300);
-    searchInput.addEventListener('input', debouncedFilterAndRenderUnits);
-    rarityFilter.addEventListener('change', filterAndRenderUnits);
-    classFilter.addEventListener('change', filterAndRenderUnits);
+    if (searchInput) searchInput.addEventListener('input', debouncedFilterAndRenderUnits);
+    if (rarityFilter) rarityFilter.addEventListener('change', filterAndRenderUnits);
+    if (classFilter) classFilter.addEventListener('change', filterAndRenderUnits);
 
     // Table Header Sorting Events
     tableHeaders.forEach(header => {
@@ -527,23 +616,45 @@ async function init() {
     });
 
     // Dark Mode Toggle Event
-    darkModeToggle.addEventListener('click', toggleDarkMode);
+    if (darkModeToggle) darkModeToggle.addEventListener('click', toggleDarkMode);
 
     // Tab Switching Events
-    unitsTab.addEventListener('click', () => switchTab('unitsTab'));
-    modsTab.addEventListener('click', () => switchTab('modsTab'));
+    if (unitsTab) unitsTab.addEventListener('click', () => switchTab('unitsTab'));
+    if (modsTab) modsTab.addEventListener('click', () => switchTab('modsTab'));
+    // Assuming tierListTab also exists and needs an event listener
+    const tierListTab = document.getElementById('tierListTab');
+    const tierListContent = document.getElementById('tierListContent');
+    if (tierListTab) {
+        tierListTab.addEventListener('click', () => {
+            switchTab('tierListTab');
+            // You might want to fetch and render tier list data here if not already done
+            // For now, just showing the content
+            if (tierListContent) tierListContent.classList.remove('hidden');
+            // If you have a separate function to load tier list, call it here:
+            // loadTierListData();
+        });
+    }
+
 
     // Mod Effects Toggle Event (global)
-    toggleModEffects.addEventListener('change', () => {
-        modEffectsEnabled = toggleModEffects.checked;
-        filterAndRenderUnits(); // Re-render units to apply/remove global mod effects
-    });
+    if (toggleModEffects) {
+        toggleModEffects.addEventListener('change', () => {
+            modEffectsEnabled = toggleModEffects.checked;
+            filterAndRenderUnits(); // Re-render units to apply/remove global mod effects
+        });
+    }
+
 
     // Global Max Level Toggle Event
-    toggleMaxLevel.addEventListener('change', () => {
-        maxLevelGlobalEnabled = toggleMaxLevel.checked;
-        filterAndRenderUnits(); // Re-render units to apply/remove global max level effects
-    });
+    if (toggleMaxLevel) {
+        toggleMaxLevel.addEventListener('change', () => {
+            maxLevelGlobalEnabled = toggleMaxLevel.checked;
+            filterAndRenderUnits(); // Re-render units to apply/remove global max level effects
+        });
+    }
+
+    // Initial switch to units tab to ensure correct display
+    switchTab('unitsTab');
 }
 
 // Initialize the application when the DOM is fully loaded
