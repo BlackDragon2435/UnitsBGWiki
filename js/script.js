@@ -6,11 +6,11 @@ import { gameData } from './gameData.js'; // Import gameData
 
 // IMPORTANT: Replace this with the actual public CSV URL of your Google Sheet
 // Go to your Google Sheet -> File -> Share -> Publish to web -> Select the sheet -> Choose CSV -> Copy the URL
-// const GOOGLE_SHEET_TIER_LIST_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQO78VJA7y_g5zHpzw1gTaJhLV2mjNdRxA33zcj1WPFj-QYxQS09nInTQXg6kXNJcjm4f7Gk7lPVZuV/pub?output=csv'; // <<< REPLACE THIS LINE
+const GOOGLE_SHEET_TIER_LIST_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQO78VJA7y_g5zHpzw1gTaJhLV2mjNdRxA33zcj1WPFj-QYxQS09nInTQXg6kXNJcjm4f7Gk7lPVZuV/pub?output=csv'; // <<< REPLACE THIS LINE
 
 let units = []; // Stores parsed unit data
 let mods = [];  // Stores parsed mod data
-// let tierList = []; // Stores parsed tier list data (commented out)
+let tierList = []; // Stores parsed tier list data
 let currentSortColumn = null;
 let currentSortDirection = 'asc'; // 'asc' or 'desc'
 let modEffectsEnabled = false; // State for global mod effects toggle
@@ -30,17 +30,17 @@ const sunIcon = document.getElementById('sunIcon');
 const moonIcon = document.getElementById('moonIcon');
 const unitsTab = document.getElementById('unitsTab');
 const modsTab = document.getElementById('modsTab');
-// const tierListTab = document.getElementById('tierListTab'); // New Tier List Tab (commented out)
+const tierListTab = document.getElementById('tierListTab'); // New Tier List Tab
 const unitsContent = document.getElementById('unitsContent');
 const modsContent = document.getElementById('modsContent');
-// const tierListContent = document.getElementById('tierListContent'); // New Tier List Content (commented out)
+const tierListContent = document.getElementById('tierListContent'); // New Tier List Content
 const toggleModEffects = document.getElementById('toggleModEffects');
 const toggleMaxLevel = document.getElementById('toggleMaxLevel'); // Global Max Level toggle
 const modsTableBody = document.querySelector('#modsTable tbody');
-// const tierListTableBody = document.getElementById('tierListTableBody'); // New Tier List Table Body (commented out)
-// const tierListSpinner = document.getElementById('tierListSpinner'); // New Tier List Spinner (commented out)
-// const tierListTableContainer = document.getElementById('tierListTableContainer'); // New Tier List Table Container (commented out)
-// const noTierListMessage = document.getElementById('noTierListMessage'); // New No Tier List Message (commented out)
+const tierListTableBody = document.getElementById('tierListTableBody'); // New Tier List Table Body
+const tierListSpinner = document.getElementById('tierListSpinner'); // New Tier List Spinner
+const tierListTableContainer = document.getElementById('tierListTableContainer'); // New Tier List Table Container
+const noTierListMessage = document.getElementById('noTierListMessage'); // New No Tier List Message
 
 let expandedUnitRowId = null; // To keep track of the currently expanded row
 
@@ -321,7 +321,7 @@ function applySingleModEffect(unit, mod) {
                 } else if (modifiedUnit.AttackEffectLifesteal === 'N/A' && typeof amount === 'number') {
                     modifiedUnit.AttackEffectLifesteal = amount;
                 } else if (modifiedUnit.AttackEffectLifesteal === 'N/A' && typeof chance === 'number') {
-                    modifiedUnit.AttackEffectLifesteal = (chance * 100);
+                    modifiedBunit.AttackEffectLifesteal = (chance * 100);
                 }
                 break;
             case "Knockback":
@@ -530,7 +530,6 @@ function renderModTable(dataToRender) {
  * Fetches and parses tier list data from a Google Sheet CSV URL.
  * @returns {Promise<Array<Object>>} A promise that resolves to an array of tier list objects.
  */
-/*
 async function fetchTierListData() {
     tierListSpinner.classList.remove('hidden');
     tierListTableContainer.classList.add('hidden');
@@ -555,7 +554,6 @@ async function fetchTierListData() {
         tierListSpinner.classList.add('hidden');
     }
 }
-*/
 
 /**
  * Parses CSV text into an array of objects.
@@ -563,7 +561,6 @@ async function fetchTierListData() {
  * @param {string} csvText - The CSV data as a string.
  * @returns {Array<Object>} An array of objects, where each object represents a row.
  */
-/*
 function parseCSV(csvText) {
     const lines = csvText.trim().split('\n');
     if (lines.length === 0) return [];
@@ -585,13 +582,11 @@ function parseCSV(csvText) {
     }
     return data;
 }
-*/
 
 /**
  * Renders the tier list table.
  * @param {Array<Object>} dataToRender - The array of tier list objects to display.
  */
-/*
 function renderTierListTable(dataToRender) {
     tierListTableBody.innerHTML = ''; // Clear existing rows
     if (dataToRender.length === 0) {
@@ -622,7 +617,6 @@ function renderTierListTable(dataToRender) {
         });
     });
 }
-*/
 
 
 // --- Detailed Unit View (Expandable Row) ---
@@ -1076,11 +1070,11 @@ async function switchTab(tabId) { // Made async to await fetchTierListData
         modsContent.classList.remove('hidden');
         renderModTable(mods); // Render mods when switching to mods tab
     }
-    // else if (tabId === 'tierListTab') { // Handle new Tier List tab (commented out)
-    //     tierListContent.classList.remove('hidden');
-    //     tierList = await fetchTierListData(); // Fetch and store tier list data
-    //     renderTierListTable(tierList); // Render tier list table
-    // }
+    else if (tabId === 'tierListTab') { // Handle new Tier List tab
+        tierListContent.classList.remove('hidden');
+        tierList = await fetchTierListData(); // Fetch and store tier list data
+        renderTierListTable(tierList); // Render tier list table
+    }
     // Close any expanded unit details when switching tabs
     if (expandedUnitRowId !== null) {
         const prevExpandedRow = unitTableBody.querySelector(`[data-unit-index="${expandedUnitRowId}"]`);
@@ -1104,7 +1098,7 @@ window.onload = function() {
     loadingSpinner.classList.remove('hidden'); // Show spinner
     unitTableContainer.classList.add('hidden'); // Hide unit table
     modsContent.classList.add('hidden'); // Ensure mods content is hidden initially
-    // tierListContent.classList.add('hidden'); // Ensure tier list content is hidden initially (commented out)
+    tierListContent.classList.add('hidden'); // Ensure tier list content is hidden initially
 
     // Simulate a delay for parsing data
     setTimeout(() => {
@@ -1142,7 +1136,7 @@ window.onload = function() {
     // Tab Switching Events
     unitsTab.addEventListener('click', () => switchTab('unitsTab'));
     modsTab.addEventListener('click', () => switchTab('modsTab'));
-    // tierListTab.addEventListener('click', () => switchTab('tierListTab')); // Tier List Tab event (commented out)
+    tierListTab.addEventListener('click', () => switchTab('tierListTab')); // Tier List Tab event
 
     // Mod Effects Toggle Event (global)
     toggleModEffects.addEventListener('change', () => {
