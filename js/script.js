@@ -137,6 +137,7 @@ async function fetchGoogleSheetCSVData(url, spinnerElement, tableContainerElemen
  * Parses CSV text into an array of objects.
  * Assumes the first row is the header.
  * Converts values to numbers/booleans where appropriate, and standardizes "N/A".
+ * This version is more careful about type conversion for specific columns.
  * @param {string} csvText - The CSV data as a string.
  * @returns {Array<Object>} An array of objects, where each object represents a row.
  */
@@ -159,26 +160,52 @@ function parseGoogleSheetCSV(csvText) {
         const rowObject = {};
         headers.forEach((header, index) => {
             let value = values[index];
-            // Attempt to convert to number if possible, otherwise keep as string
-            if (!isNaN(parseFloat(value)) && isFinite(value) && value.trim() !== '') {
-                rowObject[header] = parseFloat(value);
-            } else if (value.toLowerCase() === 'true') {
-                rowObject[header] = true;
-            } else if (value.toLowerCase() === 'false') {
-                rowObject[header] = false;
-            } else if (value.toLowerCase() === 'n/a' || value === '') {
-                rowObject[header] = 'N/A'; // Standardize "N/A" and empty strings to "N/A"
-            } else {
-                rowObject[header] = value;
+
+            // Handle "N/A" and empty strings consistently
+            if (value.toLowerCase() === 'n/a' || value === '') {
+                rowObject[header] = 'N/A';
+                return; // Move to next header
+            }
+
+            // Specific type conversions based on expected data
+            switch (header) {
+                case 'HP':
+                case 'Damage':
+                case 'Cooldown':
+                case 'Distance':
+                case 'CritChance':
+                case 'CritDamage':
+                case 'AttackEffectLifesteal':
+                case 'Knockback':
+                case 'Accuracy':
+                case 'EvadeChance':
+                case 'HPOffset':
+                case 'ShadowStepDistance':
+                case 'ShadowStepCooldown':
+                case 'Amount': // For Mod data
+                case 'Chance': // For Mod data
+                case 'NumericalRank': // For Tier List data
+                    // Attempt to parse as float for numerical stats
+                    rowObject[header] = parseFloat(value);
+                    if (isNaN(rowObject[header])) { // If it's not a valid number, keep as original string
+                        rowObject[header] = value;
+                    }
+                    break;
+                case 'IsBossUnit': // Example boolean field
+                    rowObject[header] = value.toLowerCase() === 'true';
+                    break;
+                default:
+                    // For all other headers, keep as string
+                    rowObject[header] = value;
+                    break;
             }
         });
 
-        // Add a normalized label for units for easier matching with tier list
-        if (rowObject['Label']) { // Assuming 'Label' is the unit name header for units
+        // Add normalized labels for easier matching
+        if (rowObject['Label']) { // For Unit Info sheet
             rowObject.NormalizedLabel = normalizeString(rowObject['Label']);
         }
-        // Add a normalized UnitName for tier list for easier matching with units data
-        if (rowObject['UnitName']) { // Assuming 'UnitName' is the unit name header for tier list
+        if (rowObject['UnitName']) { // For Tier List sheet
             rowObject.NormalizedUnitName = normalizeString(rowObject['UnitName']);
         }
         data.push(rowObject);
@@ -207,8 +234,8 @@ function transformFetchedModData(fetchedMods) {
 
         const effect = {};
         if (modRow.Stat && modRow.Stat !== 'N/A') effect.stat = modRow.Stat;
-        if (modRow.Amount !== 'N/A' && modRow.Amount !== undefined) effect.amount = parseFloat(modRow.Amount);
-        if (modRow.Chance !== 'N/A' && modRow.Chance !== undefined) effect.chance = parseFloat(modRow.Chance);
+        if (modRow.Amount !== 'N/A' && modRow.Amount !== undefined) effect.amount = modRow.Amount; // Amount is already parsed by parseGoogleSheetCSV
+        if (modRow.Chance !== 'N/A' && modRow.Chance !== undefined) effect.chance = modRow.Chance; // Chance is already parsed by parseGoogleSheetCSV
 
         if (Object.keys(effect).length > 0) {
             mod.effects.push(effect);
@@ -554,11 +581,13 @@ function renderModTable(dataToRender) {
 
 /**
  * Renders the tier list table.
- * @param {Array<Object>} dataToRender - The array of tier list objects to display.
+ * This function now iterates through all units and finds their corresponding tier data.
+ * @param {Array<Object>} dataToRender - The array of tier list objects (from tierList sheet).
  */
 function renderTierListTable(dataToRender) {
     tierListTableBody.innerHTML = ''; // Clear existing rows
-    if (dataToRender.length === 0) {
+    if (units.length === 0) { // Check if units data is available
+        noTierListMessage.textContent = 'No unit data available to build the tier list.';
         noTierListMessage.classList.remove('hidden');
         tierListTableContainer.classList.add('hidden');
         return;
@@ -568,21 +597,39 @@ function renderTierListTable(dataToRender) {
     }
 
     // Define the order of columns for the tier list table
-    const tierListColumnOrder = ['UnitName', 'Tier', 'NumericalRank', 'Notes']; // Updated to match screenshot headers
+    const tierListColumnOrder = ['UnitName', 'Tier', 'NumericalRank', 'Notes'];
 
-    dataToRender.forEach(item => {
+    // Iterate through all units to ensure every unit from Unit Info is listed
+    units.forEach(unit => {
         const row = tierListTableBody.insertRow();
         row.classList.add('bg-white', 'dark:bg-gray-700');
+
+        // Find the corresponding tier info for the current unit
+        const normalizedUnitLabel = normalizeString(unit.Label);
+        const tierInfo = dataToRender.find(tierItem => tierItem.NormalizedUnitName === normalizedUnitLabel);
 
         tierListColumnOrder.forEach(key => {
             const cell = row.insertCell();
             cell.classList.add('py-4', 'px-6', 'text-sm');
-            if (key === 'UnitName' || key === 'Tier') { // Use 'UnitName' for styling
+
+            let displayValue = 'N/A';
+
+            if (key === 'UnitName') {
+                displayValue = unit.Label; // Always use the unit's Label from Unit Info
                 cell.classList.add('font-medium', 'text-gray-900', 'dark:text-gray-100', 'whitespace-nowrap');
+            } else if (tierInfo) {
+                // If tier info exists for this unit, use its values
+                displayValue = tierInfo[key] !== undefined ? tierInfo[key] : 'N/A';
+                if (key === 'Tier') {
+                    cell.classList.add('font-medium', 'text-gray-900', 'dark:text-gray-100', 'whitespace-nowrap');
+                } else {
+                    cell.classList.add('text-gray-500', 'dark:text-gray-300', 'text-wrap');
+                }
             } else {
-                cell.classList.add('text-gray-500', 'dark:text-gray-300', 'text-wrap'); // Allow text wrapping for reasoning
+                // If no tier info found, display N/A
+                cell.classList.add('text-gray-500', 'dark:text-gray-400');
             }
-            cell.textContent = item[key] !== undefined ? item[key] : 'N/A';
+            cell.textContent = displayValue;
         });
     });
 }
@@ -888,28 +935,19 @@ function sortData(column) {
             return currentSortDirection === 'asc' ? indexA - indexB : indexB - indexA;
         }
 
-        // Custom sort for CommunityRanking (S > A > B > C > D > F)
+        // Custom sort for CommunityRanking (sort by NumericalRank)
         if (column === 'CommunityRanking') {
-            // Define the desired sorting order for tiers
-            const rankingOrder = ['S', 'A', 'B', 'C', 'D', 'F', 'N/A']; // 'N/A' should be last
-
-            // Find tier for unit A using normalized labels
             const tierInfoA = tierList.find(tierUnit => tierUnit.NormalizedUnitName === a.NormalizedLabel);
-            const tierA = tierInfoA ? tierInfoA.Tier : 'N/A';
-            const indexA = rankingOrder.indexOf(tierA);
-
-            // Find tier for unit B using normalized labels
             const tierInfoB = tierList.find(tierUnit => tierUnit.NormalizedUnitName === b.NormalizedLabel);
-            const tierB = tierInfoB ? tierInfoB.Tier : 'N/A';
-            const indexB = rankingOrder.indexOf(tierB);
 
-            // Handle cases where a tier might not be found in rankingOrder (e.g., new tiers)
-            // Push unknown tiers to the end
-            const finalIndexA = indexA === -1 ? rankingOrder.length : indexA;
-            const finalIndexB = indexB === -1 ? rankingOrder.length : indexB;
+            const rankA = tierInfoA && typeof tierInfoA.NumericalRank === 'number' ? tierInfoA.NumericalRank : Infinity; // Treat N/A as lowest rank
+            const rankB = tierInfoB && typeof tierInfoB.NumericalRank === 'number' ? tierInfoB.NumericalRank : Infinity; // Treat N/A as lowest rank
 
-
-            return currentSortDirection === 'asc' ? finalIndexA - finalIndexB : finalIndexB - finalIndexA;
+            if (currentSortDirection === 'asc') {
+                return rankA - rankB; // Lower numerical rank (higher tier) first
+            } else {
+                return rankB - rankA; // Higher numerical rank (lower tier) first
+            }
         }
 
         // Handle "N/A" values by treating them as lowest/highest for sorting
@@ -1055,9 +1093,8 @@ async function switchTab(tabId) { // Made async to await fetchTierListData
     }
     else if (tabId === 'tierListTab') { // Handle new Tier List tab
         tierListContent.classList.remove('hidden');
-        // Fetch and store tier list data (it's already fetched on load, but re-fetch if needed for real-time updates)
-        // For now, we'll just use the already loaded tierList
-        renderTierListTable(tierList); // Render tier list table
+        // Re-render the tier list table to ensure it's up-to-date with units data
+        renderTierListTable(tierList);
     }
     // Close any expanded unit details when switching tabs
     if (expandedUnitRowId !== null) {
