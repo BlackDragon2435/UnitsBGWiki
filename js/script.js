@@ -1,5 +1,5 @@
 // js/script.js
-// Removed local data imports as data will now be fetched from Google Sheets
+// why are you looking at this stuff
 // import { rawUnitData } from './unitsData.js';
 // import { rawModData } from './modsData.js';
 import { unitImages } from './unitImages.js';
@@ -940,13 +940,23 @@ function sortData(column) {
             const tierInfoA = tierList.find(tierUnit => tierUnit.NormalizedUnitName === a.NormalizedLabel);
             const tierInfoB = tierList.find(tierUnit => tierUnit.NormalizedUnitName === b.NormalizedLabel);
 
-            const rankA = tierInfoA && typeof tierInfoA.NumericalRank === 'number' ? tierInfoA.NumericalRank : Infinity; // Treat N/A as lowest rank
-            const rankB = tierInfoB && typeof tierInfoB.NumericalRank === 'number' ? tierInfoB.NumericalRank : Infinity; // Treat N/A as lowest rank
+            // Get NumericalRank, treat 'N/A' or missing as -Infinity for sorting (to push them to the bottom)
+            // If S is highest numerical value, then for ascending sort (S on top), we want higher numbers first.
+            const rankA = tierInfoA && typeof tierInfoA.NumericalRank === 'number' ? tierInfoA.NumericalRank : -Infinity;
+            const rankB = tierInfoB && typeof tierInfoB.NumericalRank === 'number' ? tierInfoB.NumericalRank : -Infinity;
 
             if (currentSortDirection === 'asc') {
-                return rankA - rankB; // Lower numerical rank (higher tier) first
+                // For ascending, we want HIGHER NumericalRank (S-tier) to come first.
+                // So, if rankA is 900 (S) and rankB is 700 (B), we want A before B.
+                // 900 - 700 = 200 (positive), so B comes before A. This is incorrect.
+                // We need rankB - rankA to put higher values first in "ascending" visual order.
+                return rankB - rankA;
             } else {
-                return rankB - rankA; // Higher numerical rank (lower tier) first
+                // For descending, we want LOWER NumericalRank (F-tier) to come first.
+                // So, if rankA is 900 (S) and rankB is 500 (D), we want A after B.
+                // 900 - 500 = 400 (positive), so B comes before A. This is incorrect.
+                // We need rankA - rankB to put lower values first in "descending" visual order.
+                return rankA - rankB;
             }
         }
 
