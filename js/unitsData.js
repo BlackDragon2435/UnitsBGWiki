@@ -151,7 +151,7 @@ export const rawUnitData = `
     },
     ["TheIceQueen"] = {
         ["CritChance"] = "N/A",
-        ["Label"] = "The Ice Queen",
+        ["Label"] = "The Ice Queen(BossUnit)",
         ["Class"] = "Wizard",
         ["HPOffset"] = "N/A",
         ["AttackEffect"] = "Frost",
@@ -529,7 +529,7 @@ export const rawUnitData = `
     },
     ["TheAdmiral"] = {
         ["CritChance"] = "N/A",
-        ["Label"] = "The Admiral of Death",
+        ["Label"] = "The Admiral of Death(BossUnit)",
         ["Class"] = "Ranger",
         ["HPOffset"] = "N/A",
         ["AttackEffect"] = "Fire",
@@ -760,7 +760,7 @@ export const rawUnitData = `
     },
     ["TheReaper"] = {
         ["CritChance"] = "N/A",
-        ["Label"] = "The Reaper",
+        ["Label"] = "The Reaper"(BossUnit),
         ["Class"] = "Warrior",
         ["HPOffset"] = "N/A",
         ["AttackEffect"] = "Lifesteal",
@@ -1117,7 +1117,7 @@ export const rawUnitData = `
     },
     ["GoblinKing"] = {
         ["CritChance"] = "N/A",
-        ["Label"] = "Goblin King",
+        ["Label"] = "Goblin King(BossUnit)",
         ["Class"] = "Warrior",
         ["HPOffset"] = "N/A",
         ["AttackEffect"] = "Fire",
@@ -1306,7 +1306,7 @@ export const rawUnitData = `
     },
     ["TheIceQueenSmall"] = {
         ["CritChance"] = "N/A",
-        ["Label"] = "The Ice Queen",
+        ["Label"] = "The Ice Queen(Normal)",
         ["Class"] = "Wizard",
         ["HPOffset"] = "N/A",
         ["AttackEffect"] = "Frost",
@@ -1327,7 +1327,7 @@ export const rawUnitData = `
     },
     ["SmallBlackDragon"] = {
         ["CritChance"] = "N/A",
-        ["Label"] = "Black Dragon",
+        ["Label"] = "Black Dragon(Normal)",
         ["Class"] = "Warrior",
         ["HPOffset"] = "N/A",
         ["AttackEffect"] = "Lifesteal",
@@ -1495,7 +1495,7 @@ export const rawUnitData = `
     },
     ["SmallHeadlessKnight"] = {
         ["CritChance"] = "N/A",
-        ["Label"] = "Headless Knight",
+        ["Label"] = "Headless Knight(Normal)",
         ["Class"] = "Warrior",
         ["HPOffset"] = "N/A",
         ["AttackEffect"] = "N/A",
@@ -1663,7 +1663,7 @@ export const rawUnitData = `
     },
     ["GoblinKingSmall"] = {
         ["CritChance"] = "N/A",
-        ["Label"] = "Goblin King",
+        ["Label"] = "Goblin King(Normal)",
         ["Class"] = "Warrior",
         ["HPOffset"] = "N/A",
         ["AttackEffect"] = "Fire",
@@ -1684,7 +1684,7 @@ export const rawUnitData = `
     },
     ["SmallPoseidon"] = {
         ["CritChance"] = 0.02,
-        ["Label"] = "Poseidon",
+        ["Label"] = "Poseidon(Normal)",
         ["Class"] = "Warrior",
         ["HPOffset"] = "N/A",
         ["AttackEffect"] = "N/A",
@@ -1999,7 +1999,7 @@ export const rawUnitData = `
     },
     ["HeadlessKnight"] = {
         ["CritChance"] = "N/A",
-        ["Label"] = "The Headless Knight",
+        ["Label"] = "The Headless Knight(BossUnit)",
         ["Class"] = "Warrior",
         ["HPOffset"] = "N/A",
         ["AttackEffect"] = "N/A",
@@ -2125,7 +2125,7 @@ export const rawUnitData = `
     },
     ["Ent"] = {
         ["CritChance"] = "N/A",
-        ["Label"] = "Ent",
+        ["Label"] = "Ent(Normal)",
         ["Class"] = "Tank",
         ["HPOffset"] = "N/A",
         ["AttackEffect"] = "N/A",
@@ -2314,7 +2314,7 @@ export const rawUnitData = `
     },
     ["EntSmall"] = {
         ["CritChance"] = "N/A",
-        ["Label"] = "Ent",
+        ["Label"] = "Ent(Normal)",
         ["Class"] = "Tank",
         ["HPOffset"] = "N/A",
         ["AttackEffect"] = "N/A",
@@ -2755,7 +2755,7 @@ export const rawUnitData = `
     },
     ["TheAdmiralSmall"] = {
         ["CritChance"] = "N/A",
-        ["Label"] = "The Admiral of Death",
+        ["Label"] = "The Admiral of Death(Normal)",
         ["Class"] = "Ranger",
         ["HPOffset"] = "N/A",
         ["AttackEffect"] = "Fire",
@@ -2797,7 +2797,7 @@ export const rawUnitData = `
     },
     ["SmallAncientVampire"] = {
         ["CritChance"] = 0.45,
-        ["Label"] = "Ancient Vampire",
+        ["Label"] = "Ancient Vampire(Normal)",
         ["Class"] = "Assassin",
         ["HPOffset"] = 25,
         ["AttackEffect"] = "Lifesteal",
@@ -3112,7 +3112,7 @@ export const rawUnitData = `
     },
     ["TheReaperSmall"] = {
         ["CritChance"] = "N/A",
-        ["Label"] = "The Reaper",
+        ["Label"] = "The Reaper"(Normal),
         ["Class"] = "Warrior",
         ["HPOffset"] = "N/A",
         ["AttackEffect"] = "Lifesteal",
