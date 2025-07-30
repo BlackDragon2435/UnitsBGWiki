@@ -16,8 +16,8 @@
         <header class="relative flex justify-center items-center mb-8">
             <div class="flex items-center">
                 <!-- Updated image source to the publicly hosted URL -->
-                <img src="https://tr.rbxcdn.com/180DAY-03e365f1fea92684ef841ae041d4677e/150/150/Image/Webp/noFilter" 
-                     alt="Units Battlegrounds Logo" 
+                <img src="https://tr.rbxcdn.com/180DAY-03e365f1fea92684ef841ae041d4677e/150/150/Image/Webp/noFilter"
+                     alt="Units Battlegrounds Logo"
                      class="header-image mr-4 rounded-lg shadow-md">
                 <h1 class="text-3xl sm:text-4xl font-bold text-center">Unit & Mod Compendium</h1>
             </div>
@@ -92,6 +92,12 @@
             <section id="modsContent" class="tab-content hidden">
                 <h2 class="text-2xl font-semibold mb-4">Mod Data</h2>
                 <p class="text-gray-700 dark:text-gray-300 mb-4">Here you can see all available mods and their effects. Click on a unit in the "Units" tab to see how individual mods affect its stats.</p>
+
+                <!-- Add this div for mod checkboxes -->
+                <div id="modCheckboxesContainer" class="overflow-y-auto max-h-80 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg shadow mb-6">
+                    <!-- Mod checkboxes will be rendered here by JavaScript -->
+                </div>
+
                 <div id="modsTableContainer" class="overflow-x-auto rounded-xl shadow-md mt-6">
                     <table id="modsTable" class="min-w-full">
                         <thead>
@@ -101,7 +107,7 @@
                                 <th class="py-3 px-6 text-left text-xs font-medium text-gray-50 uppercase tracking-wider">Effect Description</th>
                             </tr>
                         </thead>
-                        <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-700 dark:divide-gray-600">
+                        <tbody id="modsTableBody" class="bg-white divide-y divide-gray-200 dark:bg-gray-700 dark:divide-gray-600">
                             <!-- Mod data will be inserted here by JavaScript -->
                         </tbody>
                     </table>
