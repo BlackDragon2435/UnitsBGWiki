@@ -1,0 +1,157 @@
+UnitName,CritChance,Label,Class,HPOffset,AttackEffect,Damage,Knockback,Rarity,Accuracy,EvadeChance,Distance,ShadowStepDistance,CritDamage,AttackEffectType,AttackEffectLifesteal,AttackEffectKey,HP,Cooldown,ShadowStepCooldown
+GoblinAxeman,N/A,Goblin Axeman,Warrior,N/A,N/A,25,0,Rare,N/A,N/A,7,N/A,N/A,N/A,N/A,N/A,120,1.75,N/A
+Berserker,N/A,Berserker,Warrior,N/A,N/A,45,0,Mythic,N/A,N/A,5,N/A,N/A,N/A,N/A,N/A,280,1.4,N/A
+OmelaTree,0.015,Omela Tree,Tank,N/A,N/A,60,50,Demonic,N/A,0.01,7,N/A,1.5,N/A,N/A,N/A,1400,2,N/A
+DemonicArbalester,N/A,Demonic Arbalester,Ranger,N/A,N/A,45,0,Legendary,N/A,N/A,45,N/A,N/A,N/A,N/A,N/A,90,1.2,N/A
+Bartender,N/A,Bartender,Support,N/A,UpCooldown,25,0,Legendary,N/A,N/A,35,N/A,N/A,UpCooldown,N/A,UpCooldown,150,1.4,N/A
+LoveWizard,N/A,Love Wizard,Ranger,N/A,Hearts,30,0,Legendary,N/A,N/A,22,N/A,N/A,Hearts,N/A,Hearts,110,3.25,N/A
+Miner,N/A,Miner,Tank,N/A,N/A,10,0,Uncommon,N/A,N/A,5,N/A,N/A,N/A,N/A,N/A,200,1.5,N/A
+TheIceQueen,N/A,The Ice Queen,Wizard,N/A,Frost,60,50,Mythic,1.5,N/A,70,N/A,N/A,Slow,N/A,SlowBoss,3100,1.75,N/A
+ElvenPathfinder,N/A,Elven Pathfinder,Warrior,N/A,N/A,50,0,Legendary,N/A,N/A,10,N/A,N/A,N/A,N/A,N/A,500,1.5,N/A
+GoblinAssassin,0.15,Goblin Assassin,Assassin,N/A,Poison,15,0,Rare,N/A,0.1,6,10,N/A,Damage,N/A,Poison,60,0.75,2
+Succubus,N/A,Succubus,Ranger,N/A,Hearts,41,0,Mythic,N/A,N/A,45,N/A,N/A,Hearts,N/A,Hearts,120,2,N/A
+Witch,N/A,Witch,Healer,N/A,Healing,35,0,Mythic,N/A,N/A,35,N/A,N/A,N/A,N/A,N/A,130,1.4,N/A
+Wizard,N/A,Wizard,Wizard,N/A,N/A,15,0,Rare,N/A,N/A,30,N/A,N/A,N/A,N/A,N/A,80,1.2,N/A
+Gryla,N/A,Gryla,Summoner,N/A,N/A,0,0,Mythic,N/A,N/A,10,N/A,N/A,N/A,N/A,N/A,250,3,N/A
+PirateAssassinator,0.15,Pirate Assassinator,Assassin,N/A,N/A,60,0,Epic,N/A,0.1,8,N/A,N/A,N/A,N/A,N/A,40,4,N/A
+Yeti,0.02,Yeti,Warrior,N/A,N/A,85,10,Mythic,N/A,0.04,10,N/A,1.5,N/A,N/A,N/A,500,1.7,N/A
+Pyromancer,N/A,Pyromancer,Wizard,N/A,Fire,20,0,Rare,N/A,N/A,30,N/A,N/A,Damage,N/A,Burn,70,3,N/A
+Demon,N/A,Demon,Warrior,N/A,Lifesteal,110,0,Demonic,N/A,N/A,10,N/A,N/A,Lifesteal,30,Lifesteal,800,2,N/A
+SummonerWizard,N/A,Summoner Wizard,Summoner,N/A,N/A,0,0,Legendary,N/A,N/A,10,N/A,N/A,N/A,N/A,N/A,110,4,N/A
+PirateQuartermaster,N/A,Pirate Quartermaster,Support,N/A,Bard,0,0,Legendary,N/A,N/A,70,N/A,N/A,Bard,N/A,Bard,70,6,N/A
+VoidWizard,N/A,Void Wizard,Wizard,N/A,N/A,15,0,Legendary,N/A,N/A,30,N/A,N/A,N/A,N/A,N/A,110,1.25,N/A
+ElvenWarrior,N/A,Elven Warrior,Warrior,N/A,N/A,20,0,Rare,N/A,N/A,6,N/A,N/A,N/A,N/A,N/A,190,1.1,N/A
+Triton(Personal),N/A,Triton(Personal),Support,N/A,Bard,37,10,Demonic,N/A,0.04,70,N/A,N/A,Bard,N/A,Bard,200,5.8,N/A
+Roman,N/A,Roman,Tank,N/A,N/A,15,0,Rare,N/A,N/A,6,N/A,N/A,N/A,N/A,N/A,450,1.5,N/A
+ElvenDruid,N/A,Elven Druid,Healer,N/A,Healing,14,0,Legendary,N/A,N/A,25,N/A,N/A,N/A,N/A,N/A,90,1.5,N/A
+TheAdmiral,N/A,The Admiral of Death,Ranger,N/A,Fire,140,50,Mythic,1.5,N/A,60,N/A,N/A,Damage,N/A,Burn,1100,3,N/A
+Oceanid,0.08,Oceanid,Ranger,N/A,N/A,110,0,Mythic,N/A,0.05,55,N/A,15,N/A,N/A,N/A,210,3.8,N/A
+Volt,N/A,Volt,Wizard,N/A,N/A,20,0,Mythic,N/A,N/A,30,N/A,N/A,N/A,N/A,N/A,120,1.2,N/A
+FireArcher,N/A,Fire Archer,Ranger,N/A,Fire,20,0,Epic,N/A,N/A,35,N/A,N/A,Damage,N/A,Burn,80,1,N/A
+NoobOnTheBeach,N/A,Noob On The Beach,Warrior,N/A,N/A,40,0,Legendary,N/A,N/A,6,N/A,N/A,N/A,N/A,N/A,300,0.65,N/A
+GoblinShaman,N/A,Goblin Shaman,Healer,N/A,Healing,5,0,Rare,N/A,N/A,15,N/A,N/A,N/A,N/A,N/A,70,1,N/A
+DarkHerald,0.05,Dark Herald,Support,N/A,Bard,5,0,Mythic,100,0.05,70,N/A,1.75,Bard,N/A,Bard,110,6,N/A
+Vampire,N/A,Vampire,Warrior,N/A,Lifesteal,30,0,Epic,N/A,N/A,7,N/A,N/A,Lifesteal,20,Lifesteal,400,1.1,N/A
+Cupid,N/A,Cupid,Ranger,N/A,Hearts,40,0,Mythic,N/A,N/A,45,N/A,N/A,Hearts,N/A,Hearts,110,2,N/A
+Crabman,N/A,Crabman,Tank,N/A,N/A,50,0,Epic,N/A,N/A,6,N/A,N/A,N/A,N/A,N/A,800,2.1,N/A
+Barbarian,N/A,Barbarian,Tank,N/A,N/A,40,0,Epic,N/A,N/A,6,N/A,N/A,N/A,N/A,N/A,460,2,N/A
+TheReaper,N/A,The Reaper,Warrior,N/A,Lifesteal,130,50,Legendary,1.5,N/A,15,N/A,N/A,Lifesteal,80,Lifesteal,1600,2.25,N/A
+Spearman,N/A,Spearman,Warrior,N/A,N/A,18,15,Rare,N/A,N/A,12,N/A,N/A,N/A,N/A,N/A,150,1.2,N/A
+ElvenWizard,N/A,Elven Wizard,Wizard,N/A,Weak,10,0,Legendary,N/A,N/A,30,N/A,N/A,Weak,N/A,Weak,100,2,N/A
+Nereid,N/A,Nereid,Healer,N/A,Healing,40,0,Mythic,N/A,N/A,50,N/A,N/A,N/A,N/A,N/A,140,1.5,N/A
+Assassin,0.2,Assassin,Assassin,N/A,Poison,18,0,Epic,N/A,0.2,6,20,N/A,Damage,N/A,Poison,90,0.6,2
+GoblinArcher,N/A,Goblin Archer,Ranger,N/A,N/A,10,0,Uncommon,N/A,N/A,30,N/A,N/A,N/A,N/A,N/A,75,1.2,N/A
+Hoplomachus,N/A,Hoplomachus,Warrior,N/A,Weak,20,0,Legendary,N/A,0.1,8,N/A,N/A,Weak,N/A,Weak,250,1.1,N/A
+Bandit,N/A,Bandit,Ranger,N/A,N/A,60,0,Mythic,N/A,N/A,45,N/A,N/A,N/A,N/A,N/A,90,2.25,N/A
+Sharkman,N/A,Sharkman,Warrior,N/A,N/A,35,0,Epic,N/A,N/A,6,N/A,N/A,N/A,N/A,N/A,210,0.9,N/A
+Squire,N/A,Squire,Tank,N/A,N/A,12.5,0,Rare,N/A,N/A,6,N/A,N/A,N/A,N/A,N/A,300,1.5,N/A
+Gladiator,N/A,Gladiator,Warrior,N/A,N/A,20,0,Epic,N/A,N/A,6,N/A,N/A,N/A,N/A,N/A,180,1,N/A
+SkeletonDuelist,N/A,Skeleton Duelist,Warrior,N/A,N/A,15,0,Epic,N/A,N/A,5,N/A,N/A,N/A,N/A,N/A,300,0.7,N/A
+Peasant,N/A,Peasant,Warrior,N/A,N/A,5,0,Uncommon,N/A,N/A,6,N/A,N/A,N/A,N/A,N/A,80,0.5,N/A
+Frostflame,N/A,Frostflame,Wizard,N/A,Frost,25,0,Legendary,N/A,N/A,30,N/A,N/A,Slow,N/A,Slow,200,1.75,N/A
+SkeletonAssassin,0.15,Skeleton Assassin,Assassin,N/A,Poison,20,0,Rare,N/A,0.1,5,12,N/A,Damage,N/A,Poison,110,0.75,2
+GoblinTank,N/A,Goblin Tank,Tank,N/A,N/A,15,0,Rare,N/A,N/A,5,N/A,N/A,N/A,N/A,N/A,180,1.8,N/A
+SojutsuMaster,N/A,Sojutsu Master,Warrior,N/A,N/A,26,0,Epic,N/A,N/A,12,N/A,N/A,N/A,N/A,N/A,190,3,N/A
+GoblinKing,N/A,Goblin King,Warrior,N/A,Fire,70,50,Legendary,N/A,N/A,15,N/A,N/A,Damage,N/A,Burn,800,3,N/A
+PeasantArcher,N/A,Peasant Archer,Ranger,N/A,N/A,10,0,Uncommon,N/A,N/A,30,N/A,N/A,N/A,N/A,N/A,80,1.4,N/A
+NoobShaman,N/A,Noob Shaman,Summoner,N/A,N/A,0,0,Rare,N/A,N/A,10,N/A,N/A,N/A,N/A,N/A,90,4,N/A
+BabyGoblinWarrior,N/A,Baby Warrior,Warrior,N/A,N/A,5,0,Common,N/A,N/A,5,N/A,N/A,N/A,N/A,N/A,40,1,N/A
+SkeletonMage,N/A,Skeleton Mage,Wizard,N/A,Frost,12,0,Rare,N/A,N/A,30,N/A,N/A,Slow,N/A,Slow,120,1,N/A
+Commander,N/A,Commander,Support,N/A,UpDamage,30,0,Demonic,N/A,N/A,70,N/A,N/A,UpDamage,N/A,Demon,200,1.4,N/A
+ElvenSniper,N/A,Elven Sniper,Ranger,N/A,N/A,40,0,Legendary,N/A,N/A,45,N/A,N/A,N/A,N/A,N/A,70,1.2,N/A
+ChristmasElfWizard,N/A,Christmas Elf Wizard,Wizard,N/A,Weak,10,0,Legendary,N/A,N/A,30,N/A,N/A,Weak,N/A,Weak,100,2,N/A
+Krampus,0.02,Krampus,Warrior,N/A,Lifesteal,105,10,Demonic,N/A,0.04,5,N/A,1.5,Lifesteal,10,Lifesteal,1000,1.9,N/A
+TheIceQueenSmall,N/A,The Ice Queen,Wizard,N/A,Frost,45,N/A,Mythic,N/A,N/A,40,N/A,N/A,Slow,N/A,SlowBoss,300,1.75,N/A
+SmallBlackDragon,N/A,Black Dragon,Warrior,N/A,Lifesteal,140,10,Ancient,N/A,0.04,5,N/A,N/A,Lifesteal,10,Lifesteal,1300,2,N/A
+BloodMage,N/A,Blood Mage,Tank,N/A,Lifesteal,18,0,Legendary,N/A,N/A,25,N/A,N/A,Lifesteal,35,Lifesteal,800,1,N/A
+Bard,N/A,Bard,Support,N/A,Bard,20,0,Mythic,N/A,N/A,70,N/A,N/A,Bard,N/A,Bard,110,6,N/A
+CandyCane,0.06,Candy Cane Shooter,Ranger,N/A,N/A,65,0,Mythic,N/A,0.06,45,N/A,1.75,N/A,N/A,N/A,120,2.25,N/A
+PirateShooter,N/A,Pirate Shooter,Ranger,N/A,N/A,35,0,Rare,N/A,N/A,35,N/A,N/A,N/A,N/A,N/A,90,1.75,N/A
+Boatswain,N/A,Boatswain,Tank,N/A,N/A,30,0,Epic,N/A,N/A,6,N/A,N/A,N/A,N/A,N/A,300,1.5,N/A
+PirateSailor,N/A,Pirate Sailor,Warrior,N/A,N/A,8,0,Uncommon,N/A,N/A,6,N/A,N/A,N/A,N/A,N/A,80,1,N/A
+Vendigo,0.36,Vendigo,Assassin,N/A,Lifesteal,45,0,Mythic,N/A,0.26,6,30,2,Lifesteal,25,Lifesteal,300,0.8,1
+SmallHeadlessKnight,N/A,Headless Knight,Warrior,N/A,N/A,46,0,Mythic,N/A,N/A,5,N/A,N/A,N/A,N/A,N/A,300,1.4,N/A
+Trifang,0.08,Trifang,Ranger,13,Fire,105,0,Mythic,100,0.05,50,N/A,15,Damage,N/A,Burn,200,4,N/A
+DragonDemon,N/A,Dragon Demon,Warrior,N/A,N/A,65,0,Legendary,N/A,N/A,10,N/A,N/A,N/A,N/A,N/A,350,1.65,N/A
+CrimsonAssassin,0.35,Crimson Assassin,Assassin,N/A,Lifesteal,40,0,Mythic,N/A,0.25,6,30,N/A,Lifesteal,20,Lifesteal,110,0.8,1
+Viking,N/A,Viking,Warrior,N/A,N/A,30,0,Epic,N/A,N/A,7,N/A,N/A,N/A,N/A,N/A,280,1.6,N/A
+Torturer,N/A,Torturer,Wizard,N/A,N/A,37,0,Mythic,N/A,N/A,30,N/A,N/A,N/A,N/A,N/A,260,5,N/A
+Rhythmclaw,N/A,Rhythmclaw,Support,N/A,Bard,30,0,Mythic,N/A,N/A,70,N/A,N/A,Bard,N/A,Bard,300,5.5,N/A
+ElvenAssassin,0.15,Elven Assassin,Assassin,N/A,Weak,22,0,Legendary,N/A,0.15,6,14,N/A,Weak,N/A,Weak,90,0.75,2
+GoblinKingSmall,N/A,Goblin King,Warrior,N/A,Fire,70,0,Mythic,N/A,N/A,6,N/A,N/A,Damage,N/A,Burn,400,3,N/A
+SmallPoseidon,0.02,Poseidon,Warrior,N/A,N/A,125,10,Ancient,1.41,0.04,5,N/A,1.5,N/A,N/A,N/A,1250,1.8,N/A
+Medusa,N/A,Medusa,Ranger,N/A,N/A,25,0,Demonic,N/A,N/A,45,N/A,N/A,N/A,N/A,N/A,450,1,N/A
+KiMaster,N/A,Ki Master,Warrior,N/A,Lifesteal,15,0,Legendary,N/A,N/A,5,N/A,N/A,Lifesteal,7,Lifesteal,300,0.6,N/A
+DragonSlayer,N/A,Dragon Slayer,Warrior,N/A,N/A,75,10,Mythic,N/A,N/A,10,N/A,N/A,N/A,N/A,N/A,400,1.75,N/A
+Angel,N/A,Angel,Healer,N/A,Healing,35,0,Mythic,N/A,N/A,35,N/A,N/A,N/A,N/A,N/A,120,1.5,N/A
+DragonBerserker,N/A,Dragon Berserker,Warrior,N/A,N/A,35,0,Legendary,N/A,N/A,5,N/A,N/A,N/A,N/A,N/A,260,1.3,N/A
+Cowboy,N/A,Cowboy,Ranger,N/A,N/A,60,0,Legendary,N/A,0.1,25,N/A,N/A,N/A,N/A,N/A,180,3.25,N/A
+Viperfang,0.35,Viperfang,Assassin,N/A,Lifesteal,50,0,Mythic,N/A,0.25,6,30,N/A,Lifesteal,25,Lifesteal,350,0.8,1
+Chaosflare,N/A,Chaosflare,Wizard,N/A,N/A,60,N/A,Demonic,N/A,N/A,50,N/A,N/A,N/A,N/A,N/A,450,1.5,N/A
+Thanatos,0.45,Thanatos,Assassin,25,Lifesteal,55,0,Demonic,101,0.35,6,30,2.3,Lifesteal,30,Lifesteal,410,0.85,1
+Zeus,N/A,Zeus,Wizard,N/A,N/A,45,N/A,Ancient,N/A,N/A,50,N/A,N/A,N/A,N/A,N/A,450,2,N/A
+DemonicCureflare,N/A,Cureflare,Healer,N/A,Healing,45,0,Demonic,N/A,N/A,200,N/A,N/A,N/A,N/A,N/A,300,1.3,N/A
+PlagueDoctor,N/A,Plague Doctor,Ranger,N/A,Poison,20,0,Epic,N/A,N/A,20,N/A,N/A,Damage,N/A,Poison,80,1.75,N/A
+SkeletonSamurai,N/A,Skeleton Samurai,Warrior,N/A,N/A,25,0,Epic,N/A,N/A,6,N/A,N/A,N/A,N/A,N/A,180,1.1,N/A
+Triton,N/A,Triton,Support,N/A,Bard,37,10,Demonic,N/A,0.04,70,N/A,N/A,Bard,N/A,Bard,200,5.8,N/A
+HeadlessKnight,N/A,The Headless Knight,Warrior,N/A,N/A,300,10,Mythic,1.4,N/A,15,N/A,N/A,N/A,N/A,N/A,500000,1.75,N/A
+Marksman,0.2,Marksman,Ranger,N/A,N/A,175,0,Mythic,1.2,N/A,80,N/A,N/A,N/A,N/A,N/A,90,6,N/A
+Surfer,N/A,Surfer,Tank,N/A,N/A,25,50,Legendary,1.5,N/A,6,N/A,N/A,N/A,N/A,N/A,1150,2,N/A
+PirateSailorShooter,N/A,Sailor Shooter,Ranger,N/A,N/A,12,0,Uncommon,N/A,N/A,25,N/A,N/A,N/A,N/A,N/A,60,1.5,N/A
+CursedMagician,N/A,Cursed Magician,Wizard,N/A,Poison,22,0,Epic,N/A,N/A,20,N/A,N/A,Damage,N/A,Poison,100,1.7,N/A
+SeaDevil,0.015,Sea Devil,Tank,N/A,Lifesteal,70,50,Mythic,101,0.01,15,N/A,1.5,Lifesteal,5,Lifesteal,1150,1.5,N/A
+Ent,N/A,Ent,Tank,N/A,N/A,150,50,Mythic,1.5,N/A,15,N/A,N/A,N/A,N/A,N/A,4000,2.5,N/A
+Zombie,N/A,Zombie,Warrior,N/A,Poison,8,0,Uncommon,N/A,N/A,5,N/A,N/A,Damage,N/A,Poison,130,0.8,N/A
+Noob,N/A,Noob,Warrior,N/A,N/A,5,0,Common,N/A,N/A,6,N/A,N/A,N/A,N/A,N/A,70,1,N/A
+Necromancer,N/A,Necromancer,Summoner,N/A,N/A,0,0,Mythic,N/A,N/A,10,N/A,N/A,N/A,N/A,N/A,150,3.25,N/A
+AncientVampire,0.45,Ancient Vampire (Personal),Assassin,25,Lifesteal,50,0,Demonic,101,0.35,6,30,2.3,Lifesteal,35,Lifesteal,400,0.75,1
+ChristmasElfSwordman,N/A,Christmas Elf Swordman,Warrior,N/A,N/A,50,0,Legendary,N/A,N/A,10,N/A,N/A,N/A,N/A,N/A,500,1.5,N/A
+Ninja,0.2,Ninja,Assassin,N/A,N/A,30,0,Legendary,N/A,0.15,20,N/A,N/A,N/A,N/A,N/A,110,0.8,N/A
+CageMan,N/A,Cage Man,Wizard,N/A,N/A,35,0,Mythic,N/A,N/A,30,N/A,N/A,N/A,N/A,N/A,260,5,N/A
+DwarfTank,N/A,Dwarf Tank,Tank,N/A,N/A,20,0,Legendary,N/A,N/A,6,N/A,N/A,N/A,N/A,N/A,1000,1.5,N/A
+EntSmall,N/A,Ent,Tank,N/A,N/A,50,50,Mythic,N/A,N/A,7,N/A,N/A,N/A,N/A,N/A,1200,2.25,N/A
+Demolitionist,N/A,Demolitionist,Ranger,N/A,Fire,40,0,Legendary,N/A,N/A,22,N/A,N/A,Damage,N/A,BurnBomb,90,2,N/A
+EarthWizard,N/A,Earth Wizard,Wizard,N/A,N/A,25,0,Legendary,N/A,N/A,30,N/A,N/A,N/A,N/A,N/A,260,4,N/A
+CrossbowMan,N/A,Crossbow,Ranger,N/A,N/A,35,0,Rare,N/A,N/A,35,N/A,N/A,N/A,N/A,N/A,80,3,N/A
+Ghoul,N/A,Ghoul,Warrior,N/A,Lifesteal,16,0,Legendary,N/A,N/A,5,N/A,N/A,Lifesteal,7,Lifesteal,320,0.6,N/A
+SpookyGhost,N/A,Spooky Ghost,Wizard,N/A,Frost,15,0,Epic,N/A,N/A,30,N/A,N/A,Slow,N/A,Slow,140,2,N/A
+SkeletonTank,N/A,Skeleton Tank,Tank,N/A,N/A,30,0,Rare,N/A,N/A,5,N/A,N/A,N/A,N/A,N/A,500,1.7,N/A
+DragonKnight,0.015,Dragon Knight,Tank,N/A,Lifesteal,30,50,Legendary,101,0.01,5,N/A,1.5,Lifesteal,10,Lifesteal,800,1.55,N/A
+ChristmasElfArcher,N/A,Christmas Elf Archer,Ranger,N/A,N/A,40,0,Legendary,N/A,N/A,45,N/A,N/A,N/A,N/A,N/A,70,1.2,N/A
+MadScientist,N/A,Mad Scientist,Support,N/A,Bard,0,0,Legendary,N/A,N/A,70,N/A,N/A,Bard,N/A,Bard,80,6,N/A
+SkeletonWarrior,N/A,Skeleton Warrior,Warrior,N/A,N/A,13,0,Uncommon,N/A,N/A,5,N/A,N/A,N/A,N/A,N/A,140,1,N/A
+Samurai,N/A,Samurai,Warrior,N/A,N/A,30,0,Legendary,N/A,N/A,6,N/A,N/A,N/A,N/A,N/A,280,0.75,N/A
+BabyGoblinArcher,N/A,Baby Archer,Ranger,N/A,N/A,5,0,Common,N/A,N/A,30,N/A,N/A,N/A,N/A,N/A,30,1.2,N/A
+PirateCaptain,N/A,Pirate Captain,Warrior,N/A,N/A,10,0,Epic,N/A,N/A,5,N/A,N/A,N/A,N/A,N/A,140,0.9,N/A
+PoolPartyBlaster,N/A,Pool Party Blaster,Ranger,N/A,N/A,65,0,Mythic,N/A,N/A,50,N/A,N/A,N/A,N/A,N/A,110,2,N/A
+Sniper,N/A,Sniper,Ranger,N/A,N/A,90,0,Legendary,N/A,N/A,45,N/A,N/A,N/A,N/A,N/A,80,3,N/A
+NoobThrower,N/A,Noob Thrower,Ranger,N/A,N/A,5,0,Common,N/A,N/A,20,N/A,N/A,N/A,N/A,N/A,60,1,N/A
+Alchemist,N/A,Alchemist,Support,N/A,UpCooldown,15,0,Legendary,N/A,N/A,22,N/A,N/A,UpCooldown,N/A,UpCooldown,90,1.5,N/A
+Cryomancer,N/A,Cryomancer,Wizard,N/A,Frost,10,0,Epic,N/A,N/A,30,N/A,N/A,Slow,N/A,Slow,120,2,N/A
+DeadCannoneer,N/A,Dead Cannoneer,Ranger,N/A,N/A,65,0,Legendary,N/A,0.1,25,N/A,N/A,N/A,N/A,N/A,200,3.5,N/A
+GoblinWarrior,N/A,Goblin Warrior,Warrior,N/A,N/A,10,0,Uncommon,N/A,N/A,5,N/A,N/A,N/A,N/A,N/A,80,1,N/A
+TheAdmiralSmall,N/A,The Admiral of Death,Ranger,N/A,Fire,90,50,Mythic,N/A,N/A,45,N/A,N/A,Damage,N/A,Burn,90,3,N/A
+LivingArmor,0.015,Living Armor,Tank,N/A,Lifesteal,30,50,Mythic,101,0.01,15,N/A,1.5,Lifesteal,10,Lifesteal,900,1.5,N/A
+SmallAncientVampire,0.45,Ancient Vampire,Assassin,25,Lifesteal,50,0,Demonic,101,0.35,6,30,2.3,Lifesteal,35,Lifesteal,400,0.75,1
+LivingMummy,N/A,Living Mummy,Tank,N/A,N/A,22,0,Legendary,N/A,N/A,6,N/A,N/A,N/A,N/A,N/A,1100,1.4,N/A
+Warrior,N/A,Warrior,Warrior,N/A,N/A,8,0,Uncommon,N/A,N/A,6,N/A,N/A,N/A,N/A,N/A,100,0.9,N/A
+FrostWizard,N/A,Frost Wizard,Wizard,N/A,Frost,25,0,Legendary,N/A,N/A,35,N/A,N/A,Slow,N/A,Slow,130,1,N/A
+InfernoArcher,0.08,Inferno Archer,Ranger,13,Fire,115,0,Demonic,100,0.05,50,N/A,15,Damage,N/A,Burn,250,4.5,N/A
+Jack,N/A,Jack,Warrior,N/A,Lifesteal,85,10,Demonic,N/A,0.04,5,N/A,N/A,Lifesteal,10,Lifesteal,650,1.8,N/A
+Bomber,N/A,Bomber,Warrior,N/A,N/A,300,0,Legendary,N/A,N/A,5,N/A,N/A,N/A,N/A,N/A,60,20,N/A
+PirateMedic,N/A,Pirate Medic,Healer,N/A,Healing,10,0,Rare,N/A,N/A,5,N/A,N/A,N/A,N/A,N/A,120,1,N/A
+GoldenKnight,N/A,Golden Knight,Tank,N/A,N/A,35,0,Legendary,N/A,N/A,6,N/A,N/A,N/A,N/A,N/A,800,1.5,N/A
+Spartan,N/A,Spartan,Warrior,N/A,N/A,30,0,Epic,N/A,N/A,6,N/A,N/A,N/A,N/A,N/A,300,1.25,N/A
+YukiOnna,0.02,Yoki Onna,Wizard,N/A,Frost,47,N/A,Mythic,N/A,0.02,40,N/A,1.75,Slow,N/A,SlowBoss,350,1.7,N/A
+Druid,N/A,Druid,Healer,N/A,Healing,7,0,Epic,N/A,N/A,20,N/A,N/A,N/A,N/A,N/A,90,1.2,N/A
+Beachcomber,0.35,Beachcomber,Assassin,N/A,Poison,38,0,Legendary,N/A,0.25,6,30,N/A,Damage,N/A,Poison,250,1,1
+Therapist,N/A,Therapist,Healer,N/A,Healing,7.5,0,Rare,N/A,N/A,20,N/A,N/A,N/A,N/A,N/A,80,1.25,N/A
+SaintNicholas,0.06,Saint Nicholas,Support,N/A,UpDamage,35,0,Demonic,N/A,0.05,70,N/A,1.75,UpDamage,N/A,Demon,220,1.3,N/A
+TheReaperSmall,N/A,The Reaper,Warrior,N/A,Lifesteal,100,50,Mythic,N/A,N/A,8,N/A,N/A,Lifesteal,30,Lifesteal,600,2.25,N/A
+BattleWizard,N/A,Battle Wizard,Warrior,N/A,Frost,20,0,Rare,N/A,N/A,5,N/A,N/A,Slow,N/A,Slow,230,1.1,N/A
+SkeletonArcher,N/A,Skeleton Archer,Ranger,N/A,N/A,15,0,Uncommon,N/A,N/A,30,N/A,N/A,N/A,N/A,N/A,100,1.2,N/A
+NoobSmall,N/A,Noob,Warrior,N/A,N/A,5,0,Common,N/A,N/A,6,N/A,N/A,N/A,N/A,N/A,70,1,N/A
+Jolasveinar,N/A,Yule Lad,Warrior,N/A,N/A,12,0,Uncommon,N/A,N/A,5,N/A,N/A,N/A,N/A,N/A,90,1,N/A
+NecromancerWarrior,N/A,Skeleton Warrior,Warrior,N/A,N/A,12,0,Uncommon,N/A,N/A,5,N/A,N/A,N/A,N/A,N/A,90,1,N/A
+SummonerBattleWizard,N/A,Battle Wizard,Warrior,N/A,Frost,10,0,Epic,N/A,N/A,5,N/A,N/A,Slow,N/A,Slow,85,1.3,N/A
+NecromancerArcher,N/A,Skeleton Archer,Ranger,N/A,N/A,12,0,Uncommon,N/A,N/A,25,N/A,N/A,N/A,N/A,N/A,60,1.2,N/A
