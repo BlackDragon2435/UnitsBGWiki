@@ -3,6 +3,7 @@ body {
     font-family: 'Inter', sans-serif;
     /* Ensure a default text color that works well on both light and dark backgrounds */
     color: #374151; /* gray-800 for light mode */
+    line-height: 1.6; /* Improved line height for readability */
 }
 
 /* Table styles */
@@ -17,8 +18,20 @@ th, td {
     padding: 0.75rem 1.5rem; /* px-6 py-3 */
     text-align: left;
     white-space: nowrap; /* Prevent wrapping for headers and data */
-    font-size: 0.875rem; /* text-sm, improved readability */
+    font-size: 0.95rem; /* Slightly larger default text for better readability */
 }
+
+/* Specific styling for Unit Label column */
+#unitTable tbody td:nth-child(2) { /* Targeting the second column (Label) */
+    font-size: 1.125rem; /* text-lg */
+    font-weight: 700; /* font-bold */
+    color: #1a202c; /* A darker shade for emphasis in light mode */
+}
+
+.dark #unitTable tbody td:nth-child(2) {
+    color: #f0f4f8; /* A lighter shade for emphasis in dark mode */
+}
+
 
 /* Light Mode Table Styles */
 .light body {
@@ -36,6 +49,7 @@ th, td {
     top: 0;
     z-index: 10;
     border-bottom: 1px solid #e5e7eb; /* border-gray-200 */
+    transition: background-color 0.2s ease-in-out; /* Smooth transition on hover */
 }
 .light th:hover {
     background-color: #374151; /* gray-700 */
@@ -48,6 +62,7 @@ th, td {
 }
 .light tbody tr:hover {
     background-color: #e5e7eb; /* gray-200 */
+    transition: background-color 0.2s ease-in-out; /* Smooth transition on hover */
 }
 .light td {
     border-bottom: 1px solid #e5e7eb; /* border-gray-200 */
@@ -81,6 +96,7 @@ th, td {
     top: 0;
     z-index: 10;
     border-bottom: 1px solid #4b5563; /* border-gray-600 */
+    transition: background-color 0.2s ease-in-out; /* Smooth transition on hover */
 }
 .dark th:hover {
     background-color: #4b5563; /* gray-600 */
@@ -93,6 +109,7 @@ th, td {
 }
 .dark tbody tr:hover {
     background-color: #4b5563; /* gray-600 */
+    transition: background-color 0.2s ease-in-out; /* Smooth transition on hover */
 }
 .dark td {
     border-bottom: 1px solid #4b5563; /* border-gray-600 */
@@ -179,7 +196,7 @@ th, td {
 /* Style for mod checkboxes and max stats checkbox in detailed view */
 #modCheckboxes label, #toggleMaxStats + label {
     margin-right: 1rem;
-    font-size: 0.875rem; /* text-sm */
+    font-size: 0.95rem; /* text-base for labels */
     color: #374151; /* Default text color for labels */
 }
 
@@ -193,6 +210,7 @@ th, td {
 
 /* Improve general text contrast in the detail view */
 .unit-details-row ul li {
+    font-size: 0.95rem; /* Consistent size for list items */
     color: #374151; /* Darker text for better readability in light mode */
 }
 
@@ -201,9 +219,26 @@ th, td {
 }
 
 .unit-details-row h3 {
+    font-size: 1.125rem; /* text-lg for subheadings */
+    font-weight: 600; /* font-semibold */
     color: #1f2937; /* Even darker for headings in light mode */
 }
 
 .dark .unit-details-row h3 {
     color: #f9fafb; /* Even lighter for headings in dark mode */
+}
+
+/* Input and Select elements styling */
+input[type="text"], select {
+    font-size: 0.95rem; /* Consistent font size for inputs */
+}
+
+/* Placeholder text color */
+::placeholder {
+    color: #9ca3af; /* gray-400 */
+    opacity: 1; /* Firefox fix */
+}
+
+.dark::placeholder {
+    color: #6b7280; /* gray-500 */
 }

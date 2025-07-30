@@ -1,7 +1,7 @@
 // js/script.js
-import { rawUnitData } from './unitsData.js'; // Assuming this file exists and contains rawUnitData
+import { rawUnitData } from './unitsData.js';
 import { rawModData } from './modsData.js';
-import { unitImages } from './unitImages.js'; // Import unit images
+import { unitImages } from './unitImages.js';
 
 let units = []; // Stores parsed unit data
 let mods = [];  // Stores parsed mod data
@@ -42,6 +42,22 @@ const unitColumnOrder = [
 ];
 
 // --- Utility Functions ---
+
+/**
+ * Debounces a function, so it only runs after a certain delay from the last call.
+ * Useful for input events like search to prevent excessive function calls.
+ * @param {function} func - The function to debounce.
+ * @param {number} delay - The delay in milliseconds.
+ * @returns {function} The debounced function.
+ */
+function debounce(func, delay) {
+    let timeout;
+    return function(...args) {
+        const context = this;
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(context, args), delay);
+    };
+}
 
 /**
  * Parses the raw string data into an array of objects.
@@ -394,6 +410,10 @@ function renderUnitTable(dataToRender) {
                 displayValue = typeof displayValue === 'number' ? (displayValue * 100).toFixed(2) + '%' : displayValue;
             } else if (key === 'Cooldown' || key === 'CritDamage' || key === 'AttackEffectLifesteal') {
                 displayValue = typeof displayValue === 'number' ? displayValue.toFixed(2) : displayValue;
+            }
+            // Apply specific styling for the 'Label' column
+            if (key === 'Label') {
+                cell.classList.add('font-semibold', 'text-lg', 'text-gray-900', 'dark:text-gray-100'); // Bigger, bolder for labels
             }
             cell.textContent = displayValue !== undefined ? displayValue : 'N/A';
         });
@@ -821,7 +841,9 @@ window.onload = function() {
     }, 500); // Small delay to show spinner
 
     // Search and Filter Events
-    searchInput.addEventListener('input', filterAndRenderUnits);
+    // Debounce the search input to improve performance
+    const debouncedFilterAndRenderUnits = debounce(filterAndRenderUnits, 300);
+    searchInput.addEventListener('input', debouncedFilterAndRenderUnits);
     rarityFilter.addEventListener('change', filterAndRenderUnits);
     classFilter.addEventListener('change', filterAndRenderUnits);
 
@@ -848,3 +870,4 @@ window.onload = function() {
         filterAndRenderUnits(); // Re-render units to apply/remove global mod effects
     });
 };
+
