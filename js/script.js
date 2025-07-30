@@ -49,18 +49,12 @@ const rarityOrder = ["Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythic"
 
 // Define the order of columns for unit table display (simplified for main view)
 const unitColumnOrder = [
-    'Image', 'Label', 'Class', 'Rarity', 'HP', 'Damage', 'Cooldown', 'Distance',
-    'CritChance', 'CritDamage', 'AttackEffect', 'AttackEffectType',
-    'AttackEffectLifesteal', 'AttackEffectKey', 'Knockback', 'Accuracy',
-    'EvadeChance'
+    'Image', 'Label', 'Class', 'Rarity', 'CommunityRanking', 'HP', 'Damage', 'Cooldown'
 ];
 
 // Define ALL possible unit stats for the detailed dropdown view
 const allUnitStatsForDropdown = [
-    'Label', 'Class', 'Rarity', 'HP', 'Damage', 'Cooldown', 'Distance',
-    'CritChance', 'CritDamage', 'AttackEffect', 'AttackEffectType',
-    'AttackEffectLifesteal', 'AttackEffectKey', 'Knockback', 'Accuracy',
-    'EvadeChance', 'HPOffset', 'ShadowStepDistance', 'ShadowStepCooldown' // Included for completeness, even if N/A
+    'Label', 'Class', 'Rarity', 'HP', 'Damage', 'Cooldown'
 ];
 
 
@@ -321,7 +315,7 @@ function applySingleModEffect(unit, mod) {
                 } else if (modifiedUnit.AttackEffectLifesteal === 'N/A' && typeof amount === 'number') {
                     modifiedUnit.AttackEffectLifesteal = amount;
                 } else if (modifiedUnit.AttackEffectLifesteal === 'N/A' && typeof chance === 'number') {
-                    modifiedBunit.AttackEffectLifesteal = (chance * 100);
+                    modifiedUnit.AttackEffectLifesteal = (chance * 100);
                 }
                 break;
             case "Knockback":
@@ -473,10 +467,14 @@ function renderUnitTable(dataToRender) {
         unitColumnOrder.slice(1).forEach(key => { // Skip 'Image' as it's handled above
             const cell = row.insertCell();
             let displayValue = unitToDisplay[key];
-            // Custom formatting for specific keys
-            if (key === 'CritChance' || key === 'EvadeChance' || key === 'Accuracy') {
-                displayValue = typeof displayValue === 'number' ? (displayValue * 100).toFixed(2) + '%' : displayValue;
-            } else if (key === 'Cooldown' || key === 'CritDamage' || key === 'AttackEffectLifesteal') {
+
+            if (key === 'CommunityRanking') {
+                const tierInfo = tierList.find(tierUnit => tierUnit['Unit Name'] === unitToDisplay.Label);
+                displayValue = tierInfo ? tierInfo.Tier : 'N/A';
+                cell.classList.add('font-semibold', 'text-center'); // Center align tier
+            }
+            // Custom formatting for specific keys (only HP, Damage, Cooldown remain here)
+            else if (key === 'Cooldown' || key === 'HP' || key === 'Damage') {
                 displayValue = typeof displayValue === 'number' ? displayValue.toFixed(2) : displayValue;
             }
 
@@ -679,10 +677,8 @@ function toggleUnitDetails(unit, clickedRow, index) {
     allUnitStatsForDropdown.forEach(key => {
         const li = document.createElement('li');
         let displayValue = unit[key];
-        // Apply specific formatting for percentages and numbers
-        if (['CritChance', 'EvadeChance', 'Accuracy'].includes(key)) {
-            displayValue = typeof displayValue === 'number' ? (displayValue * 100).toFixed(2) + '%' : displayValue;
-        } else if (['Cooldown', 'CritDamage', 'AttackEffectLifesteal', 'HP', 'Damage', 'Knockback'].includes(key)) {
+        // Apply specific formatting for percentages and numbers (only HP, Damage, Cooldown remain here)
+        if (['Cooldown', 'HP', 'Damage'].includes(key)) {
             displayValue = typeof displayValue === 'number' ? displayValue.toFixed(2) : displayValue;
         }
         li.textContent = `${key}: ${displayValue !== undefined ? displayValue : 'N/A'}`;
@@ -857,10 +853,8 @@ function updateAppliedStats(baseUnit, selectedMods, listElement, showMaxStats, s
     allUnitStatsForDropdown.forEach(key => {
         const li = document.createElement('li');
         let displayValue = unitToDisplay[key];
-        // Apply specific formatting for percentages and numbers
-        if (['CritChance', 'EvadeChance', 'Accuracy'].includes(key)) {
-            displayValue = typeof displayValue === 'number' ? (displayValue * 100).toFixed(2) + '%' : displayValue;
-        } else if (['Cooldown', 'CritDamage', 'AttackEffectLifesteal', 'HP', 'Damage', 'Knockback'].includes(key)) {
+        // Apply specific formatting for percentages and numbers (only HP, Damage, Cooldown remain here)
+        if (['Cooldown', 'HP', 'Damage'].includes(key)) {
             displayValue = typeof displayValue === 'number' ? displayValue.toFixed(2) : displayValue;
         }
         li.textContent = `${key}: ${displayValue !== undefined ? displayValue : 'N/A'}`;
@@ -926,6 +920,14 @@ function sortData(column) {
         if (column === 'Rarity') {
             const indexA = rarityOrder.indexOf(valA);
             const indexB = rarityOrder.indexOf(valB);
+            return currentSortDirection === 'asc' ? indexA - indexB : indexB - indexA;
+        }
+
+        // Custom sort for CommunityRanking (assuming A, B, C, D, F where A is best)
+        if (column === 'CommunityRanking') {
+            const rankingOrder = ['S+', 'S', 'A+', 'A', 'B+', 'B', 'C+', 'C', 'D+', 'D', 'F', 'N/A'];
+            const indexA = rankingOrder.indexOf(valA);
+            const indexB = rankingOrder.indexOf(valB);
             return currentSortDirection === 'asc' ? indexA - indexB : indexB - indexA;
         }
 

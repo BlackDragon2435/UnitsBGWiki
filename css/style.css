@@ -27,33 +27,16 @@ th {
     white-space: nowrap;
 }
 
-/* Columns that should NOT wrap (Image, Label, Class, Rarity, all numerical stats) */
+/* Columns that should NOT wrap */
 #unitTable tbody td:nth-child(1), /* Image */
 #unitTable tbody td:nth-child(2), /* Label */
 #unitTable tbody td:nth-child(3), /* Class */
 #unitTable tbody td:nth-child(4), /* Rarity */
-#unitTable tbody td:nth-child(5), /* HP */
-#unitTable tbody td:nth-child(6), /* Damage */
-#unitTable tbody td:nth-child(7), /* Cooldown */
-#unitTable tbody td:nth-child(8), /* Distance */
-#unitTable tbody td:nth-child(9), /* CritChance */
-#unitTable tbody td:nth-child(10), /* CritDamage */
-#unitTable tbody td:nth-child(15), /* Knockback */
-#unitTable tbody td:nth-child(16), /* Accuracy */
-#unitTable tbody td:nth-child(17), /* EvadeChance */
-#unitTable tbody td:nth-child(18), /* HPOffset */
-#unitTable tbody td:nth-child(19), /* ShadowStepDistance */
-#unitTable tbody td:nth-child(20) { /* ShadowStepCooldown */
+#unitTable tbody td:nth-child(5), /* Community Ranking */
+#unitTable tbody td:nth-child(6), /* HP */
+#unitTable tbody td:nth-child(7), /* Damage */
+#unitTable tbody td:nth-child(8) { /* Cooldown */
     white-space: nowrap;
-}
-
-/* Columns that CAN wrap (AttackEffect, AttackEffectType, AttackEffectLifesteal, AttackEffectKey) */
-#unitTable tbody td:nth-child(11), /* AttackEffect */
-#unitTable tbody td:nth-child(12), /* AttackEffectType */
-#unitTable tbody td:nth-child(13), /* AttackEffectLifesteal */
-#unitTable tbody td:nth-child(14) { /* AttackEffectKey */
-    white-space: normal; /* Allow text to wrap */
-    word-break: break-word; /* Break long words if necessary */
 }
 
 /* Adjust widths for specific columns to make them fit better */
@@ -71,25 +54,16 @@ th {
     width: 80px;
     min-width: 80px;
 }
-/* Numerical stats - give them a smaller, consistent width */
-#unitTable tbody td:nth-child(n+5):nth-child(-n+10), /* HP to CritDamage */
-#unitTable tbody td:nth-child(15), /* Knockback */
-#unitTable tbody td:nth-child(16), /* Accuracy */
-#unitTable tbody td:nth-child(17), /* EvadeChance */
-#unitTable tbody td:nth-child(18), /* HPOffset */
-#unitTable tbody td:nth-child(19), /* ShadowStepDistance */
-#unitTable tbody td:nth-child(20) { /* ShadowStepCooldown */
+#unitTable tbody td:nth-child(5) { /* Community Ranking */
+    width: 100px;
+    min-width: 100px;
+    text-align: center;
+}
+/* Numerical stats (HP, Damage, Cooldown) */
+#unitTable tbody td:nth-child(n+6):nth-child(-n+8) { /* HP to Cooldown */
     width: 65px; /* Adjust as needed */
     min-width: 65px;
     text-align: center;
-}
-/* Effect columns - give them a bit more space, but allow wrapping */
-#unitTable tbody td:nth-child(11), /* AttackEffect */
-#unitTable tbody td:nth-child(12), /* AttackEffectType */
-#unitTable tbody td:nth-child(13), /* AttackEffectLifesteal */
-#unitTable tbody td:nth-child(14) { /* AttackEffectKey */
-    width: 100px; /* Example width */
-    min-width: 100px;
 }
 
 
@@ -126,7 +100,7 @@ th {
 }
 
 /* Styling for other stats columns */
-#unitTable tbody td:nth-child(n+5) { /* All columns from HP onwards */
+#unitTable tbody td:nth-child(n+5) { /* All columns from Community Ranking onwards */
     font-size: 1rem; /* text-base */
     color: #374151; /* gray-800 */
 }
