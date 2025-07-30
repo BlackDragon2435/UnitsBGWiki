@@ -28,8 +28,8 @@ th {
 }
 
 /* Columns that should NOT wrap */
+/* Removed white-space: nowrap from Label column (td:nth-child(2)) to allow wrapping */
 #unitTable tbody td:nth-child(1), /* Image */
-#unitTable tbody td:nth-child(2), /* Label */
 #unitTable tbody td:nth-child(3), /* Class */
 #unitTable tbody td:nth-child(4), /* Rarity */
 #unitTable tbody td:nth-child(5), /* Community Ranking */
@@ -45,9 +45,10 @@ th {
     min-width: 60px;
     padding: 0.5rem;
 }
-#unitTable tbody td:nth-child(2) { /* Label */
-    width: 120px;
+#unitTable tbody td:nth-child(2) { /* Label - allow text wrapping */
+    width: 150px; /* Increased width to give more room for wrapping */
     min-width: 120px;
+    white-space: normal; /* Allow text to wrap */
 }
 #unitTable tbody td:nth-child(3), /* Class */
 #unitTable tbody td:nth-child(4) { /* Rarity */
