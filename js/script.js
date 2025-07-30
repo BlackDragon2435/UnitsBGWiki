@@ -53,9 +53,6 @@ const unitColumnOrder = [
 ];
 
 // Define ALL possible unit stats for the detailed dropdown view
-// Re-added: Distance, CritChance, CritDamage, AttackEffect, AttackEffectType,
-// AttackEffectLifesteal, AttackEffectKey, Knockback, Accuracy, EvadeChance,
-// HPOffset, ShadowStepDistance, ShadowStepCooldown
 const allUnitStatsForDropdown = [
     'Label', 'Class', 'Rarity', 'HP', 'Damage', 'Cooldown', 'Distance',
     'CritChance', 'CritDamage', 'AttackEffect', 'AttackEffectType',
@@ -603,7 +600,8 @@ function renderTierListTable(dataToRender) {
     }
 
     // Define the order of columns for the tier list table
-    const tierListColumnOrder = ['Unit Name', 'Tier', 'Reasoning']; // Adjusted header names for display
+    // Corrected to match the actual CSV headers from the screenshot
+    const tierListColumnOrder = ['UNIT NAME', 'TIER', 'REASONING'];
 
     dataToRender.forEach(item => {
         const row = tierListTableBody.insertRow();
@@ -612,7 +610,7 @@ function renderTierListTable(dataToRender) {
         tierListColumnOrder.forEach(key => {
             const cell = row.insertCell();
             cell.classList.add('py-4', 'px-6', 'text-sm');
-            if (key === 'Unit Name' || key === 'Tier') {
+            if (key === 'UNIT NAME' || key === 'TIER') { // Use 'UNIT NAME' for styling
                 cell.classList.add('font-medium', 'text-gray-900', 'dark:text-gray-100', 'whitespace-nowrap');
             } else {
                 cell.classList.add('text-gray-500', 'dark:text-gray-300', 'text-wrap'); // Allow text wrapping for reasoning
@@ -941,13 +939,13 @@ function sortData(column) {
         if (column === 'CommunityRanking') {
             const rankingOrder = ['S+', 'S', 'A+', 'A', 'B+', 'B', 'C+', 'C', 'D+', 'D', 'F', 'N/A'];
             // Find tier for unit A
-            const tierInfoA = tierList.find(tierUnit => tierUnit['Unit Name'] === a.Label);
-            const tierA = tierInfoA ? tierInfoA.Tier : 'N/A';
+            const tierInfoA = tierList.find(tierUnit => tierUnit['UNIT NAME'] === a.Label); // Corrected key to 'UNIT NAME'
+            const tierA = tierInfoA ? tierInfoA.TIER : 'N/A'; // Corrected key to 'TIER'
             const indexA = rankingOrder.indexOf(tierA);
 
             // Find tier for unit B
-            const tierInfoB = tierList.find(tierUnit => tierUnit['Unit Name'] === b.Label);
-            const tierB = tierInfoB ? tierInfoB.Tier : 'N/A';
+            const tierInfoB = tierList.find(tierUnit => tierUnit['UNIT NAME'] === b.Label); // Corrected key to 'UNIT NAME'
+            const tierB = tierInfoB ? tierInfoB.TIER : 'N/A'; // Corrected key to 'TIER'
             const indexB = rankingOrder.indexOf(tierB);
 
             return currentSortDirection === 'asc' ? indexA - indexB : indexB - indexA;
