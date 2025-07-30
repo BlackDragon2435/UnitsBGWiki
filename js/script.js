@@ -1,4 +1,5 @@
 // js/script.js
+<<<<<<< HEAD
 // This file handles fetching, parsing, filtering, and rendering unit and mod data,
 // along with the unit tier list, from Google Sheets CSV URLs using the gviz/tq endpoint.
 
@@ -10,10 +11,21 @@ import { gameData } from './gameData.js'; // Import gameData (unchanged)
 const GOOGLE_SHEET_TIER_LIST_CSV_URL = 'https://docs.google.com/spreadsheets/d/2PACX-1vQO78VJA7y_g5zHpzw1gTaJhLV2mjNdRxA33zcj1WPFj-QYxQS09nInTQXg6kXNJcjm4f7Gk7lPVZuV/gviz/tq?tqx=out:csv&gid=0';
 const GOOGLE_SHEET_UNIT_DATA_CSV_URL = 'https://docs.google.com/spreadsheets/d/2PACX-1vQO78VJA7y_g5zHpzw1gTaJhLV2mjNdRxA33zcj1WPFj-QYxQS09nInTQXg6kXNJcjm4f7Gk7lPVZuV/gviz/tq?tqx=out:csv&gid=201310748';
 const GOOGLE_SHEET_MOD_DATA_CSV_URL = 'https://docs.google.com/spreadsheets/d/2PACX-1vQO78VJA7y_g5zHpzw1gTaJhLV2mjNdRxA33zcj1WPFj-QYxQS09nInTQXg6kXNJcjm4f7Gk7lPVZuV/gviz/tq?tqx=out:csv&gid=331730679';
+=======
+// Removed imports for rawUnitData and rawModData as data will now be fetched from Google Sheets.
+// import { rawUnitData } from './unitsData.js';
+// import { rawModData } from './modsData.js';
+
+import { unitImages } from './unitImages.js';
+import { gameData } from './gameData.js'; // Import gameData
+
+// IMPORTANT: Google Sheet CSV URLs for Unit and Mod data
+const GOOGLE_SHEET_UNIT_DATA_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQO78VJA7y_g5zHpzw1gTaJhLV2mjNdRxA33zcj1WPFj-QYxQS09nInTQXg6kXNJcjm4f7Gk7lPVZuV/pub?gid=201310748&single=true&output=csv';
+const GOOGLE_SHEET_MOD_DATA_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQO78VJA7y_g5zHpzw1gTaJhLV2mjNdRxA33zcj1WPFj-QYxQS09nInTQXg6kXNJcjm4f7Gk7lPVZuV/pub?gid=331730679&single=true&output=csv';
+>>>>>>> parent of 9b74971 (Revert "WePushingToMAINYALL")
 
 let units = []; // Stores parsed unit data
 let mods = [];  // Stores parsed mod data
-let tierList = []; // Stores parsed tier list data
 let currentSortColumn = null;
 let currentSortDirection = 'asc'; // 'asc' or 'desc'
 let modEffectsEnabled = false; // State for global mod effects toggle
@@ -24,69 +36,35 @@ const unitTableBody = document.getElementById('unitTableBody');
 const searchInput = document.getElementById('searchInput');
 const rarityFilter = document.getElementById('rarityFilter');
 const classFilter = document.getElementById('classFilter');
-const tableHeaders = document.querySelectorAll('#unitTable th');
-const loadingSpinner = document.getElementById('loadingSpinner');
-const unitTableContainer = document.getElementById('unitTableContainer');
-const noResultsMessage = document.getElementById('noResultsMessage');
+const tableHeaders = document.querySelectorAll('#unitTable th[data-sort]');
 const darkModeToggle = document.getElementById('darkModeToggle');
-const sunIcon = document.getElementById('sunIcon');
-const moonIcon = document.getElementById('moonIcon');
 const unitsTab = document.getElementById('unitsTab');
 const modsTab = document.getElementById('modsTab');
-const tierListTab = document.getElementById('tierListTab'); // New Tier List Tab
 const unitsContent = document.getElementById('unitsContent');
 const modsContent = document.getElementById('modsContent');
-const tierListContent = document.getElementById('tierListContent'); // New Tier List Content
+const modCheckboxesContainer = document.getElementById('modCheckboxesContainer');
+const unitDetailsContainer = document.getElementById('unitDetailsContainer');
+const modsTableBody = document.getElementById('modsTableBody'); // Make sure this element exists in index.html
+const loadingSpinner = document.getElementById('loadingSpinner');
 const toggleModEffects = document.getElementById('toggleModEffects');
-const toggleMaxLevel = document.getElementById('toggleMaxLevel'); // Global Max Level toggle
-const modsTableBody = document.querySelector('#modsTable tbody');
-const tierListTableBody = document.getElementById('tierListTableBody'); // New Tier List Table Body
-const tierListSpinner = document.getElementById('tierListSpinner'); // New Tier List Spinner
-const tierListTableContainer = document.getElementById('tierListTableContainer'); // New Tier List Table Container
-const noTierListMessage = document.getElementById('noTierListMessage'); // New No Tier List Message
+const toggleMaxLevel = document.getElementById('toggleMaxLevel');
 
-let expandedUnitRowId = null; // To keep track of the currently expanded row
-
-// Define the order of rarities for consistent filtering and display
-const rarityOrder = ["Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythic", "Demonic", "Ancient"];
-
-// Define the order of columns for unit table display (simplified for main view)
-const unitColumnOrder = [
-    'Image', 'Label', 'Class', 'Rarity', 'CommunityRanking', 'HP', 'Damage', 'Cooldown'
-];
-
-// Define ALL possible unit stats for the detailed dropdown view
-const allUnitStatsForDropdown = [
-    'Label', 'Class', 'Rarity', 'HP', 'Damage', 'Cooldown', 'Distance',
-    'CritChance', 'CritDamage', 'AttackEffect', 'AttackEffectType',
-    'AttackEffectLifesteal', 'AttackEffectKey', 'Knockback', 'Accuracy',
-    'EvadeChance', 'HPOffset', 'ShadowStepDistance', 'ShadowStepCooldown'
-];
-
-
-// --- Utility Functions ---
-
-/**
- * Debounces a function, so it only runs after a certain delay from the last call.
- * Useful for input events like search to prevent excessive function calls.
- * @param {function} func - The function to debounce.
- * @param {number} delay - The delay in milliseconds.
- * @returns {function} The debounced function.
- */
-function debounce(func, delay) {
+// Utility function to debounce input for better performance
+const debounce = (func, delay) => {
     let timeout;
-    return function(...args) {
-        const context = this;
+    return (...args) => {
         clearTimeout(timeout);
-        timeout = setTimeout(() => func.apply(context, args), delay);
+        timeout = setTimeout(() => func.apply(this, args), delay);
     };
-}
+};
 
 /**
- * Normalizes a string for comparison (e.g., removes spaces, converts to lowercase).
- * @param {string} str - The input string.
- * @returns {string} The normalized string.
+ * Fetches CSV data from a given URL and parses it into an array of objects.
+ * Assumes the first row is the header.
+ * @param {string} url - The URL of the CSV file.
+ * @returns {Promise<Array<Object>>} A promise that resolves to an array of objects.
  */
+<<<<<<< HEAD
 function normalizeString(str) {
     return String(str).toLowerCase().replace(/\s/g, '');
 }
@@ -242,112 +220,177 @@ function processModCSVData(csvData) {
         return mod;
     });
 }
+=======
+async function fetchAndParseCSV(url) {
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const csvText = await response.text();
+        const lines = csvText.trim().split('\n');
+        const headers = lines[0].split(',').map(header => header.trim());
+        const data = [];
 
+        for (let i = 1; i < lines.length; i++) {
+            const values = lines[i].split(',').map(value => value.trim());
+            const row = {};
+            headers.forEach((header, index) => {
+                let value = values[index];
+                // Attempt to convert to number if possible, otherwise keep as string
+                if (!isNaN(value) && value !== '') {
+                    row[header] = Number(value);
+                } else if (value === 'N/A') {
+                    row[header] = 'N/A'; // Keep N/A as string for clarity
+                } else {
+                    row[header] = value;
+                }
+            });
+            data.push(row);
+        }
+        return data;
+    } catch (error) {
+        console.error(`Error fetching or parsing CSV from ${url}:`, error);
+        return []; // Return empty array on error
+    }
+}
 
 /**
- * Applies a single mod's effects to a unit.
- * @param {Object} unit - The unit object to apply mods to.
- * @param {Object} mod - The mod object to apply.
- * @returns {Object} A new unit object with mod effects applied.
+ * Parses the raw unit data into a structured array of unit objects.
+ * This function is now simplified as CSV parsing handles most of the structure.
+ * @param {Array<Object>} csvData - The array of unit objects parsed from CSV.
+ * @returns {Array<Object>} An array of unit objects with appropriate types.
  */
-function applySingleModEffect(unit, mod) {
-    const modifiedUnit = { ...unit }; // Create a shallow copy
+function parseUnitData(csvData) {
+    return csvData.map(unit => {
+        // Convert relevant fields to numbers, handling 'N/A'
+        unit.Damage = unit.Damage === 'N/A' ? 'N/A' : Number(unit.Damage);
+        unit.HP = unit.HP === 'N/A' ? 'N/A' : Number(unit.HP);
+        unit.Cooldown = unit.Cooldown === 'N/A' ? 'N/A' : Number(unit.Cooldown);
+        unit.CritChance = unit.CritChance === 'N/A' ? 'N/A' : Number(unit.CritChance);
+        unit.CritDamage = unit.CritDamage === 'N/A' ? 'N/A' : Number(unit.CritDamage);
+        unit.Accuracy = unit.Accuracy === 'N/A' ? 'N/A' : Number(unit.Accuracy);
+        unit.EvadeChance = unit.EvadeChance === 'N/A' ? 'N/A' : Number(unit.EvadeChance);
+        unit.Distance = unit.Distance === 'N/A' ? 'N/A' : Number(unit.Distance);
+        unit.Knockback = unit.Knockback === 'N/A' ? 'N/A' : Number(unit.Knockback);
+        unit.ShadowStepDistance = unit.ShadowStepDistance === 'N/A' ? 'N/A' : Number(unit.ShadowStepDistance);
+        unit.ShadowStepCooldown = unit.ShadowStepCooldown === 'N/A' ? 'N/A' : Number(unit.ShadowStepCooldown);
+        unit.AttackEffectLifesteal = unit.AttackEffectLifesteal === 'N/A' ? 'N/A' : Number(unit.AttackEffectLifesteal);
+        unit.HPOffset = unit.HPOffset === 'N/A' ? 'N/A' : Number(unit.HPOffset);
 
-    mod.effects.forEach(effect => {
-        const stat = effect.stat;
-        const amount = effect.amount;
-        const chance = effect.chance; // Keep chance for potential future use or display
+        // Add a unique ID for each unit based on its UnitName (original key)
+        unit.id = unit.UnitName;
 
-        // Ensure the unit property exists and is a number or N/A
-        // Only apply if the stat is relevant and exists in the modifiedUnit
-        if (modifiedUnit[stat] === undefined) {
-             return; // Stat does not exist on the unit, skip applying mod
-        }
+        return unit;
+    });
+}
 
-        // Initialize N/A stats if a mod applies a numeric amount to them
-        if (modifiedUnit[stat] === 'N/A' && typeof amount === 'number') {
-            if (['CritChance', 'CritDamage', 'EvadeChance', 'Accuracy', 'Knockback'].includes(stat)) {
-                modifiedUnit[stat] = 0; // Initialize to 0 for addition
-            } else if (stat === 'AttackEffectLifesteal') {
-                modifiedUnit[stat] = 0; // Initialize Lifesteal to 0 if N/A
+/**
+ * Parses the raw mod data into a structured array of mod objects.
+ * This function is now simplified as CSV parsing handles most of the structure.
+ * @param {Array<Object>} csvData - The array of mod objects parsed from CSV.
+ * @returns {Array<Object>} An array of mod objects with appropriate types.
+ */
+function parseModData(csvData) {
+    return csvData.map(mod => {
+        // Convert Amount and Chance to numbers, handling empty strings/N/A as 0 or 'N/A'
+        mod.Amount = mod.Amount === '' || mod.Amount === 'N/A' ? 0 : Number(mod.Amount);
+        mod.Chance = mod.Chance === '' || mod.Chance === 'N/A' ? 0 : Number(mod.Chance);
+        return mod;
+    });
+}
+
+/**
+ * Calculates the modified stat value for a unit based on a given mod.
+ * @param {Object} unit - The unit object.
+ * @param {Object} mod - The mod object.
+ * @param {string} statKey - The key of the stat to modify (e.g., 'HP', 'Damage').
+ * @param {number} baseValue - The base value of the stat.
+ * @returns {number} The modified stat value.
+ */
+function calculateModifiedStat(unit, mod, statKey, baseValue) {
+    let modifiedValue = baseValue;
+
+    // Handle percentage-based mods (Damage, HP, Cooldown, CritChance, EvadeChance, Accuracy, Mirror)
+    if (['Damage', 'HP', 'Cooldown', 'CritChance', 'EvadeChance', 'Accuracy', 'Mirror'].includes(statKey) && typeof mod.Amount === 'number') {
+        modifiedValue = baseValue * (1 + mod.Amount);
+    }
+    // Handle CritDamageCoeff which is a direct addition
+    else if (statKey === 'CritDamageCoeff' && typeof mod.Amount === 'number') {
+        modifiedValue = baseValue + mod.Amount;
+    }
+    // Handle Lifesteal which is a direct addition (amount is HP healed)
+    else if (statKey === 'Lifesteal' && typeof mod.Amount === 'number') {
+        modifiedValue = baseValue + mod.Amount;
+    }
+    // For other stats or if mod.Amount is not a number, return base value
+    else {
+        modifiedValue = baseValue;
+    }
+
+    return modifiedValue;
+}
+
+/**
+ * Applies selected mods and global effects to unit stats.
+ * @param {Object} unit - The original unit object.
+ * @param {Array<string>} selectedModIds - Array of IDs of currently selected mods.
+ * @param {boolean} applyMaxLevel - Whether to apply max level stat modifiers.
+ * @returns {Object} A new unit object with modified stats.
+ */
+function applyModsAndLevelEffects(unit, selectedModIds, applyMaxLevel) {
+    let modifiedUnit = { ...unit }; // Create a shallow copy to avoid modifying original unit
+
+    // Apply global max level effects if enabled
+    if (applyMaxLevel) {
+        const unitClass = unit.Class;
+        const unitRarity = unit.Rarity;
+
+        if (gameData.StatModifiersByClassAndRarity[unitClass]) {
+            const classModifiers = gameData.StatModifiersByClassAndRarity[unitClass];
+            for (const stat in classModifiers) {
+                if (classModifiers.hasOwnProperty(stat)) {
+                    const modifier = classModifiers[stat];
+                    if (modifier._attributes && modifier._attributes[unitRarity] !== undefined) {
+                        const baseValue = typeof modifiedUnit[stat] === 'number' ? modifiedUnit[stat] : 0;
+                        // For Cooldown, it's a reduction, so subtract the modifier
+                        if (stat === 'Cooldown') {
+                            modifiedUnit[stat] = baseValue + modifier._attributes[unitRarity];
+                        } else {
+                            modifiedUnit[stat] = baseValue * (1 + modifier._attributes[unitRarity]);
+                        }
+                    }
+                }
             }
-        } else if (modifiedUnit[stat] === 'N/A' && typeof chance === 'number' && stat === 'Lifesteal') {
-             modifiedUnit.AttackEffectLifesteal = 0; // Initialize Lifesteal if N/A and mod has chance
         }
+    }
+>>>>>>> parent of 9b74971 (Revert "WePushingToMAINYALL")
 
-
-        switch (stat) {
-            case "HP":
-            case "Damage":
-                if (typeof modifiedUnit[stat] === 'number' && typeof amount === 'number') {
-                    modifiedUnit[stat] = modifiedUnit[stat] * (1 + amount);
-                }
-                break;
-            case "Cooldown":
-                if (typeof modifiedUnit[stat] === 'number' && typeof amount === 'number') {
-                    modifiedUnit[stat] = Math.max(0.1, modifiedUnit[stat] + amount); // Ensure cooldown doesn't go below 0.1
-                }
-                break;
-            case "CritChance":
-            case "EvadeChance":
-            case "Accuracy":
-                if (typeof modifiedUnit[stat] === 'number' && typeof amount === 'number') {
-                    modifiedUnit[stat] = Math.min(1, modifiedUnit[stat] + amount); // Cap these at 1 (or 100%)
-                }
-                break;
-            case "CritDamageCoeff": // Assuming this modifies CritDamage
-                if (typeof modifiedUnit.CritDamage === 'number' && typeof amount === 'number') {
-                    modifiedUnit.CritDamage = modifiedUnit.CritDamage * (1 + amount);
-                } else if (modifiedUnit.CritDamage === 'N/A' && typeof amount === 'number') {
-                    modifiedUnit.CritDamage = 1 + amount; // If N/A, assume base 1 and add multiplier
-                }
-                break;
-            case "Lifesteal":
-                // Lifesteal can be an 'amount' or derived from 'chance' in your data
-                if (typeof modifiedUnit.AttackEffectLifesteal === 'number' && typeof amount === 'number') {
-                    modifiedUnit.AttackEffectLifesteal += amount;
-                } else if (typeof modifiedUnit.AttackEffectLifesteal === 'number' && typeof chance === 'number') {
-                    // If Lifesteal is given as a chance, assume it's also an amount to add
-                    modifiedUnit.AttackEffectLifesteal += (chance * 100); // Assuming chance is a multiplier, convert to percentage point
-                } else if (modifiedUnit.AttackEffectLifesteal === 'N/A' && typeof amount === 'number') {
-                    modifiedUnit.AttackEffectLifesteal = amount;
-                } else if (modifiedUnit.AttackEffectLifesteal === 'N/A' && typeof chance === 'number') {
-                    modifiedUnit.AttackEffectLifesteal = (chance * 100);
-                }
-                break;
-            case "Knockback":
-                if (typeof modifiedUnit[stat] === 'number' && typeof amount === 'number') {
-                    modifiedUnit[stat] += amount;
-                } else if (modifiedUnit[stat] === 'N/A' && typeof amount === 'number') {
-                    modifiedUnit[stat] = amount;
-                }
-                break;
-            // Removed HPOffset, ShadowStepDistance, ShadowStepCooldown from here
-            case "Frost":
-            case "Fire":
-            case "Poison":
-            case "Mirror":
-                // This is more complex. For now, we'll just indicate their presence.
-                // A more advanced system would track active debuffs/buffs.
-                // For display, we might append to AttackEffect/Type if not already there.
-                if (modifiedUnit.AttackEffect === 'N/A') modifiedUnit.AttackEffect = stat;
-                else if (!modifiedUnit.AttackEffect.includes(stat)) modifiedUnit.AttackEffect += `, ${stat}`;
-
-                if (modifiedUnit.AttackEffectType === 'N/A') modifiedUnit.AttackEffectType = stat;
-                else if (!modifiedUnit.AttackEffectType.includes(stat)) modifiedUnit.AttackEffectType += `, ${stat}`;
-                break;
+    // Apply selected mods
+    selectedModIds.forEach(modId => {
+        const mod = mods.find(m => m.ModName === modId); // Find mod by ModName (which is now the ID)
+        if (mod) {
+            const statKey = mod.Stat;
+            if (statKey && modifiedUnit[statKey] !== undefined && modifiedUnit[statKey] !== 'N/A') {
+                const baseValue = typeof modifiedUnit[statKey] === 'number' ? modifiedUnit[statKey] : 0;
+                modifiedUnit[statKey] = calculateModifiedStat(modifiedUnit, mod, statKey, baseValue);
+            }
+            // Handle special effects like Frost, Poison, Fire, Healing, Bard, UpCooldown, UpDamage
+            if (mod.Effect && mod.Effect !== "Default unit properties") {
+                // For now, these are just descriptive and don't change numerical stats directly
+                // If they were to change stats, the logic would go here.
+            }
         }
     });
+
     return modifiedUnit;
 }
 
 
 /**
- * Applies a list of mods to a unit.
- * @param {Object} baseUnit - The original unit object.
- * @param {Array<Object>} modsToApply - An array of mod objects to apply.
- * @returns {Object} The unit object with all specified mods applied.
+ * Renders the units table based on current filters and sort order.
  */
+<<<<<<< HEAD
 function applyModsToUnit(baseUnit, modsToApply) {
     let currentUnit = { ...baseUnit }; // Start with a fresh copy of the base unit
     modsToApply.forEach(mod => {
@@ -405,92 +448,89 @@ function getUnitStatsAtLevel(baseUnit, level, selectedMods) {
  * @param {Array<Object>} dataToRender - The array of unit objects to display.
  */
 function renderUnitTable(dataToRender) {
+=======
+function renderUnitsTable() {
+>>>>>>> parent of 9b74971 (Revert "WePushingToMAINYALL")
     unitTableBody.innerHTML = ''; // Clear existing rows
-    if (dataToRender.length === 0) {
-        noResultsMessage.classList.remove('hidden');
-        unitTableContainer.classList.add('hidden');
-        return;
-    } else {
-        noResultsMessage.classList.add('hidden');
-        unitTableContainer.classList.remove('hidden');
+    unitDetailsContainer.innerHTML = ''; // Clear unit details
+
+    const searchQuery = searchInput.value.toLowerCase();
+    const selectedRarity = rarityFilter.value;
+    const selectedClass = classFilter.value;
+
+    let filteredUnits = units.filter(unit => {
+        const matchesSearch = unit.Label.toLowerCase().includes(searchQuery);
+        const matchesRarity = selectedRarity === 'All' || unit.Rarity === selectedRarity;
+        const matchesClass = selectedClass === 'All' || unit.Class === selectedClass;
+        return matchesSearch && matchesRarity && matchesClass;
+    });
+
+    // Apply sorting
+    if (currentSortColumn) {
+        filteredUnits.sort((a, b) => {
+            let valA = a[currentSortColumn];
+            let valB = b[currentSortColumn];
+
+            // Handle 'N/A' values for sorting
+            if (valA === 'N/A') valA = -Infinity; // Treat N/A as very small for numerical sorts
+            if (valB === 'N/A') valB = -Infinity;
+
+            if (typeof valA === 'string') {
+                return currentSortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+            } else {
+                return currentSortDirection === 'asc' ? valA - valB : valB - valA;
+            }
+        });
     }
 
-    dataToRender.forEach((unit, index) => {
-        // Determine the level for calculation based on global toggle
-        const levelForDisplay = maxLevelGlobalEnabled ? 25 : 1;
+    // Apply mods and level effects if enabled
+    const unitsToRender = filteredUnits.map(unit => {
+        const selectedModIds = Array.from(modCheckboxesContainer.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+        return applyModsAndLevelEffects(unit, selectedModIds, maxLevelGlobalEnabled);
+    });
 
-        // Calculate unit stats at the determined level (level 1 or max level)
-        let unitToDisplay = getUnitStatsAtLevel(unit, levelForDisplay, []); // No mods applied yet for this base calculation
-
-        // Apply global mod effects if enabled, on top of the leveled stats
-        if (modEffectsEnabled) {
-            unitToDisplay = applyModsToUnit(unitToDisplay, mods);
-        }
-
-        const row = unitTableBody.insertRow();
-        row.classList.add('cursor-pointer', 'unit-row'); // Add base classes
-
-        row.dataset.unitIndex = index; // Store original index for detail lookup
-
-        // Add image cell
-        const imgCell = row.insertCell();
-        imgCell.classList.add('py-2', 'px-4');
-        const img = document.createElement('img');
-        img.src = unitImages[unitToDisplay.Label] || 'https://placehold.co/60x60/cccccc/333333?text=N/A'; // Placeholder if no image
-        img.alt = unitToDisplay.Label;
-        img.classList.add('w-12', 'h-12', 'rounded-full', 'object-cover', 'shadow-sm');
-        imgCell.appendChild(img);
-
-
-        unitColumnOrder.slice(1).forEach(key => { // Skip 'Image' as it's handled above
-            const cell = row.insertCell();
-            let displayValue = unitToDisplay[key];
-
-            if (key === 'CommunityRanking') {
-                // Use normalized labels for matching
-                const normalizedUnitLabel = normalizeString(unitToDisplay.Label);
-                const tierInfo = tierList.find(tierUnit => tierUnit.NormalizedUnitName === normalizedUnitLabel);
-                displayValue = tierInfo ? tierInfo.Tier : 'N/A'; // Corrected key to 'TIER'
-                cell.classList.add('font-semibold', 'text-center'); // Center align tier
-            }
-            // Custom formatting for specific keys (only HP, Damage, Cooldown remain here)
-            else if (key === 'Cooldown' || key === 'HP' || key === 'Damage') {
-                displayValue = typeof displayValue === 'number' ? displayValue.toFixed(2) : displayValue;
-            }
-
-            // Apply specific styling for the 'Label' column
-            if (key === 'Label') {
-                // Apply rarity class to the cell itself for background color and text color
-                cell.classList.add('font-semibold', 'text-lg', `rarity-${unitToDisplay.Rarity.replace(/\s/g, '')}`);
-            } else if (['Class', 'Rarity'].includes(key)) {
-                cell.classList.add('font-medium', 'text-base'); // Make Class and Rarity slightly bolder and clearer
-            } else {
-                cell.classList.add('text-base'); // Default size for other stats
-            }
-            cell.textContent = displayValue !== undefined ? displayValue : 'N/A';
-        });
-
-        row.addEventListener('click', () => toggleUnitDetails(unit, row, index));
+    unitsToRender.forEach(unit => {
+        const row = document.createElement('tr');
+        row.className = 'hover:bg-gray-50 dark:hover:bg-gray-600 cursor-pointer transition-colors duration-200';
+        row.innerHTML = `
+            <td class="py-3 px-6 whitespace-nowrap">
+                <img src="${unitImages[unit.Label] || 'https://placehold.co/60x60/cccccc/333333?text=N/A'}" alt="${unit.Label}" class="w-10 h-10 rounded-full object-cover">
+            </td>
+            <td class="py-3 px-6 whitespace-nowrap font-medium text-gray-900 dark:text-gray-100">${unit.Label}</td>
+            <td class="py-3 px-6 whitespace-nowrap">${unit.Class}</td>
+            <td class="py-3 px-6 whitespace-nowrap">${unit.Rarity}</td>
+            <td class="py-3 px-6 whitespace-nowrap">${unit.HP !== 'N/A' ? unit.HP.toFixed(2) : 'N/A'}</td>
+            <td class="py-3 px-6 whitespace-nowrap">${unit.Damage !== 'N/A' ? unit.Damage.toFixed(2) : 'N/A'}</td>
+            <td class="py-3 px-6 whitespace-nowrap">${unit.Cooldown !== 'N/A' ? unit.Cooldown.toFixed(2) : 'N/A'}</td>
+            <td class="py-3 px-6 whitespace-nowrap">${unit.CritChance !== 'N/A' ? (unit.CritChance * 100).toFixed(2) + '%' : 'N/A'}</td>
+            <td class="py-3 px-6 whitespace-nowrap">${unit.CritDamage !== 'N/A' ? unit.CritDamage.toFixed(2) : 'N/A'}</td>
+            <td class="py-3 px-6 whitespace-nowrap">${unit.Accuracy !== 'N/A' ? unit.Accuracy.toFixed(2) : 'N/A'}</td>
+            <td class="py-3 px-6 whitespace-nowrap">${unit.EvadeChance !== 'N/A' ? (unit.EvadeChance * 100).toFixed(2) + '%' : 'N/A'}</td>
+            <td class="py-3 px-6 whitespace-nowrap">${unit.Distance !== 'N/A' ? unit.Distance.toFixed(2) : 'N/A'}</td>
+            <td class="py-3 px-6 whitespace-nowrap">${unit.Knockback !== 'N/A' ? unit.Knockback.toFixed(2) : 'N/A'}</td>
+        `;
+        row.addEventListener('click', () => displayUnitDetails(unit.id)); // Use unit.id for details
+        unitTableBody.appendChild(row);
     });
 }
 
 /**
- * Renders the mod table rows.
- * @param {Array<Object>} dataToRender - The array of mod objects to display.
+ * Displays detailed information for a selected unit, including mod effects.
+ * @param {string} unitId - The ID of the unit to display details for.
  */
-function renderModTable(dataToRender) {
-    modsTableBody.innerHTML = ''; // Clear existing rows
-    if (dataToRender.length === 0) {
-        modsTableBody.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-gray-600 dark:text-gray-400">No mod data available.</td></tr>';
+function displayUnitDetails(unitId) {
+    const originalUnit = units.find(u => u.id === unitId);
+    if (!originalUnit) {
+        unitDetailsContainer.innerHTML = '<p class="text-red-500">Unit not found.</p>';
         return;
     }
 
-    const modColumnOrder = ['label', 'rarity', 'effectDescription']; // Define order for mods table
+    // Get selected mods for calculation
+    const selectedModIds = Array.from(modCheckboxesContainer.querySelectorAll('input[type="checkbox"]:checked')).map(cb => cb.value);
+    const modifiedUnit = applyModsAndLevelEffects(originalUnit, selectedModIds, maxLevelGlobalEnabled);
 
-    dataToRender.forEach(mod => {
-        const row = modsTableBody.insertRow();
-        row.classList.add('bg-white', 'dark:bg-gray-700');
 
+<<<<<<< HEAD
         modColumnOrder.forEach(key => {
             const cell = row.insertCell();
             cell.classList.add('py-4', 'px-6', 'whitespace-nowrap', 'text-sm');
@@ -571,41 +611,78 @@ function renderTierListTable(dataToRender) {
             cell.textContent = item[key] !== undefined ? item[key] : 'N/A';
         });
     });
+=======
+    let detailsHtml = `
+        <div class="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-lg mt-8 border border-gray-200 dark:border-gray-700">
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-4">${originalUnit.Label} Details</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 unit-details-row">
+                <div>
+                    <img src="${unitImages[originalUnit.Label] || 'https://placehold.co/100x100/cccccc/333333?text=N/A'}" alt="${originalUnit.Label}" class="w-24 h-24 rounded-full object-cover mb-4">
+                    <p><strong>Class:</strong> ${originalUnit.Class}</p>
+                    <p><strong>Rarity:</strong> ${originalUnit.Rarity}</p>
+                    <p><strong>Attack Effect:</strong> ${originalUnit.AttackEffect}</p>
+                    <p><strong>Attack Effect Type:</strong> ${originalUnit.AttackEffectType}</p>
+                    <p><strong>Attack Effect Lifesteal:</strong> ${originalUnit.AttackEffectLifesteal !== 'N/A' ? originalUnit.AttackEffectLifesteal.toFixed(2) : 'N/A'}</p>
+                    <p><strong>Attack Effect Key:</strong> ${originalUnit.AttackEffectKey}</p>
+                    <p><strong>Shadow Step Distance:</strong> ${originalUnit.ShadowStepDistance !== 'N/A' ? originalUnit.ShadowStepDistance.toFixed(2) : 'N/A'}</p>
+                    <p><strong>Shadow Step Cooldown:</strong> ${originalUnit.ShadowStepCooldown !== 'N/A' ? originalUnit.ShadowStepCooldown.toFixed(2) : 'N/A'}</p>
+                    <p><strong>HP Offset:</strong> ${originalUnit.HPOffset !== 'N/A' ? originalUnit.HPOffset.toFixed(2) : 'N/A'}</p>
+                </div>
+                <div>
+                    <h3 class="text-lg font-semibold mb-2">Base Stats:</h3>
+                    <ul>
+                        <li><strong>HP:</strong> ${originalUnit.HP !== 'N/A' ? originalUnit.HP.toFixed(2) : 'N/A'}</li>
+                        <li><strong>Damage:</strong> ${originalUnit.Damage !== 'N/A' ? originalUnit.Damage.toFixed(2) : 'N/A'}</li>
+                        <li><strong>Cooldown:</strong> ${originalUnit.Cooldown !== 'N/A' ? originalUnit.Cooldown.toFixed(2) : 'N/A'}</li>
+                        <li><strong>Crit Chance:</strong> ${originalUnit.CritChance !== 'N/A' ? (originalUnit.CritChance * 100).toFixed(2) + '%' : 'N/A'}</li>
+                        <li><strong>Crit Damage:</strong> ${originalUnit.CritDamage !== 'N/A' ? originalUnit.CritDamage.toFixed(2) : 'N/A'}</li>
+                        <li><strong>Accuracy:</strong> ${originalUnit.Accuracy !== 'N/A' ? originalUnit.Accuracy.toFixed(2) : 'N/A'}</li>
+                        <li><strong>Evade Chance:</strong> ${originalUnit.EvadeChance !== 'N/A' ? (originalUnit.EvadeChance * 100).toFixed(2) + '%' : 'N/A'}</li>
+                        <li><strong>Distance:</strong> ${originalUnit.Distance !== 'N/A' ? originalUnit.Distance.toFixed(2) : 'N/A'}</li>
+                        <li><strong>Knockback:</strong> ${originalUnit.Knockback !== 'N/A' ? originalUnit.Knockback.toFixed(2) : 'N/A'}</li>
+                    </ul>
+                    ${(modEffectsEnabled || maxLevelGlobalEnabled) ? `
+                    <h3 class="text-lg font-semibold mt-4 mb-2">Modified Stats:</h3>
+                    <ul>
+                        <li><strong>HP:</strong> ${modifiedUnit.HP !== 'N/A' ? modifiedUnit.HP.toFixed(2) : 'N/A'}</li>
+                        <li><strong>Damage:</strong> ${modifiedUnit.Damage !== 'N/A' ? modifiedUnit.Damage.toFixed(2) : 'N/A'}</li>
+                        <li><strong>Cooldown:</strong> ${modifiedUnit.Cooldown !== 'N/A' ? modifiedUnit.Cooldown.toFixed(2) : 'N/A'}</li>
+                        <li><strong>Crit Chance:</strong> ${modifiedUnit.CritChance !== 'N/A' ? (modifiedUnit.CritChance * 100).toFixed(2) + '%' : 'N/A'}</li>
+                        <li><strong>Crit Damage:</strong> ${modifiedUnit.CritDamage !== 'N/A' ? modifiedUnit.CritDamage.toFixed(2) : 'N/A'}</li>
+                        <li><strong>Accuracy:</strong> ${modifiedUnit.Accuracy !== 'N/A' ? modifiedUnit.Accuracy.toFixed(2) : 'N/A'}</li>
+                        <li><strong>Evade Chance:</strong> ${modifiedUnit.EvadeChance !== 'N/A' ? (modifiedUnit.EvadeChance * 100).toFixed(2) + '%' : 'N/A'}</li>
+                        <li><strong>Distance:</strong> ${modifiedUnit.Distance !== 'N/A' ? modifiedUnit.Distance.toFixed(2) : 'N/A'}</li>
+                        <li><strong>Knockback:</strong> ${modifiedUnit.Knockback !== 'N/A' ? modifiedUnit.Knockback.toFixed(2) : 'N/A'}</li>
+                    </ul>
+                    ` : ''}
+                </div>
+            </div>
+        </div>
+    `;
+    unitDetailsContainer.innerHTML = detailsHtml;
+>>>>>>> parent of 9b74971 (Revert "WePushingToMAINYALL")
 }
 
 
-// --- Detailed Unit View (Expandable Row) ---
-
 /**
- * Toggles the detailed view for a unit.
- * @param {Object} unit - The base unit object.
- * @param {HTMLTableRowElement} clickedRow - The table row element that was clicked.
- * @param {number} index - The original index of the unit in the `units` array.
+ * Renders the mod checkboxes for filtering.
  */
-function toggleUnitDetails(unit, clickedRow, index) {
-    const existingDetailRow = unitTableBody.querySelector('.unit-details-row');
-    const currentlyExpandedUnitIndex = existingDetailRow ? parseInt(existingDetailRow.dataset.unitIndex) : null;
+function renderModCheckboxes() {
+    modCheckboxesContainer.innerHTML = ''; // Clear existing checkboxes
 
-    // Case 1: Clicked on an already expanded row (or its associated detail row)
-    if (currentlyExpandedUnitIndex === index) {
-        if (existingDetailRow) {
-            existingDetailRow.remove();
+    // Group mods by rarity
+    const modsByRarity = mods.reduce((acc, mod) => {
+        if (!acc[mod.Rarity]) {
+            acc[mod.Rarity] = [];
         }
-        clickedRow.classList.remove('expanded');
-        expandedUnitRowId = null;
-        return; // Done, just collapsed
-    }
+        acc[mod.Rarity].push(mod);
+        return acc;
+    }, {});
 
-    // Case 2: Another row is expanded, or no row is expanded, and a new row is clicked
-    if (existingDetailRow) {
-        // Collapse the previously expanded row
-        const prevExpandedUnitRow = unitTableBody.querySelector(`[data-unit-index="${currentlyExpandedUnitIndex}"]`);
-        if (prevExpandedUnitRow) {
-            prevExpandedUnitRow.classList.remove('expanded');
-        }
-        existingDetailRow.remove();
-    }
+    // Define the order of rarities
+    const rarityOrder = ["Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythic", "Demonic", "Ancient"];
 
+<<<<<<< HEAD
     // Now, expand the newly clicked row
     expandedUnitRowId = index;
     clickedRow.classList.add('expanded');
@@ -686,388 +763,128 @@ function toggleUnitDetails(unit, clickedRow, index) {
     });
 
     // Create columns for each rarity
+=======
+>>>>>>> parent of 9b74971 (Revert "WePushingToMAINYALL")
     rarityOrder.forEach(rarity => {
-        if (modsByRarity[rarity].length > 0) {
-            const rarityColumn = document.createElement('div');
-            rarityColumn.classList.add('flex', 'flex-col', 'p-2', 'rounded-md', 'border', 'border-gray-200', 'dark:border-gray-600', 'flex-shrink-0'); // Column styling
-
-            const rarityHeader = document.createElement('h4');
-            rarityHeader.classList.add('font-bold', 'text-base', 'mt-2', 'mb-1', 'w-full', `text-rarity-${rarity.toLowerCase()}`); // Add rarity color class
-            rarityHeader.textContent = `${rarity} Mods`;
-            rarityColumn.appendChild(rarityHeader);
+        if (modsByRarity[rarity] && modsByRarity[rarity].length > 0) {
+            const rarityGroup = document.createElement('div');
+            rarityGroup.className = 'mb-4';
+            rarityGroup.innerHTML = `<h4 class="text-base font-bold text-gray-900 dark:text-gray-100 mb-2">${rarity} Mods</h4>`;
 
             modsByRarity[rarity].forEach(mod => {
-                const label = document.createElement('label');
-                label.classList.add('inline-flex', 'items-center', 'cursor-pointer', 'mb-1');
-                label.title = mod.effectDescription; // Tooltip for effect description
-
-                const checkbox = document.createElement('input');
-                checkbox.type = 'checkbox';
-                checkbox.value = mod.id; // Use mod.id to identify
-                checkbox.dataset.rarity = mod.rarity; // Store rarity for disabling logic
-                checkbox.classList.add('form-checkbox', 'h-4', 'w-4', 'text-blue-600', 'rounded', 'focus:ring-blue-500', 'dark:text-blue-400', 'dark:focus:ring-blue-400', 'mr-1');
-
-                checkbox.addEventListener('change', (event) => {
-                    const changedModId = event.target.value;
-                    const changedModRarity = event.target.dataset.rarity;
-
-                    if (event.target.checked) {
-                        // If this mod is checked, uncheck all other mods of the same rarity
-                        modCheckboxesContainer.querySelectorAll(`input[type="checkbox"][data-rarity="${changedModRarity}"]`).forEach(cb => {
-                            if (cb.value !== changedModId) {
-                                cb.checked = false;
-                            }
-                        });
-                        selectedModsForUnit = selectedModsForUnit.filter(m => m.rarity !== changedModRarity); // Remove existing mod of this rarity
-                        selectedModsForUnit.push(mod); // Add the newly selected mod
-                    } else {
-                        // If unchecked, simply remove it
-                        selectedModsForUnit = selectedModsForUnit.filter(m => m.id !== changedModId);
-                    }
-
-                    // Ensure max level toggle is off if individual mods are being selected
-                    toggleMaxLevelUnit.checked = false; // Uncheck max level if a specific mod is chosen
-                    updateAppliedStats(unit, selectedModsForUnit, appliedStatsList, false, toggleMaxLevelUnit.checked, parseInt(levelInput.value), activeModEffectsList);
-                });
-
-                label.appendChild(checkbox);
-                label.appendChild(document.createTextNode(mod.label));
-                rarityColumn.appendChild(label);
+                const checkboxDiv = document.createElement('div');
+                checkboxDiv.className = 'flex items-center mb-2';
+                checkboxDiv.innerHTML = `
+                    <input type="checkbox" id="mod-${mod.ModName}" value="${mod.ModName}" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:focus:ring-blue-600">
+                    <label for="mod-${mod.ModName}" class="ml-2 text-sm font-medium text-gray-700 dark:text-gray-300">${mod.Title} (${mod.Effect})</label>
+                `;
+                const checkbox = checkboxDiv.querySelector('input');
+                checkbox.addEventListener('change', filterAndRenderUnits); // Re-render units when mod selection changes
+                rarityGroup.appendChild(checkboxDiv);
             });
-            modCheckboxesContainer.appendChild(rarityColumn);
+            modCheckboxesContainer.appendChild(rarityGroup);
         }
     });
-
-    // Event listener for Max Level toggle
-    toggleMaxLevelUnit.addEventListener('change', () => {
-        if (toggleMaxLevelUnit.checked) {
-            levelInput.value = 25; // Set level to 25 when max level is toggled
-            // Uncheck all individual mod checkboxes if Max Level is enabled
-            modCheckboxesContainer.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-            selectedModsForUnit = []; // Clear selected mods
-        } else {
-            levelInput.value = 1; // Reset level to 1 when max level is untoggled
-        }
-        updateAppliedStats(unit, selectedModsForUnit, appliedStatsList, false, toggleMaxLevelUnit.checked, parseInt(levelInput.value), activeModEffectsList);
-    });
-
-    // Event listener for Level Input
-    levelInput.addEventListener('input', () => {
-        let level = parseInt(levelInput.value);
-        if (isNaN(level) || level < 1) {
-            level = 1;
-            levelInput.value = 1;
-        } else if (level > 25) {
-            level = 25;
-            levelInput.value = 25;
-        }
-        // If level is manually changed, uncheck the Max Level toggle
-        toggleMaxLevelUnit.checked = false;
-        updateAppliedStats(unit, selectedModsForUnit, appliedStatsList, false, toggleMaxLevelUnit.checked, level, activeModEffectsList);
-    });
-
-
-    // Initial display of applied stats (no mods applied yet)
-    updateAppliedStats(unit, selectedModsForUnit, appliedStatsList, false, false, parseInt(levelInput.value), activeModEffectsList);
-
-    detailCell.appendChild(detailContent);
 }
 
 /**
- * Updates the displayed stats in the detailed unit view based on selected mods or max stats toggle.
- * @param {Object} baseUnit - The original unit object.
- * @param {Array<Object>} selectedMods - The mods currently selected for this unit.
- * @param {HTMLElement} listElement - The UL element to render stats into.
- * @param {boolean} showMaxStats - This parameter is now unused but kept for function signature consistency.
- * @param {boolean} showMaxLevel - True if "Max Level" should be displayed.
- * @param {number} currentLevel - The level to calculate stats for.
- * @param {HTMLElement} activeModEffectsListElement - The UL element to render active mod effects into.
+ * Renders the mods table.
  */
-function updateAppliedStats(baseUnit, selectedMods, listElement, showMaxStats, showMaxLevel, currentLevel, activeModEffectsListElement) {
-    listElement.innerHTML = ''; // Clear previous stats
-    activeModEffectsListElement.innerHTML = ''; // Clear previous mod effects
-
-    let unitToDisplay = { ...baseUnit };
-
-    // Determine the level for calculation
-    const levelForCalculation = showMaxLevel ? 25 : currentLevel;
-
-    // Calculate stats at the determined level, then apply mods
-    unitToDisplay = getUnitStatsAtLevel(baseUnit, levelForCalculation, selectedMods);
-
-    // Render allUnitStatsForDropdown in the dropdown's "Stats with Mods" section
-    allUnitStatsForDropdown.forEach(key => {
-        const li = document.createElement('li');
-        let displayValue = unitToDisplay[key];
-        // Apply specific formatting for percentages and numbers
-        if (['Cooldown', 'HP', 'Damage', 'Distance', 'CritChance', 'CritDamage', 'AttackEffectLifesteal', 'Knockback', 'Accuracy', 'EvadeChance'].includes(key)) {
-            displayValue = typeof displayValue === 'number' ? displayValue.toFixed(2) : displayValue;
-        }
-        // Special formatting for percentage values
-        if (['CritChance', 'EvadeChance', 'Accuracy'].includes(key) && typeof displayValue === 'number') {
-            displayValue = (displayValue * 100).toFixed(2) + '%';
-        }
-        li.textContent = `${key}: ${displayValue !== undefined ? displayValue : 'N/A'}`;
-
-        // Highlight changes from base stats (considering the level calculation)
-        const baseValueAtLevel1 = baseUnit[key]; // Compare against base level 1 stats
-        const currentDisplayedValue = unitToDisplay[key];
-
-        // Only highlight if the base value at level 1 is a number and different from current
-        if (typeof baseValueAtLevel1 === 'number' && typeof currentDisplayedValue === 'number' && baseValueAtLevel1 !== currentDisplayedValue) {
-            li.classList.add('font-bold', 'text-blue-600', 'dark:text-blue-300');
-        } else if (typeof baseValueAtLevel1 === 'string' && typeof currentDisplayedValue === 'string' && baseValueAtLevel1 !== currentDisplayedValue) {
-            // For string changes (like AttackEffect becoming 'Fire, Frost')
-            li.classList.add('font-bold', 'text-blue-600', 'dark:text-blue-300');
-        }
-        listElement.appendChild(li);
+function renderModsTable() {
+    modsTableBody.innerHTML = ''; // Clear existing rows
+    mods.forEach(mod => {
+        const row = document.createElement('tr');
+        row.className = 'bg-white dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600';
+        row.innerHTML = `
+            <td class="py-3 px-6 whitespace-nowrap font-medium text-gray-900 dark:text-gray-100">${mod.Title}</td>
+            <td class="py-3 px-6 whitespace-nowrap">${mod.Rarity}</td>
+            <td class="py-3 px-6">${mod.Effect}</td>
+        `;
+        modsTableBody.appendChild(row);
     });
-
-    // Populate Active Mod Effects
-    if (selectedMods.length > 0) {
-        selectedMods.forEach(mod => {
-            if (mod.effectDescription && mod.effectDescription !== 'No defined effect') {
-                const li = document.createElement('li');
-                li.classList.add('text-gray-700', 'dark:text-gray-200');
-                li.innerHTML = `<span class="font-semibold">${mod.label} (${mod.rarity}):</span> ${mod.effectDescription}`;
-                activeModEffectsListElement.appendChild(li);
-            }
-        });
-    } else {
-        const li = document.createElement('li');
-        li.classList.add('text-gray-500', 'dark:text-gray-400');
-        li.textContent = 'No mods currently applied.';
-        activeModEffectsListElement.appendChild(li);
-    }
 }
 
-
-// --- Sorting and Filtering ---
+/**
+ * Filters and re-renders units based on current search and filter criteria.
+ */
+function filterAndRenderUnits() {
+    // Small delay to show spinner for a moment even if data loads fast
+    loadingSpinner.classList.remove('hidden');
+    setTimeout(() => {
+        renderUnitsTable();
+        loadingSpinner.classList.add('hidden');
+    }, 50);
+}
 
 /**
- * Sorts the units array based on the given column and current sort direction.
- * @param {string} column - The column key to sort by.
+ * Sorts the units data by the specified column.
+ * @param {string} column - The column to sort by.
  */
 function sortData(column) {
-    // If sorting by image, do nothing or sort by Label instead
-    if (column === 'Image') {
-        column = 'Label';
-    }
-
     if (currentSortColumn === column) {
         currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
     } else {
         currentSortColumn = column;
-        currentSortDirection = 'asc'; // Default to ascending for new column
+        currentSortDirection = 'asc';
     }
-
-    // Sort units (original data)
-    units.sort((a, b) => {
-        const valA = a[column];
-        const valB = b[column];
-
-        // Custom sort for Rarity
-        if (column === 'Rarity') {
-            const indexA = rarityOrder.indexOf(valA);
-            const indexB = rarityOrder.indexOf(valB);
-            return currentSortDirection === 'asc' ? indexA - indexB : indexB - indexA;
-        }
-
-        // Custom sort for CommunityRanking (S > A > B > C > D > F)
-        if (column === 'CommunityRanking') {
-            // Define the desired sorting order for tiers
-            const rankingOrder = ['S', 'A', 'B', 'C', 'D', 'F', 'N/A']; // 'N/A' should be last
-
-            // Find tier for unit A using normalized labels
-            const tierInfoA = tierList.find(tierUnit => tierUnit.NormalizedUnitName === a.NormalizedLabel);
-            const tierA = tierInfoA ? tierInfoA.Tier : 'N/A';
-            const indexA = rankingOrder.indexOf(tierA);
-
-            // Find tier for unit B using normalized labels
-            const tierInfoB = tierList.find(tierUnit => tierUnit.NormalizedUnitName === b.NormalizedLabel);
-            const tierB = tierInfoB ? tierInfoB.Tier : 'N/A';
-            const indexB = rankingOrder.indexOf(tierB);
-
-            // Handle cases where a tier might not be found in rankingOrder (e.g., new tiers)
-            // Push unknown tiers to the end
-            const finalIndexA = indexA === -1 ? rankingOrder.length : indexA;
-            const finalIndexB = indexB === -1 ? rankingOrder.length : indexB;
-
-
-            return currentSortDirection === 'asc' ? finalIndexA - finalIndexB : finalIndexB - finalIndexA;
-        }
-
-        // Handle "N/A" values by treating them as lowest/highest for sorting
-        if (valA === 'N/A' && valB === 'N/A') return 0;
-        if (valA === 'N/A') return currentSortDirection === 'asc' ? 1 : -1;
-        if (valB === 'N/A') return currentSortDirection === 'asc' ? -1 : 1;
-
-        // Numeric comparison
-        if (typeof valA === 'number' && typeof valB === 'number') {
-            return currentSortDirection === 'asc' ? valA - valB : valB - valA;
-        }
-        // String comparison
-        return currentSortDirection === 'asc' ?
-            String(valA).localeCompare(String(valB)) :
-            String(valB).localeCompare(String(valA));
-    });
-    filterAndRenderUnits(); // Re-render after sorting
+    filterAndRenderUnits(); // Re-render with new sort order
 }
 
 /**
- * Filters the units data based on search input, rarity, and class filters, then renders the table.
- */
-function filterAndRenderUnits() {
-    const searchTerm = searchInput.value.toLowerCase();
-    const selectedRarity = rarityFilter.value;
-    const selectedClass = classFilter.value;
-
-    const filteredUnits = units.filter(unit => {
-        const matchesSearch = Object.values(unit).some(value =>
-            String(value).toLowerCase().includes(searchTerm)
-        );
-        const matchesRarity = selectedRarity === '' || unit.Rarity === selectedRarity;
-        const matchesClass = selectedClass === '' || unit.Class === selectedClass;
-
-        return matchesSearch && matchesRarity && matchesClass;
-    });
-
-    renderUnitTable(filteredUnits);
-}
-
-/**
- * Populates the rarity filter dropdown.
- */
-function populateRarityFilter() {
-    rarityFilter.innerHTML = '<option value="">All Rarity</option>'; // Reset
-    rarityOrder.forEach(rarity => {
-        const option = document.createElement('option');
-        option.value = rarity;
-        option.textContent = rarity;
-        rarityFilter.appendChild(option);
-    });
-}
-
-/**
- * Populates the class filter dropdown.
- */
-function populateClassFilter() {
-    const classes = new Set();
-    units.forEach(unit => {
-        if (unit.Class) {
-            classes.add(unit.Class);
-        }
-    });
-    const sortedClasses = Array.from(classes).sort();
-    classFilter.innerHTML = '<option value="">All Classes</option>'; // Reset
-    sortedClasses.forEach(cls => {
-        const option = document.createElement('option');
-        option.value = cls;
-        option.textContent = cls;
-        classFilter.appendChild(option);
-    });
-}
-
-
-// --- Dark Mode Toggle ---
-
-/**
- * Toggles dark mode on/off and saves preference to localStorage.
+ * Toggles dark mode on and off.
  */
 function toggleDarkMode() {
     document.documentElement.classList.toggle('dark');
-    document.body.classList.toggle('dark'); // Toggle for body as well for custom CSS
-    document.body.classList.toggle('light'); // Toggle light class for custom CSS
     const isDarkMode = document.documentElement.classList.contains('dark');
     localStorage.setItem('theme', isDarkMode ? 'dark' : 'light');
-    updateDarkModeIcons(isDarkMode);
 }
-
-/**
- * Updates the sun/moon icons based on the current dark mode state.
- * @param {boolean} isDarkMode - True if dark mode is active, false otherwise.
- */
-function updateDarkModeIcons(isDarkMode) {
-    if (isDarkMode) {
-        sunIcon.classList.remove('hidden');
-        moonIcon.classList.add('hidden');
-    } else {
-        sunIcon.classList.add('hidden');
-        moonIcon.classList.remove('hidden');
-    }
-}
-
-/**
- * Initializes dark mode based on user's system preference or saved setting.
- */
-function initializeDarkMode() {
-    const savedTheme = localStorage.getItem('theme');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-
-    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
-        document.documentElement.classList.add('dark');
-        document.body.classList.add('dark');
-        document.body.classList.remove('light');
-        updateDarkModeIcons(true);
-    } else {
-        document.documentElement.classList.remove('dark');
-        document.body.classList.remove('dark');
-        document.body.classList.add('light');
-        updateDarkModeIcons(false);
-    }
-}
-
-
-// --- Tab Switching ---
 
 /**
  * Switches between unit and mod tabs.
- * @param {string} tabId - The ID of the tab to activate ('unitsTab' or 'modsTab').
+ * @param {string} activeTabId - The ID of the tab to activate ('unitsTab' or 'modsTab').
  */
-async function switchTab(tabId) { // Made async to await fetchTierListData
-    // Deactivate all tab buttons and hide all tab contents
-    document.querySelectorAll('.tab-button').forEach(button => button.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
+function switchTab(activeTabId) {
+    // Deactivate all tabs and hide all content sections
+    unitsTab.classList.remove('border-blue-500', 'text-blue-500');
+    modsTab.classList.remove('border-blue-500', 'text-blue-500');
+    unitsContent.classList.add('hidden');
+    modsContent.classList.add('hidden');
 
-    // Activate the clicked tab button and show its content
-    document.getElementById(tabId).classList.add('active');
-    if (tabId === 'unitsTab') {
+    // Activate the selected tab and show its content
+    if (activeTabId === 'unitsTab') {
+        unitsTab.classList.add('border-blue-500', 'text-blue-500');
         unitsContent.classList.remove('hidden');
-        filterAndRenderUnits(); // Re-render units when switching back
-    } else if (tabId === 'modsTab') {
+    } else if (activeTabId === 'modsTab') {
+        modsTab.classList.add('border-blue-500', 'text-blue-500');
         modsContent.classList.remove('hidden');
-        renderModTable(mods); // Render mods when switching to mods tab
-    }
-    else if (tabId === 'tierListTab') { // Handle new Tier List tab
-        tierListContent.classList.remove('hidden');
-        tierList = await fetchTierListData(); // Fetch and store tier list data
-        renderTierListTable(tierList); // Render tier list table
-    }
-    // Close any expanded unit details when switching tabs
-    if (expandedUnitRowId !== null) {
-        const prevExpandedRow = unitTableBody.querySelector(`[data-unit-index="${expandedUnitRowId}"]`);
-        if (prevExpandedRow) {
-            prevExpandedRow.classList.remove('expanded');
-            if (prevExpandedRow.nextElementSibling && prevExpandedRow.nextElementSibling.classList.contains('unit-details-row')) {
-                prevExpandedRow.nextElementSibling.remove();
-            }
-        }
-        expandedUnitRowId = null;
     }
 }
 
+/**
+ * Initializes the application by fetching data and setting up event listeners.
+ */
+async function init() {
+    loadingSpinner.classList.remove('hidden'); // Show spinner on init
 
-// --- Initialization ---
+    // Fetch and parse unit data from Google Sheet
+    const fetchedUnitData = await fetchAndParseCSV(GOOGLE_SHEET_UNIT_DATA_CSV_URL);
+    units = parseUnitData(fetchedUnitData);
 
-// Event Listeners
-window.onload = async function() { // Made onload async
-    initializeDarkMode(); // Set initial dark mode state
+    // Fetch and parse mod data from Google Sheet
+    const fetchedModData = await fetchAndParseCSV(GOOGLE_SHEET_MOD_DATA_CSV_URL);
+    mods = parseModData(fetchedModData);
 
-    loadingSpinner.classList.remove('hidden'); // Show spinner
-    unitTableContainer.classList.add('hidden'); // Hide unit table
-    modsContent.classList.add('hidden'); // Ensure mods content is hidden initially
-    tierListContent.classList.add('hidden'); // Ensure tier list content is hidden initially
+    // Populate filters (only if data is available)
+    if (units.length > 0) {
+        const rarities = [...new Set(units.map(unit => unit.Rarity))];
+        rarities.forEach(rarity => {
+            const option = document.createElement('option');
+            option.value = rarity;
+            option.textContent = rarity;
+            rarityFilter.appendChild(option);
+        });
 
+<<<<<<< HEAD
     // Fetch and process unit data from CSV
     const rawUnitsCSVData = await fetchCSVData(GOOGLE_SHEET_UNIT_DATA_CSV_URL);
     units = processUnitCSVData(rawUnitsCSVData);
@@ -1078,17 +895,33 @@ window.onload = async function() { // Made onload async
 
     // Fetch tier list data and wait for it to complete
     tierList = await fetchTierListData();
+=======
+        const classes = [...new Set(units.map(unit => unit.Class))];
+        classes.forEach(unitClass => {
+            const option = document.createElement('option');
+            option.value = unitClass;
+            option.textContent = unitClass;
+            classFilter.appendChild(option);
+        });
+    }
 
-    populateRarityFilter();
-    populateClassFilter(); // Populate class filter after parsing
-    filterAndRenderUnits(); // Initial render of units (now with tierList available)
-    renderModTable(mods); // Initial render of mods (will be hidden initially)
+    // Render initial tables and checkboxes
+    renderModCheckboxes();
+    renderModsTable();
+    filterAndRenderUnits(); // Initial render of units table
+>>>>>>> parent of 9b74971 (Revert "WePushingToMAINYALL")
 
-    loadingSpinner.classList.add('hidden'); // Hide spinner
-    unitTableContainer.classList.remove('hidden'); // Show unit table
+    // Hide spinner after initial render
+    loadingSpinner.classList.add('hidden');
 
-    // Search and Filter Events
-    // Debounce the search input to improve performance
+    // Set initial theme based on localStorage or system preference
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+        document.documentElement.classList.add('dark');
+    }
+
+    // Event Listeners
+    // Search and Filter Events (debounced for performance)
     const debouncedFilterAndRenderUnits = debounce(filterAndRenderUnits, 300);
     searchInput.addEventListener('input', debouncedFilterAndRenderUnits);
     rarityFilter.addEventListener('change', filterAndRenderUnits);
@@ -1110,7 +943,6 @@ window.onload = async function() { // Made onload async
     // Tab Switching Events
     unitsTab.addEventListener('click', () => switchTab('unitsTab'));
     modsTab.addEventListener('click', () => switchTab('modsTab'));
-    tierListTab.addEventListener('click', () => switchTab('tierListTab')); // Tier List Tab event
 
     // Mod Effects Toggle Event (global)
     toggleModEffects.addEventListener('change', () => {
@@ -1121,7 +953,10 @@ window.onload = async function() { // Made onload async
     // Global Max Level Toggle Event
     toggleMaxLevel.addEventListener('change', () => {
         maxLevelGlobalEnabled = toggleMaxLevel.checked;
-        // Re-render units to apply/remove global max level effects
-        filterAndRenderUnits();
+        filterAndRenderUnits(); // Re-render units to apply/remove global max level effects
     });
-};
+}
+
+// Initialize the application when the DOM is fully loaded
+document.addEventListener('DOMContentLoaded', init);
+

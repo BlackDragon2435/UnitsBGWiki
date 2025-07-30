@@ -1,0 +1,29 @@
+ModName,Title,Rarity,Amount,Chance,Stat,Effect
+Default,Default,Common,0,0.76,,Default unit properties
+SmallDamage,Strong,Common,0.1,0.04,Damage,Increase Damage by 10%
+SmallHP,Life,Common,0.1,0.04,HP,Increase HP by 10%
+SmallCooldown,Fast,Common,-0.1,0.04,Cooldown,Increase Cooldown by -10%
+SmallFrost,Frost,Uncommon,,0.01,Frost,Slows movement by 30% and slows attack speed by 25% for 2s
+SmallPoison,Toxic,Uncommon,,0.01,Poison,Periodic damage 2 HP every 0.3s 8 times
+SmallFire,Fire,Uncommon,,0.01,Fire,Periodic damage 5 HP every 0.8s 3 times
+MediumHP,Big,Rare,0.25,0.01,HP,Increase HP by 25%
+MediumMirror,Hedgehog,Rare,0.15,0.01,Mirror,Return 15% damage to attacker
+MediumAccuracy,Exact,Rare,0.15,0.01,Accuracy,Increase Accuracy by 15%
+MediumCooldown,Trickster,Rare,-0.2,0.01,Cooldown,Increase Cooldown by -20%
+MediumDamage,Bodybuilder,Rare,0.25,0.01,Damage,Increase Damage by 25%
+SmallLifesteal,Leech,Rare,10,0.01,Lifesteal,Heals by 10 HP for each attack
+MediumFire,Armageddon,Legendary,,0.002,Fire,Periodic damage 10 HP every 0.5s 3 times
+MediumCritDamageCoeff,Critical,Legendary,0.25,0.002,CritDamageCoeff,Increase Crit Damage Coeff by 25%
+MediumPoison,Viper,Legendary,,0.002,Poison,Periodic damage 3 HP every 0.25s 10 times
+MediumFrost,Blizzard,Legendary,,0.002,Frost,Slows movement by 50% and slows attack speed by 25% for 3s
+MediumEvadeChance,Dexterous,Legendary,0.2,0.002,EvadeChance,Increase Evade Chance by 20%
+MediumCritChance,Accurate,Legendary,0.2,0.002,CritChance,Increase Crit Chance by 20%
+LargeDamage,Powerful,Mythic,0.5,0.001,Damage,Increase Damage by 50%
+LargeCooldown,Lightning,Mythic,-0.35,0.001,Cooldown,Increase Cooldown by -35%
+LargeHP,Titan,Mythic,0.5,0.001,HP,Increase HP by 50%
+LargeAccuracy,Sniper,Mythic,0.5,0.001,Accuracy,Increase Accuracy by 50%
+LargeMirror,Mirror,Mythic,0.35,0.001,Mirror,Return 35% damage to attacker
+LargeCritChance,Assassin,Demonic,0.35,0.001,CritChance,Increase Crit Chance by 35%
+LargeCritDamageCoeff,Executor,Demonic,0.6,0.001,CritDamageCoeff,Increase Crit Damage Coeff by 60%
+LargeEvadeChance,Joker,Demonic,0.35,0.001,EvadeChance,Increase Evade Chance by 35%
+MediumLifesteal,Vampire,Demonic,25,0.001,Lifesteal,Heals by 25 HP for each attack
