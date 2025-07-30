@@ -80,6 +80,15 @@ function debounce(func, delay) {
 }
 
 /**
+ * Normalizes a string for comparison (e.g., removes spaces, converts to lowercase).
+ * @param {string} str - The input string.
+ * @returns {string} The normalized string.
+ */
+function normalizeString(str) {
+    return String(str).toLowerCase().replace(/\s/g, '');
+}
+
+/**
  * Parses the raw string data into an array of objects.
  * Handles "N/A" conversion to actual null for easier numeric operations,
  * and number parsing.
@@ -127,6 +136,8 @@ function parseData(dataString, dataType) {
                 }
                 unit[key] = value;
             }
+            // Add a normalized label for easier matching with tier list
+            unit.NormalizedLabel = normalizeString(unit.Label);
             parsedItems.push(unit);
         });
 
@@ -472,8 +483,10 @@ function renderUnitTable(dataToRender) {
             let displayValue = unitToDisplay[key];
 
             if (key === 'CommunityRanking') {
-                const tierInfo = tierList.find(tierUnit => tierUnit['UNIT NAME'] === unitToDisplay.Label);
-                displayValue = tierInfo ? tierInfo.TIER : 'N/A'; // Corrected key to 'TIER'
+                // Use normalized labels for matching
+                const normalizedUnitLabel = normalizeString(unitToDisplay.Label);
+                const tierInfo = tierList.find(tierUnit => tierUnit.NormalizedUnitName === normalizedUnitLabel);
+                displayValue = tierInfo ? tierInfo.Tier : 'N/A'; // Corrected key to 'TIER'
                 cell.classList.add('font-semibold', 'text-center'); // Center align tier
             }
             // Custom formatting for specific keys (only HP, Damage, Cooldown remain here)
@@ -579,6 +592,10 @@ function parseCSV(csvText) {
         headers.forEach((header, index) => {
             rowObject[header] = values[index];
         });
+        // Add a normalized UnitName for easier matching with units data
+        if (rowObject['UnitName']) {
+            rowObject.NormalizedUnitName = normalizeString(rowObject['UnitName']);
+        }
         data.push(rowObject);
     }
     return data;
@@ -601,7 +618,7 @@ function renderTierListTable(dataToRender) {
 
     // Define the order of columns for the tier list table
     // Corrected to match the actual CSV headers from the screenshot
-    const tierListColumnOrder = ['UnitName', 'Tier', 'Notes'];
+    const tierListColumnOrder = ['UnitName', 'Tier', 'NumericalRank', 'Notes']; // Updated to match screenshot headers
 
     dataToRender.forEach(item => {
         const row = tierListTableBody.insertRow();
@@ -610,7 +627,7 @@ function renderTierListTable(dataToRender) {
         tierListColumnOrder.forEach(key => {
             const cell = row.insertCell();
             cell.classList.add('py-4', 'px-6', 'text-sm');
-            if (key === 'UNIT NAME' || key === 'TIER') { // Use 'UNIT NAME' for styling
+            if (key === 'UnitName' || key === 'Tier') { // Use 'UnitName' for styling
                 cell.classList.add('font-medium', 'text-gray-900', 'dark:text-gray-100', 'whitespace-nowrap');
             } else {
                 cell.classList.add('text-gray-500', 'dark:text-gray-300', 'text-wrap'); // Allow text wrapping for reasoning
@@ -938,14 +955,14 @@ function sortData(column) {
         // Custom sort for CommunityRanking (assuming A, B, C, D, F where A is best)
         if (column === 'CommunityRanking') {
             const rankingOrder = ['S+', 'S', 'A+', 'A', 'B+', 'B', 'C+', 'C', 'D+', 'D', 'F', 'N/A'];
-            // Find tier for unit A
-            const tierInfoA = tierList.find(tierUnit => tierUnit['UNIT NAME'] === a.Label); // Corrected key to 'UNIT NAME'
-            const tierA = tierInfoA ? tierInfoA.TIER : 'N/A'; // Corrected key to 'TIER'
+            // Find tier for unit A using normalized labels
+            const tierInfoA = tierList.find(tierUnit => tierUnit.NormalizedUnitName === a.NormalizedLabel);
+            const tierA = tierInfoA ? tierInfoA.Tier : 'N/A';
             const indexA = rankingOrder.indexOf(tierA);
 
-            // Find tier for unit B
-            const tierInfoB = tierList.find(tierUnit => tierUnit['UNIT NAME'] === b.Label); // Corrected key to 'UNIT NAME'
-            const tierB = tierInfoB ? tierInfoB.TIER : 'N/A'; // Corrected key to 'TIER'
+            // Find tier for unit B using normalized labels
+            const tierInfoB = tierList.find(tierUnit => tierUnit.NormalizedUnitName === b.NormalizedLabel);
+            const tierB = tierInfoB ? tierInfoB.Tier : 'N/A';
             const indexB = rankingOrder.indexOf(tierB);
 
             return currentSortDirection === 'asc' ? indexA - indexB : indexB - indexA;
