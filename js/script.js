@@ -472,8 +472,8 @@ function renderUnitTable(dataToRender) {
             let displayValue = unitToDisplay[key];
 
             if (key === 'CommunityRanking') {
-                const tierInfo = tierList.find(tierUnit => tierUnit['Unit Name'] === unitToDisplay.Label);
-                displayValue = tierInfo ? tierInfo.Tier : 'N/A';
+                const tierInfo = tierList.find(tierUnit => tierUnit['UNIT NAME'] === unitToDisplay.Label);
+                displayValue = tierInfo ? tierInfo.TIER : 'N/A'; // Corrected key to 'TIER'
                 cell.classList.add('font-semibold', 'text-center'); // Center align tier
             }
             // Custom formatting for specific keys (only HP, Damage, Cooldown remain here)
@@ -1114,7 +1114,7 @@ async function switchTab(tabId) { // Made async to await fetchTierListData
 // --- Initialization ---
 
 // Event Listeners
-window.onload = function() {
+window.onload = async function() { // Made onload async
     initializeDarkMode(); // Set initial dark mode state
 
     loadingSpinner.classList.remove('hidden'); // Show spinner
@@ -1122,18 +1122,20 @@ window.onload = function() {
     modsContent.classList.add('hidden'); // Ensure mods content is hidden initially
     tierListContent.classList.add('hidden'); // Ensure tier list content is hidden initially
 
-    // Simulate a delay for parsing data
-    setTimeout(() => {
-        units = parseData(rawUnitData, 'units');
-        mods = parseData(rawModData, 'mods'); // Parse mod data
-        populateRarityFilter();
-        populateClassFilter(); // Populate class filter after parsing
-        filterAndRenderUnits(); // Initial render of units
-        renderModTable(mods); // Initial render of mods (will be hidden initially)
+    // Parse units and mods data
+    units = parseData(rawUnitData, 'units');
+    mods = parseData(rawModData, 'mods'); // Parse mod data
 
-        loadingSpinner.classList.add('hidden'); // Hide spinner
-        unitTableContainer.classList.remove('hidden'); // Show unit table
-    }, 500); // Small delay to show spinner
+    // Fetch tier list data and wait for it to complete
+    tierList = await fetchTierListData(); // Await the tier list fetch
+
+    populateRarityFilter();
+    populateClassFilter(); // Populate class filter after parsing
+    filterAndRenderUnits(); // Initial render of units (now with tierList available)
+    renderModTable(mods); // Initial render of mods (will be hidden initially)
+
+    loadingSpinner.classList.add('hidden'); // Hide spinner
+    unitTableContainer.classList.remove('hidden'); // Show unit table
 
     // Search and Filter Events
     // Debounce the search input to improve performance
