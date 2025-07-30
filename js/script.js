@@ -149,55 +149,60 @@ function parseData(dataString, dataType) {
                 if (modGroup.Stat) effect.stat = modGroup.Stat;
                 if (modGroup.Amount !== undefined) effect.amount = modGroup.Amount;
                 if (modGroup.Chance !== undefined) effect.chance = modGroup.Chance;
+                if (modGroup.Effect) effect.description = modGroup.Effect; // Add effect description from raw data
 
                 if (Object.keys(effect).length > 0) {
                     mod.effects.push(effect);
                 }
 
-                // Generate a readable effect description
+                // Generate a readable effect description if not already provided
                 let effectDescParts = [];
-                mod.effects.forEach(eff => {
-                    let desc = '';
-                    const stat = eff.stat;
-                    const amount = eff.amount;
-                    const chance = eff.chance;
+                if (modGroup.Effect) {
+                    effectDescParts.push(modGroup.Effect);
+                } else {
+                    mod.effects.forEach(eff => {
+                        let desc = '';
+                        const stat = eff.stat;
+                        const amount = eff.amount;
+                        const chance = eff.chance;
 
-                    if (stat === "HP" || stat === "Damage") {
-                        if (typeof amount === 'number') {
-                            desc += `Increases ${stat} by ${(amount * 100).toFixed(0)}%`;
+                        if (stat === "HP" || stat === "Damage") {
+                            if (typeof amount === 'number') {
+                                desc += `Increases ${stat} by ${(amount * 100).toFixed(0)}%`;
+                            }
+                        } else if (stat === "Cooldown") {
+                            if (typeof amount === 'number') {
+                                desc += `Reduces ${stat} by ${Math.abs(amount).toFixed(2)}s`;
+                            }
+                        } else if (stat === "CritChance" || stat === "EvadeChance" || stat === "Accuracy") {
+                            if (typeof amount === 'number') {
+                                desc += `Increases ${stat} by ${(amount * 100).toFixed(0)}%`;
+                            }
+                        } else if (stat === "CritDamageCoeff") {
+                             if (typeof amount === 'number') {
+                                desc += `Increases Crit Damage Multiplier by ${(amount * 100).toFixed(0)}%`;
+                            }
+                        } else if (stat === "Lifesteal") {
+                             if (typeof amount === 'number') {
+                                desc += `Adds ${amount}% Lifesteal`;
+                            } else if (typeof chance === 'number') { // Special case for Lifesteal with chance
+                                desc += `Adds ${(chance * 100).toFixed(0)}% Lifesteal`;
+                            }
+                        } else if (stat === "Frost" || stat === "Fire" || stat === "Poison" || stat === "Mirror") {
+                            if (typeof chance === 'number') {
+                                desc += `Applies ${stat} with ${(chance * 100).toFixed(0)}% chance`;
+                            }
+                        } else if (mod.label === "Default") { // Handle the "Default" mod specifically
+                            desc += "Default unit properties";
                         }
-                    } else if (stat === "Cooldown") {
-                        if (typeof amount === 'number') {
-                            desc += `Reduces ${stat} by ${Math.abs(amount).toFixed(2)}s`;
-                        }
-                    } else if (stat === "CritChance" || stat === "EvadeChance" || stat === "Accuracy") {
-                        if (typeof amount === 'number') {
-                            desc += `Increases ${stat} by ${(amount * 100).toFixed(0)}%`;
-                        }
-                    } else if (stat === "CritDamageCoeff") {
-                         if (typeof amount === 'number') {
-                            desc += `Increases Crit Damage Multiplier by ${(amount * 100).toFixed(0)}%`;
-                        }
-                    } else if (stat === "Lifesteal") {
-                         if (typeof amount === 'number') {
-                            desc += `Adds ${amount}% Lifesteal`;
-                        } else if (typeof chance === 'number') { // Special case for Lifesteal with chance
-                            desc += `Adds ${(chance * 100).toFixed(0)}% Lifesteal`;
-                        }
-                    } else if (stat === "Frost" || stat === "Fire" || stat === "Poison" || stat === "Mirror") {
-                        if (typeof chance === 'number') {
-                            desc += `Applies ${stat} with ${(chance * 100).toFixed(0)}% chance`;
-                        }
-                    } else if (mod.label === "Default") { // Handle the "Default" mod specifically
-                        desc += "Default unit properties";
-                    }
 
-                    // Add chance if it's not already part of the main description for certain effects
-                    if (typeof chance === 'number' && !["Frost", "Fire", "Poison", "Mirror", "Lifesteal"].includes(stat) && desc) {
-                        desc += ` (Chance: ${(chance * 100).toFixed(0)}%)`;
-                    }
-                    if (desc) effectDescParts.push(desc);
-                });
+                        // Add chance if it's not already part of the main description for certain effects
+                        if (typeof chance === 'number' && !["Frost", "Fire", "Poison", "Mirror", "Lifesteal"].includes(stat) && desc) {
+                            desc += ` (Chance: ${(chance * 100).toFixed(0)}%)`;
+                        }
+                        if (desc) effectDescParts.push(desc);
+                    });
+                }
                 mod.effectDescription = effectDescParts.join('; ') || 'No defined effect';
                 mod.appliesTo = "All"; // Default, as not specified in the mod data
 
@@ -437,25 +442,23 @@ function renderModTable(dataToRender) {
  * @param {number} index - The original index of the unit in the `units` array.
  */
 function toggleUnitDetails(unit, row, index) {
-    const nextRow = row.nextElementSibling;
+    const existingDetailRow = unitTableBody.querySelector('.unit-details-row');
 
-    // If an existing detail row is open for this unit, close it
-    if (nextRow && nextRow.classList.contains('unit-details-row') && nextRow.dataset.unitIndex === String(index)) {
+    // If there's an existing detail row and it's for the same unit, close it
+    if (existingDetailRow && existingDetailRow.dataset.unitIndex === String(index)) {
         row.classList.remove('expanded');
-        nextRow.remove();
+        existingDetailRow.remove();
         expandedUnitRowId = null;
         return;
     }
 
-    // Close any other open detail rows
-    if (expandedUnitRowId !== null && expandedUnitRowId !== index) {
-        const prevExpandedRow = unitTableBody.querySelector(`[data-unit-index="${expandedUnitRowId}"]`);
+    // If there's an existing detail row for a *different* unit, close it first
+    if (existingDetailRow && existingDetailRow.dataset.unitIndex !== String(index)) {
+        const prevExpandedRow = unitTableBody.querySelector(`[data-unit-index="${existingDetailRow.dataset.unitIndex}"]`);
         if (prevExpandedRow) {
             prevExpandedRow.classList.remove('expanded');
-            if (prevExpandedRow.nextElementSibling && prevExpandedRow.nextElementSibling.classList.contains('unit-details-row')) {
-                prevExpandedRow.nextElementSibling.remove();
-            }
         }
+        existingDetailRow.remove();
     }
 
     // Set the new expanded row ID
@@ -498,11 +501,16 @@ function toggleUnitDetails(unit, row, index) {
     const modApplyDiv = document.createElement('div');
     modApplyDiv.classList.add('flex-1', 'p-3', 'rounded-lg', 'bg-blue-50', 'dark:bg-blue-900', 'shadow-inner');
     modApplyDiv.innerHTML = `<h3 class="font-semibold text-lg mb-2 text-blue-800 dark:text-blue-200">Apply Mods:</h3>
+                             <div class="mb-4 flex items-center">
+                                 <input type="checkbox" id="toggleMaxStats" class="mr-2 rounded text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400">
+                                 <label for="toggleMaxStats" class="text-gray-700 dark:text-gray-300">Show Max Stats (TBD)</label>
+                             </div>
                              <div id="modCheckboxes" class="flex flex-wrap gap-x-4 gap-y-2 mb-4 text-gray-700 dark:text-gray-200"></div>
                              <h3 class="font-semibold text-lg mb-2 text-blue-800 dark:text-blue-200">Stats with Mods:</h3>
                              <ul id="appliedStatsList" class="space-y-1 text-gray-700 dark:text-gray-200"></ul>`;
     detailContent.appendChild(modApplyDiv);
 
+    const toggleMaxStats = modApplyDiv.querySelector('#toggleMaxStats');
     const modCheckboxesDiv = modApplyDiv.querySelector('#modCheckboxes');
     const appliedStatsList = modApplyDiv.querySelector('#appliedStatsList');
 
@@ -525,7 +533,9 @@ function toggleUnitDetails(unit, row, index) {
             } else {
                 selectedModsForUnit = selectedModsForUnit.filter(m => m.id !== mod.id);
             }
-            updateAppliedStats(unit, selectedModsForUnit, appliedStatsList);
+            // Ensure max stats toggle is off if individual mods are being selected
+            toggleMaxStats.checked = false;
+            updateAppliedStats(unit, selectedModsForUnit, appliedStatsList, false);
         });
 
         label.appendChild(checkbox);
@@ -533,26 +543,51 @@ function toggleUnitDetails(unit, row, index) {
         modCheckboxesDiv.appendChild(label);
     });
 
+    // Event listener for Max Stats toggle
+    toggleMaxStats.addEventListener('change', () => {
+        if (toggleMaxStats.checked) {
+            // Uncheck all individual mod checkboxes if Max Stats is enabled
+            modCheckboxesDiv.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+            selectedModsForUnit = []; // Clear selected mods
+        }
+        updateAppliedStats(unit, selectedModsForUnit, appliedStatsList, toggleMaxStats.checked);
+    });
+
+
     // Initial display of applied stats (no mods applied yet)
-    updateAppliedStats(unit, selectedModsForUnit, appliedStatsList);
+    updateAppliedStats(unit, selectedModsForUnit, appliedStatsList, false);
 
     detailCell.appendChild(detailContent);
 }
 
 /**
- * Updates the displayed stats in the detailed unit view based on selected mods.
+ * Updates the displayed stats in the detailed unit view based on selected mods or max stats toggle.
  * @param {Object} baseUnit - The original unit object.
  * @param {Array<Object>} selectedMods - The mods currently selected for this unit.
  * @param {HTMLElement} listElement - The UL element to render stats into.
+ * @param {boolean} showMaxStats - True if "Max Stats" should be displayed.
  */
-function updateAppliedStats(baseUnit, selectedMods, listElement) {
+function updateAppliedStats(baseUnit, selectedMods, listElement, showMaxStats) {
     listElement.innerHTML = ''; // Clear previous stats
 
-    const modifiedUnit = applyModsToUnit(baseUnit, selectedMods);
+    let unitToDisplay = { ...baseUnit };
+
+    if (showMaxStats) {
+        // Display "TBD" for all relevant stats
+        unitColumnOrder.slice(1).forEach(key => {
+            const li = document.createElement('li');
+            li.textContent = `${key}: TBD`;
+            li.classList.add('font-bold', 'text-blue-600', 'dark:text-blue-300'); // Highlight as "max"
+            listElement.appendChild(li);
+        });
+        return; // Exit as we're showing TBD
+    } else {
+        unitToDisplay = applyModsToUnit(baseUnit, selectedMods);
+    }
 
     unitColumnOrder.slice(1).forEach(key => { // Skip 'Image'
         const li = document.createElement('li');
-        let displayValue = modifiedUnit[key];
+        let displayValue = unitToDisplay[key];
         if (key === 'CritChance' || key === 'EvadeChance' || key === 'Accuracy') {
             displayValue = typeof displayValue === 'number' ? (displayValue * 100).toFixed(2) + '%' : displayValue;
         } else if (key === 'Cooldown' || key === 'CritDamage' || key === 'AttackEffectLifesteal') {
@@ -561,8 +596,15 @@ function updateAppliedStats(baseUnit, selectedMods, listElement) {
         li.textContent = `${key}: ${displayValue !== undefined ? displayValue : 'N/A'}`;
 
         // Highlight changes from base stats
-        if (baseUnit[key] !== modifiedUnit[key] && baseUnit[key] !== 'N/A' && modifiedUnit[key] !== 'N/A') {
-            li.classList.add('font-bold', 'text-blue-600', 'dark:text-blue-300');
+        if (baseUnit[key] !== unitToDisplay[key] && baseUnit[key] !== 'N/A' && unitToDisplay[key] !== 'N/A') {
+            // Check for numeric difference beyond formatting
+            const baseNum = parseFloat(baseUnit[key]);
+            const modifiedNum = parseFloat(unitToDisplay[key]);
+            if (!isNaN(baseNum) && !isNaN(modifiedNum) && baseNum !== modifiedNum) {
+                li.classList.add('font-bold', 'text-blue-600', 'dark:text-blue-300');
+            } else if (typeof baseUnit[key] === 'string' && typeof unitToDisplay[key] === 'string' && baseUnit[key] !== unitToDisplay[key]) {
+                 li.classList.add('font-bold', 'text-blue-600', 'dark:text-blue-300');
+            }
         }
         listElement.appendChild(li);
     });

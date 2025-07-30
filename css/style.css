@@ -1,6 +1,8 @@
 /* Base styles for dark mode compatibility */
 body {
     font-family: 'Inter', sans-serif;
+    /* Ensure a default text color that works well on both light and dark backgrounds */
+    color: #374151; /* gray-800 for light mode */
 }
 
 /* Table styles */
@@ -15,6 +17,7 @@ th, td {
     padding: 0.75rem 1.5rem; /* px-6 py-3 */
     text-align: left;
     white-space: nowrap; /* Prevent wrapping for headers and data */
+    font-size: 0.875rem; /* text-sm, improved readability */
 }
 
 /* Light Mode Table Styles */
@@ -173,10 +176,34 @@ th, td {
     to { opacity: 1; transform: translateY(0); }
 }
 
-/* Style for mod checkboxes in detailed view */
-#modCheckboxes label {
+/* Style for mod checkboxes and max stats checkbox in detailed view */
+#modCheckboxes label, #toggleMaxStats + label {
     margin-right: 1rem;
+    font-size: 0.875rem; /* text-sm */
+    color: #374151; /* Default text color for labels */
 }
-#modCheckboxes input[type="checkbox"] {
+
+.dark #modCheckboxes label, .dark #toggleMaxStats + label {
+    color: #e5e7eb; /* Light text color for labels in dark mode */
+}
+
+#modCheckboxes input[type="checkbox"], #toggleMaxStats {
     cursor: pointer;
+}
+
+/* Improve general text contrast in the detail view */
+.unit-details-row ul li {
+    color: #374151; /* Darker text for better readability in light mode */
+}
+
+.dark .unit-details-row ul li {
+    color: #e5e7eb; /* Lighter text for better readability in dark mode */
+}
+
+.unit-details-row h3 {
+    color: #1f2937; /* Even darker for headings in light mode */
+}
+
+.dark .unit-details-row h3 {
+    color: #f9fafb; /* Even lighter for headings in dark mode */
 }
