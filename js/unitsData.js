@@ -3173,7 +3173,7 @@ export const rawUnitData = `
         ["Cooldown"] = 1.2,
         ["ShadowStepCooldown"] = "N/A",
     },
-		["Artemis"] = {
+	["Artemis"] = {
 		["Knockback"] = 0,
 		["Rarity"] = "Demonic",
 		["Label"] = "Artemis",
@@ -3185,7 +3185,7 @@ export const rawUnitData = `
 		["Cooldown"] = 1.3,
 		["Damage"] = 23,
 	},
-		["Persesus"] = {
+	["Persesus"] = {
 		["Knockback"] = 50,
 		["Rarity"] = "Mythic",
 		["Label"] = "Perseus",
@@ -3199,7 +3199,7 @@ export const rawUnitData = `
 		["Cooldown"] = 3,
 		["Damage"] = 55,
 	},
-		["Aphrodite"] = {
+	["Aphrodite"] = {
 		["Knockback"] = 0,
 		["Rarity"] = "Mythic",
 		["Label"] = "Aphrodite",
@@ -3216,7 +3216,7 @@ export const rawUnitData = `
 		["Cooldown"] = 3.75,
 		["Damage"] = 55,
 	},
-		["NoobSmall"] = {
+	["NoobSmall"] = {
         ["CritChance"] = "N/A",
         ["Label"] = "Noob",
         ["Class"] = "Warrior",
