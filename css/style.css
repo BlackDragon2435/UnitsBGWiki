@@ -1,0 +1,154 @@
+/* Base styles for dark mode compatibility */
+body {
+    font-family: 'Inter', sans-serif;
+}
+
+/* Table styles */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    border-radius: 0.75rem; /* rounded-xl */
+    overflow: hidden; /* Ensures rounded corners apply to children */
+}
+
+th, td {
+    padding: 0.75rem 1.5rem; /* px-6 py-3 */
+    text-align: left;
+    white-space: nowrap; /* Prevent wrapping for headers and data */
+}
+
+/* Light Mode Table Styles */
+.light body {
+    background-color: #f3f4f6; /* gray-100 */
+    color: #374151; /* gray-800 */
+}
+.light main {
+    background-color: #ffffff; /* white */
+}
+.light th {
+    background-color: #1f2937; /* gray-800 */
+    color: #f9fafb; /* gray-50 */
+    cursor: pointer;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-bottom: 1px solid #e5e7eb; /* border-gray-200 */
+}
+.light th:hover {
+    background-color: #374151; /* gray-700 */
+}
+.light tbody tr:nth-child(even) {
+    background-color: #f9fafb; /* gray-50 */
+}
+.light tbody tr:nth-child(odd) {
+    background-color: #ffffff; /* white */
+}
+.light tbody tr:hover {
+    background-color: #e5e7eb; /* gray-200 */
+}
+.light td {
+    border-bottom: 1px solid #e5e7eb; /* border-gray-200 */
+}
+.light .tab-button {
+    background-color: #e5e7eb; /* gray-200 */
+    color: #374151; /* gray-800 */
+}
+.light .tab-button.active {
+    background-color: #3b82f6; /* blue-500 */
+    color: #ffffff;
+}
+.light .tab-button:hover:not(.active) {
+    background-color: #d1d5db; /* gray-300 */
+}
+
+
+/* Dark Mode Table Styles */
+.dark body {
+    background-color: #111827; /* gray-900 */
+    color: #e5e7eb; /* gray-200 */
+}
+.dark main {
+    background-color: #1f2937; /* gray-800 */
+}
+.dark th {
+    background-color: #374151; /* gray-700 */
+    color: #f9fafb; /* gray-50 */
+    cursor: pointer;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-bottom: 1px solid #4b5563; /* border-gray-600 */
+}
+.dark th:hover {
+    background-color: #4b5563; /* gray-600 */
+}
+.dark tbody tr:nth-child(even) {
+    background-color: #1f2937; /* gray-800 */
+}
+.dark tbody tr:nth-child(odd) {
+    background-color: #374151; /* gray-700 */
+}
+.dark tbody tr:hover {
+    background-color: #4b5563; /* gray-600 */
+}
+.dark td {
+    border-bottom: 1px solid #4b5563; /* border-gray-600 */
+}
+.dark .tab-button {
+    background-color: #4b5563; /* gray-600 */
+    color: #e5e7eb; /* gray-200 */
+}
+.dark .tab-button.active {
+    background-color: #60a5fa; /* blue-400 */
+    color: #1f2937;
+}
+.dark .tab-button:hover:not(.active) {
+    background-color: #6b7280; /* gray-500 */
+}
+
+
+/* Tab Button Styles (common) */
+.tab-button {
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+    cursor: pointer;
+    border: none;
+    outline: none;
+}
+
+
+/* Rarity colors - Specific hex codes for better contrast and distinction */
+.rarity-Common { background-color: #c0c0c0; } /* Silver/Light Gray */
+.rarity-Uncommon { background-color: #90ee90; } /* Light Green */
+.rarity-Rare { background-color: #add8e6; } /* Light Blue */
+.rarity-Epic { background-color: #dda0dd; } /* Plum/Light Purple */
+.rarity-Legendary { background-color: #ffd700; } /* Gold */
+.rarity-Mythic { background-color: #ff6347; } /* Tomato/Orange-Red */
+.rarity-Demonic { background-color: #8b0000; color: white; } /* Dark Red */
+.rarity-Ancient { background-color: #4682b4; color: white; } /* Steel Blue */
+
+/* Ensure text color is readable on rarity backgrounds */
+.rarity-Common, .rarity-Uncommon, .rarity-Rare, .rarity-Epic, .rarity-Legendary, .rarity-Mythic {
+    color: #1f2937; /* Dark text for lighter backgrounds */
+}
+
+/* Spinner */
+.spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border-left-color: #1f2937; /* gray-800 */
+    animation: spin 1s ease infinite;
+    margin: 2rem auto;
+}
+.dark .spinner {
+    border-left-color: #e5e7eb; /* gray-200 */
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}

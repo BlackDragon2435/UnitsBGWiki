@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unit & Mod Compendium</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/style.css">
+    <!-- Google Fonts - Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body class="bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-300">
+    <div class="max-w-7xl mx-auto p-4 sm:p-8">
+        <header class="flex flex-col sm:flex-row items-center justify-between mb-8">
+            <h1 class="text-3xl sm:text-4xl font-bold text-center sm:text-left mb-4 sm:mb-0">Unit & Mod Compendium</h1>
+            <button id="darkModeToggle" class="p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200 shadow-md">
+                <svg id="sunIcon" class="w-6 h-6 text-yellow-500 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h1M3 12h1m15.325-7.757l-.707-.707M4.343 19.657l-.707-.707M19.657 4.343l-.707.707M4.343 4.343l-.707.707M18 12a6 6 0 11-12 0 6 6 0 0112 0z"></path></svg>
+                <svg id="moonIcon" class="w-6 h-6 text-gray-800 dark:text-gray-100" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+            </button>
+        </header>
+
+        <nav class="mb-6">
+            <ul class="flex justify-center space-x-4">
+                <li><button id="unitsTab" class="tab-button active">Units</button></li>
+                <li><button id="modsTab" class="tab-button">Mods</button></li>
+            </ul>
+        </nav>
+
+        <main class="bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-xl shadow-lg transition-colors duration-300">
+            <!-- Units Tab Content -->
+            <section id="unitsContent" class="tab-content">
+                <h2 class="text-2xl font-semibold mb-4">Unit Data</h2>
+                <div class="mb-6 flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0 md:space-x-4">
+                    <input type="text" id="searchInput" placeholder="Search units..."
+                           class="p-3 border border-gray-300 dark:border-gray-600 rounded-md w-full md:w-1/3 focus:ring-blue-500 focus:border-blue-500 shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                    <select id="rarityFilter" class="p-3 border border-gray-300 dark:border-gray-600 rounded-md w-full md:w-1/4 focus:ring-blue-500 focus:border-blue-500 shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                        <option value="">All Rarity</option>
+                        <!-- Rarity options populated by JS -->
+                    </select>
+                    <select id="classFilter" class="p-3 border border-gray-300 dark:border-gray-600 rounded-md w-full md:w-1/4 focus:ring-blue-500 focus:border-blue-500 shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                        <option value="">All Classes</option>
+                        <!-- Class options populated by JS -->
+                    </select>
+                </div>
+
+                <div class="mb-4 flex items-center">
+                    <input type="checkbox" id="toggleModEffects" class="mr-2 rounded text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400">
+                    <label for="toggleModEffects" class="text-gray-700 dark:text-gray-300">Show Mod Effects (Placeholder)</label>
+                </div>
+
+                <div id="loadingSpinner" class="spinner"></div>
+                <div id="unitTableContainer" class="overflow-x-auto rounded-xl shadow-md hidden">
+                    <table id="unitTable" class="min-w-full">
+                        <thead>
+                            <tr>
+                                <th data-sort="Label">Label</th>
+                                <th data-sort="Class">Class</th>
+                                <th data-sort="Rarity">Rarity</th>
+                                <th data-sort="HP">HP</th>
+                                <th data-sort="Damage">Damage</th>
+                                <th data-sort="Cooldown">Cooldown</th>
+                                <th data-sort="Distance">Distance</th>
+                                <th data-sort="CritChance">Crit Chance</th>
+                                <th data-sort="CritDamage">Crit Damage</th>
+                                <th data-sort="AttackEffect">Attack Effect</th>
+                                <th data-sort="AttackEffectType">Effect Type</th>
+                                <th data-sort="AttackEffectLifesteal">Effect Lifesteal</th>
+                                <th data-sort="AttackEffectKey">Effect Key</th>
+                                <th data-sort="Knockback">Knockback</th>
+                                <th data-sort="Accuracy">Accuracy</th>
+                                <th data-sort="EvadeChance">Evade Chance</th>
+                                <th data-sort="HPOffset">HP Offset</th>
+                                <th data-sort="ShadowStepDistance">Shadow Step Distance</th>
+                                <th data-sort="ShadowStepCooldown">Shadow Step Cooldown</th>
+                            </tr>
+                        </thead>
+                        <tbody id="unitTableBody">
+                            <!-- Unit data will be inserted here by JavaScript -->
+                        </tbody>
+                    </table>
+                </div>
+                <p id="noResultsMessage" class="text-center text-gray-600 dark:text-gray-400 mt-4 hidden">No units found matching your criteria.</p>
+            </section>
+
+            <!-- Mods Tab Content -->
+            <section id="modsContent" class="tab-content hidden">
+                <h2 class="text-2xl font-semibold mb-4">Mod Data</h2>
+                <p class="text-gray-700 dark:text-gray-300">This section will display mod data. Once you provide the structure for your mod data, we can implement sorting, filtering, and detailed views here.</p>
+                <div id="modsTableContainer" class="overflow-x-auto rounded-xl shadow-md mt-6">
+                    <table id="modsTable" class="min-w-full">
+                        <thead>
+                            <tr>
+                                <th class="py-3 px-6 text-left text-xs font-medium text-gray-50 uppercase tracking-wider">Mod Name (Placeholder)</th>
+                                <th class="py-3 px-6 text-left text-xs font-medium text-gray-50 uppercase tracking-wider">Effect (Placeholder)</th>
+                                <th class="py-3 px-6 text-left text-xs font-medium text-gray-50 uppercase tracking-wider">Applies To (Placeholder)</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-700 dark:divide-gray-600">
+                            <tr class="bg-white dark:bg-gray-700">
+                                <td class="py-4 px-6 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">Mod A</td>
+                                <td class="py-4 px-6 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">Increases HP by 10%</td>
+                                <td class="py-4 px-6 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">Warriors</td>
+                            </tr>
+                            <tr class="bg-gray-50 dark:bg-gray-750">
+                                <td class="py-4 px-6 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">Mod B</td>
+                                <td class="py-4 px-6 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">Reduces Cooldown by 0.1s</td>
+                                <td class="py-4 px-6 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">Rangers</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Main JavaScript file -->
+    <script type="module" src="js/script.js"></script>
+</body>
+</html>
