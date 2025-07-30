@@ -8,6 +8,7 @@ let mods = [];  // Stores parsed mod data
 let currentSortColumn = null;
 let currentSortDirection = 'asc'; // 'asc' or 'desc'
 let modEffectsEnabled = false; // State for global mod effects toggle
+let maxLevelGlobalEnabled = false; // Global state for max level toggle
 
 // DOM Elements
 const unitTableBody = document.getElementById('unitTableBody');
@@ -26,6 +27,7 @@ const modsTab = document.getElementById('modsTab');
 const unitsContent = document.getElementById('unitsContent');
 const modsContent = document.getElementById('modsContent');
 const toggleModEffects = document.getElementById('toggleModEffects');
+const toggleMaxLevel = document.getElementById('toggleMaxLevel'); // Global Max Level toggle
 const modsTableBody = document.querySelector('#modsTable tbody');
 
 let expandedUnitRowId = null; // To keep track of the currently expanded row
@@ -411,9 +413,14 @@ function renderUnitTable(dataToRender) {
             } else if (key === 'Cooldown' || key === 'CritDamage' || key === 'AttackEffectLifesteal') {
                 displayValue = typeof displayValue === 'number' ? displayValue.toFixed(2) : displayValue;
             }
+
             // Apply specific styling for the 'Label' column
             if (key === 'Label') {
-                cell.classList.add('font-semibold', 'text-lg', 'text-gray-900', 'dark:text-gray-100'); // Bigger, bolder for labels
+                cell.classList.add('font-semibold', 'text-lg', `text-rarity-${unitToDisplay.Rarity.toLowerCase()}`); // Apply rarity color class
+            } else if (['Class', 'Rarity'].includes(key)) {
+                cell.classList.add('font-medium', 'text-base'); // Make Class and Rarity slightly bolder and clearer
+            } else {
+                cell.classList.add('text-base'); // Default size for other stats
             }
             cell.textContent = displayValue !== undefined ? displayValue : 'N/A';
         });
@@ -525,57 +532,108 @@ function toggleUnitDetails(unit, row, index) {
                                  <input type="checkbox" id="toggleMaxStats" class="mr-2 rounded text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400">
                                  <label for="toggleMaxStats" class="text-gray-700 dark:text-gray-300">Show Max Stats (TBD)</label>
                              </div>
-                             <div id="modCheckboxes" class="flex flex-wrap gap-x-4 gap-y-2 mb-4 text-gray-700 dark:text-gray-200"></div>
+                             <div class="mb-4 flex items-center">
+                                 <input type="checkbox" id="toggleMaxLevelUnit" class="mr-2 rounded text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400">
+                                 <label for="toggleMaxLevelUnit" class="text-gray-700 dark:text-gray-300">Show Max Level (25) (TBD)</label>
+                             </div>
+                             <div id="modCheckboxesContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-2 mb-4 text-gray-700 dark:text-gray-200"></div>
                              <h3 class="font-semibold text-lg mb-2 text-blue-800 dark:text-blue-200">Stats with Mods:</h3>
                              <ul id="appliedStatsList" class="space-y-1 text-gray-700 dark:text-gray-200"></ul>`;
     detailContent.appendChild(modApplyDiv);
 
     const toggleMaxStats = modApplyDiv.querySelector('#toggleMaxStats');
-    const modCheckboxesDiv = modApplyDiv.querySelector('#modCheckboxes');
+    const toggleMaxLevelUnit = modApplyDiv.querySelector('#toggleMaxLevelUnit'); // New DOM element for Max Level
+    const modCheckboxesContainer = modApplyDiv.querySelector('#modCheckboxesContainer');
     const appliedStatsList = modApplyDiv.querySelector('#appliedStatsList');
 
     // Store selected mods for this specific unit's detail view
     let selectedModsForUnit = [];
 
-    // Populate mod checkboxes
+    // Populate mod checkboxes, sorted by rarity in columns
+    const modsByRarity = {};
+    rarityOrder.forEach(rarity => modsByRarity[rarity] = []);
     mods.forEach(mod => {
-        const label = document.createElement('label');
-        label.classList.add('inline-flex', 'items-center', 'cursor-pointer');
-        label.title = mod.effectDescription; // Tooltip for effect description
+        if (modsByRarity[mod.rarity]) {
+            modsByRarity[mod.rarity].push(mod);
+        }
+    });
 
-        const checkbox = document.createElement('input');
-        checkbox.type = 'checkbox';
-        checkbox.value = mod.id; // Use mod.id to identify
-        checkbox.classList.add('form-checkbox', 'h-4', 'w-4', 'text-blue-600', 'rounded', 'focus:ring-blue-500', 'dark:text-blue-400', 'dark:focus:ring-blue-400', 'mr-1');
-        checkbox.addEventListener('change', () => {
-            if (checkbox.checked) {
-                selectedModsForUnit.push(mod);
-            } else {
-                selectedModsForUnit = selectedModsForUnit.filter(m => m.id !== mod.id);
-            }
-            // Ensure max stats toggle is off if individual mods are being selected
-            toggleMaxStats.checked = false;
-            updateAppliedStats(unit, selectedModsForUnit, appliedStatsList, false);
-        });
+    // Create columns for each rarity
+    rarityOrder.forEach(rarity => {
+        if (modsByRarity[rarity].length > 0) {
+            const rarityColumn = document.createElement('div');
+            rarityColumn.classList.add('flex', 'flex-col', 'p-2', 'rounded-md', 'border', 'border-gray-200', 'dark:border-gray-600'); // Column styling
 
-        label.appendChild(checkbox);
-        label.appendChild(document.createTextNode(mod.label));
-        modCheckboxesDiv.appendChild(label);
+            const rarityHeader = document.createElement('h4');
+            rarityHeader.classList.add('font-bold', 'text-base', 'mb-2', `text-rarity-${rarity.toLowerCase()}`); // Apply rarity color class
+            rarityHeader.textContent = `${rarity} Mods`;
+            rarityColumn.appendChild(rarityHeader);
+
+            modsByRarity[rarity].forEach(mod => {
+                const label = document.createElement('label');
+                label.classList.add('inline-flex', 'items-center', 'cursor-pointer', 'mb-1');
+                label.title = mod.effectDescription; // Tooltip for effect description
+
+                const checkbox = document.createElement('input');
+                checkbox.type = 'checkbox';
+                checkbox.value = mod.id; // Use mod.id to identify
+                checkbox.dataset.rarity = mod.rarity; // Store rarity for disabling logic
+                checkbox.classList.add('form-checkbox', 'h-4', 'w-4', 'text-blue-600', 'rounded', 'focus:ring-blue-500', 'dark:text-blue-400', 'dark:focus:ring-blue-400', 'mr-1');
+
+                checkbox.addEventListener('change', (event) => {
+                    const changedModId = event.target.value;
+                    const changedModRarity = event.target.dataset.rarity;
+
+                    if (event.target.checked) {
+                        // If this mod is checked, uncheck all other mods of the same rarity
+                        modCheckboxesContainer.querySelectorAll(`input[type="checkbox"][data-rarity="${changedModRarity}"]`).forEach(cb => {
+                            if (cb.value !== changedModId) {
+                                cb.checked = false;
+                            }
+                        });
+                        selectedModsForUnit = selectedModsForUnit.filter(m => m.rarity !== changedModRarity); // Remove existing mod of this rarity
+                        selectedModsForUnit.push(mod); // Add the newly selected mod
+                    } else {
+                        // If unchecked, simply remove it
+                        selectedModsForUnit = selectedModsForUnit.filter(m => m.id !== changedModId);
+                    }
+
+                    // Ensure max stats toggle is off if individual mods are being selected
+                    toggleMaxStats.checked = false;
+                    updateAppliedStats(unit, selectedModsForUnit, appliedStatsList, toggleMaxStats.checked, toggleMaxLevelUnit.checked);
+                });
+
+                label.appendChild(checkbox);
+                label.appendChild(document.createTextNode(mod.label));
+                rarityColumn.appendChild(label);
+            });
+            modCheckboxesContainer.appendChild(rarityColumn);
+        }
     });
 
     // Event listener for Max Stats toggle
     toggleMaxStats.addEventListener('change', () => {
         if (toggleMaxStats.checked) {
-            // Uncheck all individual mod checkboxes if Max Stats is enabled
-            modCheckboxesDiv.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+            // Uncheck all individual mod checkboxes and Max Level toggle if Max Stats is enabled
+            modCheckboxesContainer.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
             selectedModsForUnit = []; // Clear selected mods
+            toggleMaxLevelUnit.checked = false; // Uncheck Max Level
         }
-        updateAppliedStats(unit, selectedModsForUnit, appliedStatsList, toggleMaxStats.checked);
+        updateAppliedStats(unit, selectedModsForUnit, appliedStatsList, toggleMaxStats.checked, toggleMaxLevelUnit.checked);
+    });
+
+    // Event listener for Max Level toggle
+    toggleMaxLevelUnit.addEventListener('change', () => {
+        // Max Level can be combined with other mods, but not with Max Stats
+        if (toggleMaxLevelUnit.checked) {
+            toggleMaxStats.checked = false; // Uncheck Max Stats if Max Level is enabled
+        }
+        updateAppliedStats(unit, selectedModsForUnit, appliedStatsList, toggleMaxStats.checked, toggleMaxLevelUnit.checked);
     });
 
 
     // Initial display of applied stats (no mods applied yet)
-    updateAppliedStats(unit, selectedModsForUnit, appliedStatsList, false);
+    updateAppliedStats(unit, selectedModsForUnit, appliedStatsList, false, false);
 
     detailCell.appendChild(detailContent);
 }
@@ -586,24 +644,31 @@ function toggleUnitDetails(unit, row, index) {
  * @param {Array<Object>} selectedMods - The mods currently selected for this unit.
  * @param {HTMLElement} listElement - The UL element to render stats into.
  * @param {boolean} showMaxStats - True if "Max Stats" should be displayed.
+ * @param {boolean} showMaxLevel - True if "Max Level" should be displayed.
  */
-function updateAppliedStats(baseUnit, selectedMods, listElement, showMaxStats) {
+function updateAppliedStats(baseUnit, selectedMods, listElement, showMaxStats, showMaxLevel) {
     listElement.innerHTML = ''; // Clear previous stats
 
     let unitToDisplay = { ...baseUnit };
 
-    if (showMaxStats) {
-        // Display "TBD" for all relevant stats
-        unitColumnOrder.slice(1).forEach(key => {
-            const li = document.createElement('li');
-            li.textContent = `${key}: TBD`;
-            li.classList.add('font-bold', 'text-blue-600', 'dark:text-blue-300'); // Highlight as "max"
-            listElement.appendChild(li);
+    // Apply Max Level effect first if enabled
+    if (showMaxLevel) {
+        unitToDisplay = { ...unitToDisplay }; // Create a fresh copy to modify
+        // Apply "TBD" for max level stats.
+        // In a real scenario, you'd calculate actual max level stats here.
+        // For now, we'll just mark relevant numeric stats as TBD.
+        Object.keys(unitToDisplay).forEach(key => {
+            if (typeof unitToDisplay[key] === 'number' && key !== 'Distance') { // Exclude Distance from TBD for now
+                unitToDisplay[key] = 'TBD (Lvl 25)';
+            }
         });
-        return; // Exit as we're showing TBD
-    } else {
-        unitToDisplay = applyModsToUnit(baseUnit, selectedMods);
     }
+
+    // Apply individual mods if Max Stats is not enabled
+    if (!showMaxStats) {
+        unitToDisplay = applyModsToUnit(unitToDisplay, selectedMods);
+    }
+
 
     unitColumnOrder.slice(1).forEach(key => { // Skip 'Image'
         const li = document.createElement('li');
@@ -616,15 +681,21 @@ function updateAppliedStats(baseUnit, selectedMods, listElement, showMaxStats) {
         li.textContent = `${key}: ${displayValue !== undefined ? displayValue : 'N/A'}`;
 
         // Highlight changes from base stats
-        if (baseUnit[key] !== unitToDisplay[key] && baseUnit[key] !== 'N/A' && unitToDisplay[key] !== 'N/A') {
-            // Check for numeric difference beyond formatting
-            const baseNum = parseFloat(baseUnit[key]);
-            const modifiedNum = parseFloat(unitToDisplay[key]);
-            if (!isNaN(baseNum) && !isNaN(modifiedNum) && baseNum !== modifiedNum) {
+        // This logic needs to consider the 'TBD' state from Max Level
+        const baseValue = baseUnit[key];
+        const currentDisplayedValue = unitToDisplay[key];
+
+        if (baseValue !== currentDisplayedValue && baseValue !== 'N/A' && currentDisplayedValue !== 'N/A') {
+            const baseNum = parseFloat(baseValue);
+            const currentNum = parseFloat(currentDisplayedValue);
+
+            if (!isNaN(baseNum) && !isNaN(currentNum) && baseNum !== currentNum) {
                 li.classList.add('font-bold', 'text-blue-600', 'dark:text-blue-300');
-            } else if (typeof baseUnit[key] === 'string' && typeof unitToDisplay[key] === 'string' && baseUnit[key] !== unitToDisplay[key]) {
-                 li.classList.add('font-bold', 'text-blue-600', 'dark:text-blue-300');
+            } else if (typeof baseValue === 'string' && typeof currentDisplayedValue === 'string' && baseValue !== currentDisplayedValue) {
+                li.classList.add('font-bold', 'text-blue-600', 'dark:text-blue-300');
             }
+        } else if (showMaxLevel && String(currentDisplayedValue).includes('TBD')) {
+             li.classList.add('font-bold', 'text-blue-600', 'dark:text-blue-300');
         }
         listElement.appendChild(li);
     });
@@ -869,5 +940,11 @@ window.onload = function() {
         modEffectsEnabled = toggleModEffects.checked;
         filterAndRenderUnits(); // Re-render units to apply/remove global mod effects
     });
-};
 
+    // Global Max Level Toggle Event
+    toggleMaxLevel.addEventListener('change', () => {
+        maxLevelGlobalEnabled = toggleMaxLevel.checked;
+        // Re-render units to apply/remove global max level effects
+        filterAndRenderUnits();
+    });
+};

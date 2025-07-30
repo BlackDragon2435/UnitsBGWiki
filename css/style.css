@@ -25,11 +25,41 @@ th, td {
 #unitTable tbody td:nth-child(2) { /* Targeting the second column (Label) */
     font-size: 1.125rem; /* text-lg */
     font-weight: 700; /* font-bold */
-    color: #1a202c; /* A darker shade for emphasis in light mode */
+    /* Text color will be set dynamically by JS based on rarity, using a class */
 }
 
-.dark #unitTable tbody td:nth-child(2) {
-    color: #f0f4f8; /* A lighter shade for emphasis in dark mode */
+/* Rarity-specific text colors for Unit Labels */
+.text-rarity-common { color: #1f2937; } /* Dark text for common */
+.text-rarity-uncommon { color: #1f2937; } /* Dark text for uncommon */
+.text-rarity-rare { color: #1f2937; } /* Dark text for rare */
+.text-rarity-epic { color: #1f2937; } /* Dark text for epic */
+.text-rarity-legendary { color: #1f2937; } /* Dark text for legendary */
+.text-rarity-mythic { color: #1f2937; } /* Dark text for mythic */
+.text-rarity-demonic { color: #ffffff; } /* White text for demonic */
+.text-rarity-ancient { color: #ffffff; } /* White text for ancient */
+
+
+/* Styling for Class and Rarity columns */
+#unitTable tbody td:nth-child(3), /* Class */
+#unitTable tbody td:nth-child(4) { /* Rarity */
+    font-weight: 500; /* font-medium */
+    font-size: 1rem; /* text-base */
+    color: #4b5563; /* gray-600 */
+}
+
+.dark #unitTable tbody td:nth-child(3),
+.dark #unitTable tbody td:nth-child(4) {
+    color: #d1d5db; /* gray-300 */
+}
+
+/* Styling for other stats columns */
+#unitTable tbody td:nth-child(n+5) { /* All columns from HP onwards */
+    font-size: 1rem; /* text-base */
+    color: #374151; /* gray-800 */
+}
+
+.dark #unitTable tbody td:nth-child(n+5) {
+    color: #e5e7eb; /* gray-200 */
 }
 
 
@@ -194,18 +224,26 @@ th, td {
 }
 
 /* Style for mod checkboxes and max stats checkbox in detailed view */
-#modCheckboxes label, #toggleMaxStats + label {
+#modCheckboxesContainer label, #toggleMaxStats + label, #toggleMaxLevelUnit + label {
     margin-right: 1rem;
     font-size: 0.95rem; /* text-base for labels */
     color: #374151; /* Default text color for labels */
 }
 
-.dark #modCheckboxes label, .dark #toggleMaxStats + label {
+.dark #modCheckboxesContainer label, .dark #toggleMaxStats + label, .dark #toggleMaxLevelUnit + label {
     color: #e5e7eb; /* Light text color for labels in dark mode */
 }
 
-#modCheckboxes input[type="checkbox"], #toggleMaxStats {
+#modCheckboxesContainer input[type="checkbox"], #toggleMaxStats, #toggleMaxLevelUnit {
     cursor: pointer;
+}
+
+/* Specific styling for rarity headers within mod checkboxes */
+#modCheckboxesContainer h4 {
+    font-size: 1rem; /* text-base for rarity headers */
+    font-weight: 700; /* font-bold */
+    margin-top: 0.75rem;
+    margin-bottom: 0.5rem;
 }
 
 /* Improve general text contrast in the detail view */
@@ -242,3 +280,4 @@ input[type="text"], select {
 .dark::placeholder {
     color: #6b7280; /* gray-500 */
 }
+
