@@ -416,7 +416,8 @@ function renderUnitTable(dataToRender) {
 
             // Apply specific styling for the 'Label' column
             if (key === 'Label') {
-                cell.classList.add('font-semibold', 'text-lg', `text-rarity-${unitToDisplay.Rarity.toLowerCase()}`); // Apply rarity color class
+                // Apply rarity class to the cell itself for background color
+                cell.classList.add('font-semibold', 'text-lg', `rarity-${unitToDisplay.Rarity.replace(/\s/g, '')}`);
             } else if (['Class', 'Rarity'].includes(key)) {
                 cell.classList.add('font-medium', 'text-base'); // Make Class and Rarity slightly bolder and clearer
             } else {
@@ -565,7 +566,7 @@ function toggleUnitDetails(unit, row, index) {
             rarityColumn.classList.add('flex', 'flex-col', 'p-2', 'rounded-md', 'border', 'border-gray-200', 'dark:border-gray-600'); // Column styling
 
             const rarityHeader = document.createElement('h4');
-            rarityHeader.classList.add('font-bold', 'text-base', 'mb-2', `text-rarity-${rarity.toLowerCase()}`); // Apply rarity color class
+            rarityHeader.classList.add('font-bold', 'text-base', 'mt-2', 'mb-1', 'w-full', `text-rarity-${rarity.toLowerCase()}`); // Add rarity color class
             rarityHeader.textContent = `${rarity} Mods`;
             rarityColumn.appendChild(rarityHeader);
 
@@ -658,7 +659,8 @@ function updateAppliedStats(baseUnit, selectedMods, listElement, showMaxStats, s
         // In a real scenario, you'd calculate actual max level stats here.
         // For now, we'll just mark relevant numeric stats as TBD.
         Object.keys(unitToDisplay).forEach(key => {
-            if (typeof unitToDisplay[key] === 'number' && key !== 'Distance') { // Exclude Distance from TBD for now
+            // Only apply TBD to numeric stats that are typically affected by leveling
+            if (typeof unitToDisplay[key] === 'number' && ['HP', 'Damage', 'Cooldown', 'CritChance', 'CritDamage', 'Accuracy', 'EvadeChance'].includes(key)) {
                 unitToDisplay[key] = 'TBD (Lvl 25)';
             }
         });

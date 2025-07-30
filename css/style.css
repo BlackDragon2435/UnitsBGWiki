@@ -25,18 +25,19 @@ th, td {
 #unitTable tbody td:nth-child(2) { /* Targeting the second column (Label) */
     font-size: 1.125rem; /* text-lg */
     font-weight: 700; /* font-bold */
-    /* Text color will be set dynamically by JS based on rarity, using a class */
+    /* Background color and text color set by rarity classes below */
 }
 
-/* Rarity-specific text colors for Unit Labels */
-.text-rarity-common { color: #1f2937; } /* Dark text for common */
-.text-rarity-uncommon { color: #1f2937; } /* Dark text for uncommon */
-.text-rarity-rare { color: #1f2937; } /* Dark text for rare */
-.text-rarity-epic { color: #1f2937; } /* Dark text for epic */
-.text-rarity-legendary { color: #1f2937; } /* Dark text for legendary */
-.text-rarity-mythic { color: #1f2937; } /* Dark text for mythic */
-.text-rarity-demonic { color: #ffffff; } /* White text for demonic */
-.text-rarity-ancient { color: #ffffff; } /* White text for ancient */
+/* Rarity-specific background and text colors for Unit Labels */
+/* These classes are applied directly to the <td> element for the Label */
+.rarity-Common { background-color: #c0c0c0; color: #1f2937; } /* Silver/Light Gray, Dark text */
+.rarity-Uncommon { background-color: #90ee90; color: #1f2937; } /* Light Green, Dark text */
+.rarity-Rare { background-color: #add8e6; color: #1f2937; } /* Light Blue, Dark text */
+.rarity-Epic { background-color: #dda0dd; color: #1f2937; } /* Plum/Light Purple, Dark text */
+.rarity-Legendary { background-color: #ffd700; color: #1f2937; } /* Gold, Dark text */
+.rarity-Mythic { background-color: #ff6347; color: #1f2937; } /* Tomato/Orange-Red, Dark text */
+.rarity-Demonic { background-color: #8b0000; color: #ffffff; } /* Dark Red, White text */
+.rarity-Ancient { background-color: #4682b4; color: #ffffff; } /* Steel Blue, White text */
 
 
 /* Styling for Class and Rarity columns */
@@ -169,21 +170,26 @@ th, td {
 }
 
 
-/* Rarity colors - Specific hex codes for better contrast and distinction */
+/* Rarity colors for backgrounds - these are used by the rarity-X classes on the <td> */
+/* These are the same as before, but now applied to the cell background */
 .rarity-Common { background-color: #c0c0c0; } /* Silver/Light Gray */
 .rarity-Uncommon { background-color: #90ee90; } /* Light Green */
 .rarity-Rare { background-color: #add8e6; } /* Light Blue */
 .rarity-Epic { background-color: #dda0dd; } /* Plum/Light Purple */
 .rarity-Legendary { background-color: #ffd700; } /* Gold */
 .rarity-Mythic { background-color: #ff6347; } /* Tomato/Orange-Red */
-.rarity-Demonic { background-color: #8b0000; color: white; } /* Dark Red */
-.rarity-Ancient { background-color: #4682b4; color: white; } /* Steel Blue */
+.rarity-Demonic { background-color: #8b0000; } /* Dark Red */
+.rarity-Ancient { background-color: #4682b4; } /* Steel Blue */
 
-/* Ensure text color is readable on rarity backgrounds */
+/* Ensure text color is readable on rarity backgrounds - these are the text colors */
+/* These are now applied directly to the td.rarity-X classes */
 .rarity-Common, .rarity-Uncommon, .rarity-Rare, .rarity-Epic, .rarity-Legendary, .rarity-Mythic {
     color: #1f2937; /* Dark text for lighter backgrounds */
 }
 /* For Demonic and Ancient, text is white as background is dark */
+.rarity-Demonic, .rarity-Ancient {
+    color: #ffffff;
+}
 
 
 /* Spinner */
@@ -280,4 +286,3 @@ input[type="text"], select {
 .dark::placeholder {
     color: #6b7280; /* gray-500 */
 }
-
