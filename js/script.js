@@ -1,5 +1,5 @@
 // js/script.js
-import { rawUnitData } from './unitsData.js';
+import { rawUnitData } from './unitsData.js'; // Assuming this file exists and contains rawUnitData
 import { rawModData } from './modsData.js';
 import { unitImages } from './unitImages.js'; // Import unit images
 
@@ -57,7 +57,6 @@ function parseData(dataString, dataType) {
     const itemLines = dataString.split(/[\r\n]+/).filter(line => line.trim() !== '');
 
     if (dataType === 'units') {
-        // This part remains largely the same as it correctly parses unit data blocks
         const unitBlocks = dataString.match(/\["([^"]+)"\] = \{([^}]+)\},/g);
 
         if (!unitBlocks) {
