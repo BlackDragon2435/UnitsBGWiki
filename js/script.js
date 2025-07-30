@@ -1,5 +1,5 @@
 // js/script.js
-// why are you looking at this stuff
+// why you looking here?
 // import { rawUnitData } from './unitsData.js';
 // import { rawModData } from './modsData.js';
 import { unitImages } from './unitImages.js';
@@ -940,27 +940,27 @@ function sortData(column) {
             const tierInfoA = tierList.find(tierUnit => tierUnit.NormalizedUnitName === a.NormalizedLabel);
             const tierInfoB = tierList.find(tierUnit => tierUnit.NormalizedUnitName === b.NormalizedLabel);
 
-            // Get NumericalRank, treat 'N/A' or missing as -Infinity for sorting (to push them to the bottom)
-            // If S is highest numerical value, then for ascending sort (S on top), we want higher numbers first.
-            const rankA = tierInfoA && typeof tierInfoA.NumericalRank === 'number' ? tierInfoA.NumericalRank : -Infinity;
-            const rankB = tierInfoB && typeof tierInfoB.NumericalRank === 'number' ? tierInfoB.NumericalRank : -Infinity;
+            // Get NumericalRank. Treat 'N/A' or missing as Infinity to push them to the bottom.
+            const rankA = tierInfoA && typeof tierInfoA.NumericalRank === 'number' ? tierInfoA.NumericalRank : Infinity;
+            const rankB = tierInfoB && typeof tierInfoB.NumericalRank === 'number' ? tierInfoB.NumericalRank : Infinity;
 
             if (currentSortDirection === 'asc') {
-                // For ascending, we want HIGHER NumericalRank (S-tier) to come first.
+                // For ascending (S on top), we want HIGHER NumericalRank to come first.
                 // So, if rankA is 900 (S) and rankB is 700 (B), we want A before B.
-                // 900 - 700 = 200 (positive), so B comes before A. This is incorrect.
-                // We need rankB - rankA to put higher values first in "ascending" visual order.
+                // rankB - rankA will be 700 - 900 = -200, which correctly places A before B.
                 return rankB - rankA;
             } else {
-                // For descending, we want LOWER NumericalRank (F-tier) to come first.
-                // So, if rankA is 900 (S) and rankB is 500 (D), we want A after B.
-                // 900 - 500 = 400 (positive), so B comes before A. This is incorrect.
+                // For descending (F on top), we want LOWER NumericalRank to come first.
+                // So, if rankA is 900 (S) and rankB is 500 (D), we want D before S.
+                // rankA - rankB will be 900 - 500 = 400, which incorrectly places S before D.
                 // We need rankA - rankB to put lower values first in "descending" visual order.
                 return rankA - rankB;
             }
         }
 
         // Handle "N/A" values by treating them as lowest/highest for sorting
+        // This general N/A handling is now less critical for CommunityRanking
+        // because it's handled specifically above, but good to keep for other columns.
         if (valA === 'N/A' && valB === 'N/A') return 0;
         if (valA === 'N/A') return currentSortDirection === 'asc' ? 1 : -1;
         if (valB === 'N/A') return currentSortDirection === 'asc' ? -1 : 1;
