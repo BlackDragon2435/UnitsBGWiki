@@ -1,5 +1,5 @@
 // js/modsData.js
-// This file contains the raw mod data as a string, parsed from the provided screenshots.
+// This file contains the raw mod data extracted directly from the provided screenshots.
 
 export const rawModData = `
     ["Default/Title"] = "Default",
@@ -7,24 +7,28 @@ export const rawModData = `
     ["Default/Amount"] = 0,
     ["Default/Chance"] = 0.76,
     ["Default/Stat"] = "",
+    ["Default/Effect"] = "Default unit properties",
 
     ["SmallDamage/Title"] = "Strong",
     ["SmallDamage/Rarity"] = "Common",
     ["SmallDamage/Amount"] = 0.1,
     ["SmallDamage/Chance"] = 0.04,
     ["SmallDamage/Stat"] = "Damage",
+    ["SmallDamage/Effect"] = "Increase Damage by 10%",
 
     ["SmallHP/Title"] = "Life",
     ["SmallHP/Rarity"] = "Common",
     ["SmallHP/Amount"] = 0.1,
     ["SmallHP/Chance"] = 0.04,
     ["SmallHP/Stat"] = "HP",
+    ["SmallHP/Effect"] = "Increase HP by 10%",
 
     ["SmallCooldown/Title"] = "Fast",
     ["SmallCooldown/Rarity"] = "Common",
     ["SmallCooldown/Amount"] = -0.1,
     ["SmallCooldown/Chance"] = 0.04,
     ["SmallCooldown/Stat"] = "Cooldown",
+    ["SmallCooldown/Effect"] = "Increase Cooldown by -10%",
 
     ["SmallFrost/Title"] = "Frost",
     ["SmallFrost/Rarity"] = "Uncommon",
@@ -49,6 +53,7 @@ export const rawModData = `
     ["MediumHP/Amount"] = 0.25,
     ["MediumHP/Chance"] = 0.01,
     ["MediumHP/Stat"] = "HP",
+    ["MediumHP/Effect"] = "Increase HP by 25%",
 
     ["MediumMirror/Title"] = "Hedgehog",
     ["MediumMirror/Rarity"] = "Rare",
@@ -62,22 +67,25 @@ export const rawModData = `
     ["MediumAccuracy/Amount"] = 0.15,
     ["MediumAccuracy/Chance"] = 0.01,
     ["MediumAccuracy/Stat"] = "Accuracy",
+    ["MediumAccuracy/Effect"] = "Increase Accuracy by 15%",
 
     ["MediumCooldown/Title"] = "Trickster",
     ["MediumCooldown/Rarity"] = "Rare",
     ["MediumCooldown/Amount"] = -0.2,
     ["MediumCooldown/Chance"] = 0.01,
     ["MediumCooldown/Stat"] = "Cooldown",
+    ["MediumCooldown/Effect"] = "Increase Cooldown by -20%",
 
     ["MediumDamage/Title"] = "Bodybuilder",
     ["MediumDamage/Rarity"] = "Rare",
     ["MediumDamage/Amount"] = 0.25,
     ["MediumDamage/Chance"] = 0.01,
     ["MediumDamage/Stat"] = "Damage",
+    ["MediumDamage/Effect"] = "Increase Damage by 25%",
 
     ["SmallLifesteal/Title"] = "Leech",
     ["SmallLifesteal/Rarity"] = "Rare",
-    ["SmallLifesteal/Amount"] = 0.10,
+    ["SmallLifesteal/Amount"] = 10, // Value from screenshot for effect description
     ["SmallLifesteal/Chance"] = 0.01,
     ["SmallLifesteal/Stat"] = "Lifesteal",
     ["SmallLifesteal/Effect"] = "Heals by 10 HP for each attack",
@@ -93,6 +101,7 @@ export const rawModData = `
     ["MediumCritDamageCoeff/Amount"] = 0.25,
     ["MediumCritDamageCoeff/Chance"] = 0.002,
     ["MediumCritDamageCoeff/Stat"] = "CritDamageCoeff",
+    ["MediumCritDamageCoeff/Effect"] = "Increase Crit Damage Coeff by 25%",
 
     ["MediumPoison/Title"] = "Viper",
     ["MediumPoison/Rarity"] = "Legendary",
@@ -111,36 +120,42 @@ export const rawModData = `
     ["MediumEvadeChance/Amount"] = 0.2,
     ["MediumEvadeChance/Chance"] = 0.002,
     ["MediumEvadeChance/Stat"] = "EvadeChance",
+    ["MediumEvadeChance/Effect"] = "Increase Evade Chance by 20%",
 
     ["MediumCritChance/Title"] = "Accurate",
     ["MediumCritChance/Rarity"] = "Legendary",
     ["MediumCritChance/Amount"] = 0.2,
     ["MediumCritChance/Chance"] = 0.002,
     ["MediumCritChance/Stat"] = "CritChance",
+    ["MediumCritChance/Effect"] = "Increase Crit Chance by 20%",
 
     ["LargeDamage/Title"] = "Powerful",
     ["LargeDamage/Rarity"] = "Mythic",
     ["LargeDamage/Amount"] = 0.5,
     ["LargeDamage/Chance"] = 0.001,
     ["LargeDamage/Stat"] = "Damage",
+    ["LargeDamage/Effect"] = "Increase Damage by 50%",
 
     ["LargeCooldown/Title"] = "Lightning",
     ["LargeCooldown/Rarity"] = "Mythic",
     ["LargeCooldown/Amount"] = -0.35,
     ["LargeCooldown/Chance"] = 0.001,
     ["LargeCooldown/Stat"] = "Cooldown",
+    ["LargeCooldown/Effect"] = "Increase Cooldown by -35%",
 
     ["LargeHP/Title"] = "Titan",
     ["LargeHP/Rarity"] = "Mythic",
     ["LargeHP/Amount"] = 0.5,
     ["LargeHP/Chance"] = 0.001,
     ["LargeHP/Stat"] = "HP",
+    ["LargeHP/Effect"] = "Increase HP by 50%",
 
     ["LargeAccuracy/Title"] = "Sniper",
     ["LargeAccuracy/Rarity"] = "Mythic",
     ["LargeAccuracy/Amount"] = 0.5,
     ["LargeAccuracy/Chance"] = 0.001,
     ["LargeAccuracy/Stat"] = "Accuracy",
+    ["LargeAccuracy/Effect"] = "Increase Accuracy by 50%",
 
     ["LargeMirror/Title"] = "Mirror",
     ["LargeMirror/Rarity"] = "Mythic",
@@ -154,22 +169,25 @@ export const rawModData = `
     ["LargeCritChance/Amount"] = 0.35,
     ["LargeCritChance/Chance"] = 0.001,
     ["LargeCritChance/Stat"] = "CritChance",
+    ["LargeCritChance/Effect"] = "Increase Crit Chance by 35%",
 
     ["LargeCritDamageCoeff/Title"] = "Executor",
     ["LargeCritDamageCoeff/Rarity"] = "Demonic",
     ["LargeCritDamageCoeff/Amount"] = 0.6,
     ["LargeCritDamageCoeff/Chance"] = 0.001,
     ["LargeCritDamageCoeff/Stat"] = "CritDamageCoeff",
+    ["LargeCritDamageCoeff/Effect"] = "Increase Crit Damage Coeff by 60%",
 
     ["LargeEvadeChance/Title"] = "Joker",
     ["LargeEvadeChance/Rarity"] = "Demonic",
     ["LargeEvadeChance/Amount"] = 0.35,
     ["LargeEvadeChance/Chance"] = 0.001,
     ["LargeEvadeChance/Stat"] = "EvadeChance",
+    ["LargeEvadeChance/Effect"] = "Increase Evade Chance by 35%",
 
     ["MediumLifesteal/Title"] = "Vampire",
     ["MediumLifesteal/Rarity"] = "Demonic",
-    ["MediumLifesteal/Amount"] = 25, // Assuming HP healed directly based on screenshot text
+    ["MediumLifesteal/Amount"] = 25, // Value from screenshot for effect description
     ["MediumLifesteal/Chance"] = 0.001,
     ["MediumLifesteal/Stat"] = "Lifesteal",
     ["MediumLifesteal/Effect"] = "Heals by 25 HP for each attack"

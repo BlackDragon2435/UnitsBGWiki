@@ -252,6 +252,13 @@ th, td {
     margin-bottom: 0.5rem;
 }
 
+/* Make the mod checkboxes container vertically scrollable */
+#modCheckboxesContainer {
+    max-height: 300px; /* Adjust as needed */
+    overflow-y: auto;
+    padding-right: 10px; /* Add some padding for the scrollbar */
+}
+
 /* Improve general text contrast in the detail view */
 .unit-details-row ul li {
     font-size: 0.95rem; /* Consistent size for list items */

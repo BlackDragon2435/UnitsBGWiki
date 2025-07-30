@@ -2,6 +2,7 @@
 import { rawUnitData } from './unitsData.js';
 import { rawModData } from './modsData.js';
 import { unitImages } from './unitImages.js';
+import { gameData } from './gameData.js'; // Import gameData
 
 let units = []; // Stores parsed unit data
 let mods = [];  // Stores parsed mod data
@@ -345,6 +346,45 @@ function applyModsToUnit(baseUnit, modsToApply) {
 }
 
 /**
+ * Calculates a unit's stats at a specific level, applying class/rarity modifiers and then mods.
+ * @param {Object} baseUnit - The original unit object (level 1 stats).
+ * @param {number} level - The target level for the unit.
+ * @param {Array<Object>} selectedMods - An array of mod objects to apply.
+ * @returns {Object} A new unit object with calculated stats.
+ */
+function getUnitStatsAtLevel(baseUnit, level, selectedMods) {
+    let calculatedUnit = { ...baseUnit }; // Start with base stats
+
+    const unitClass = baseUnit.Class;
+    const unitRarity = baseUnit.Rarity;
+
+    // Apply StatsByClass modifiers based on unit's class and rarity
+    if (gameData.StatsByClass[unitClass]) {
+        const classStats = gameData.StatsByClass[unitClass];
+        for (const statKey in classStats) {
+            if (classStats[statKey]._attributes && classStats[statKey]._attributes[unitRarity] !== undefined) {
+                const modifier = classStats[statKey]._attributes[unitRarity];
+                if (typeof calculatedUnit[statKey] === 'number') {
+                    if (statKey === 'Cooldown') {
+                        // Cooldown modifiers are additive (e.g., -0.05s)
+                        calculatedUnit[statKey] = Math.max(0.1, calculatedUnit[statKey] + modifier);
+                    } else {
+                        // Other stats are multiplicative (e.g., HP * (1 + 0.18))
+                        calculatedUnit[statKey] = calculatedUnit[statKey] * (1 + modifier);
+                    }
+                }
+            }
+        }
+    }
+
+    // Apply selected mods on top of the class/rarity modified stats
+    calculatedUnit = applyModsToUnit(calculatedUnit, selectedMods);
+
+    return calculatedUnit;
+}
+
+
+/**
  * Formats a value for display in the table.
  * @param {*} value - The value to format.
  * @returns {string} The formatted string.
@@ -391,7 +431,8 @@ function renderUnitTable(dataToRender) {
         const unitToDisplay = modEffectsEnabled ? applyModsToUnit(unit, mods) : unit;
 
         const row = unitTableBody.insertRow();
-        row.classList.add(`rarity-${unitToDisplay.Rarity.replace(/\s/g, '')}`, 'cursor-pointer', 'unit-row');
+        row.classList.add('cursor-pointer', 'unit-row'); // Add base classes
+
         row.dataset.unitIndex = index; // Store original index for detail lookup
 
         // Add image cell
@@ -416,7 +457,7 @@ function renderUnitTable(dataToRender) {
 
             // Apply specific styling for the 'Label' column
             if (key === 'Label') {
-                // Apply rarity class to the cell itself for background color
+                // Apply rarity class to the cell itself for background color and text color
                 cell.classList.add('font-semibold', 'text-lg', `rarity-${unitToDisplay.Rarity.replace(/\s/g, '')}`);
             } else if (['Class', 'Rarity'].includes(key)) {
                 cell.classList.add('font-medium', 'text-base'); // Make Class and Rarity slightly bolder and clearer
@@ -466,35 +507,39 @@ function renderModTable(dataToRender) {
 /**
  * Toggles the detailed view for a unit.
  * @param {Object} unit - The base unit object.
- * @param {HTMLTableRowElement} row - The table row element that was clicked.
+ * @param {HTMLTableRowElement} clickedRow - The table row element that was clicked.
  * @param {number} index - The original index of the unit in the `units` array.
  */
-function toggleUnitDetails(unit, row, index) {
+function toggleUnitDetails(unit, clickedRow, index) {
     const existingDetailRow = unitTableBody.querySelector('.unit-details-row');
+    const currentlyExpandedUnitIndex = existingDetailRow ? parseInt(existingDetailRow.dataset.unitIndex) : null;
 
-    // If there's an existing detail row and it's for the same unit, close it
-    if (existingDetailRow && existingDetailRow.dataset.unitIndex === String(index)) {
-        row.classList.remove('expanded');
-        existingDetailRow.remove();
+    // Case 1: Clicked on an already expanded row (or its associated detail row)
+    if (currentlyExpandedUnitIndex === index) {
+        if (existingDetailRow) {
+            existingDetailRow.remove();
+        }
+        clickedRow.classList.remove('expanded');
         expandedUnitRowId = null;
-        return;
+        return; // Done, just collapsed
     }
 
-    // If there's an existing detail row for a *different* unit, close it first
-    if (existingDetailRow && existingDetailRow.dataset.unitIndex !== String(index)) {
-        const prevExpandedRow = unitTableBody.querySelector(`[data-unit-index="${existingDetailRow.dataset.unitIndex}"]`);
-        if (prevExpandedRow) {
-            prevExpandedRow.classList.remove('expanded');
+    // Case 2: Another row is expanded, or no row is expanded, and a new row is clicked
+    if (existingDetailRow) {
+        // Collapse the previously expanded row
+        const prevExpandedUnitRow = unitTableBody.querySelector(`[data-unit-index="${currentlyExpandedUnitIndex}"]`);
+        if (prevExpandedUnitRow) {
+            prevExpandedUnitRow.classList.remove('expanded');
         }
         existingDetailRow.remove();
     }
 
-    // Set the new expanded row ID
+    // Now, expand the newly clicked row
     expandedUnitRowId = index;
-    row.classList.add('expanded');
+    clickedRow.classList.add('expanded');
 
     // Create the new detail row
-    const detailRow = unitTableBody.insertRow(row.rowIndex + 1);
+    const detailRow = unitTableBody.insertRow(clickedRow.rowIndex + 1);
     detailRow.classList.add('unit-details-row', 'bg-gray-50', 'dark:bg-gray-700', 'border-b', 'border-gray-200', 'dark:border-gray-600');
     detailRow.dataset.unitIndex = index; // Link to the unit row
 
@@ -535,7 +580,13 @@ function toggleUnitDetails(unit, row, index) {
                              </div>
                              <div class="mb-4 flex items-center">
                                  <input type="checkbox" id="toggleMaxLevelUnit" class="mr-2 rounded text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400">
-                                 <label for="toggleMaxLevelUnit" class="text-gray-700 dark:text-gray-300">Show Max Level (25) (TBD)</label>
+                                 <label for="toggleMaxLevelUnit" class="text-gray-700 dark:text-gray-300">Show Max Level (25)</label>
+                             </div>
+                             <div class="mb-4 flex items-center">
+                                 <label for="levelInput" class="text-gray-700 dark:text-gray-300 mr-2">Level:</label>
+                                 <input type="number" id="levelInput" value="1" min="1" max="25"
+                                        class="p-1 border border-gray-300 dark:border-gray-600 rounded-md w-20 text-center
+                                               bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
                              </div>
                              <div id="modCheckboxesContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-2 mb-4 text-gray-700 dark:text-gray-200"></div>
                              <h3 class="font-semibold text-lg mb-2 text-blue-800 dark:text-blue-200">Stats with Mods:</h3>
@@ -544,6 +595,7 @@ function toggleUnitDetails(unit, row, index) {
 
     const toggleMaxStats = modApplyDiv.querySelector('#toggleMaxStats');
     const toggleMaxLevelUnit = modApplyDiv.querySelector('#toggleMaxLevelUnit'); // New DOM element for Max Level
+    const levelInput = modApplyDiv.querySelector('#levelInput'); // New DOM element for Level Input
     const modCheckboxesContainer = modApplyDiv.querySelector('#modCheckboxesContainer');
     const appliedStatsList = modApplyDiv.querySelector('#appliedStatsList');
 
@@ -601,7 +653,7 @@ function toggleUnitDetails(unit, row, index) {
 
                     // Ensure max stats toggle is off if individual mods are being selected
                     toggleMaxStats.checked = false;
-                    updateAppliedStats(unit, selectedModsForUnit, appliedStatsList, toggleMaxStats.checked, toggleMaxLevelUnit.checked);
+                    updateAppliedStats(unit, selectedModsForUnit, appliedStatsList, toggleMaxStats.checked, toggleMaxLevelUnit.checked, parseInt(levelInput.value));
                 });
 
                 label.appendChild(checkbox);
@@ -620,7 +672,7 @@ function toggleUnitDetails(unit, row, index) {
             selectedModsForUnit = []; // Clear selected mods
             toggleMaxLevelUnit.checked = false; // Uncheck Max Level
         }
-        updateAppliedStats(unit, selectedModsForUnit, appliedStatsList, toggleMaxStats.checked, toggleMaxLevelUnit.checked);
+        updateAppliedStats(unit, selectedModsForUnit, appliedStatsList, toggleMaxStats.checked, toggleMaxLevelUnit.checked, parseInt(levelInput.value));
     });
 
     // Event listener for Max Level toggle
@@ -628,13 +680,31 @@ function toggleUnitDetails(unit, row, index) {
         // Max Level can be combined with other mods, but not with Max Stats
         if (toggleMaxLevelUnit.checked) {
             toggleMaxStats.checked = false; // Uncheck Max Stats if Max Level is enabled
+            levelInput.value = 25; // Set level to 25 when max level is toggled
+        } else {
+            levelInput.value = 1; // Reset level to 1 when max level is untoggled
         }
-        updateAppliedStats(unit, selectedModsForUnit, appliedStatsList, toggleMaxStats.checked, toggleMaxLevelUnit.checked);
+        updateAppliedStats(unit, selectedModsForUnit, appliedStatsList, toggleMaxStats.checked, toggleMaxLevelUnit.checked, parseInt(levelInput.value));
+    });
+
+    // Event listener for Level Input
+    levelInput.addEventListener('input', () => {
+        let level = parseInt(levelInput.value);
+        if (isNaN(level) || level < 1) {
+            level = 1;
+            levelInput.value = 1;
+        } else if (level > 25) {
+            level = 25;
+            levelInput.value = 25;
+        }
+        // If level is manually changed, uncheck the Max Level toggle
+        toggleMaxLevelUnit.checked = false;
+        updateAppliedStats(unit, selectedModsForUnit, appliedStatsList, toggleMaxStats.checked, toggleMaxLevelUnit.checked, level);
     });
 
 
     // Initial display of applied stats (no mods applied yet)
-    updateAppliedStats(unit, selectedModsForUnit, appliedStatsList, false, false);
+    updateAppliedStats(unit, selectedModsForUnit, appliedStatsList, false, false, parseInt(levelInput.value));
 
     detailCell.appendChild(detailContent);
 }
@@ -646,30 +716,18 @@ function toggleUnitDetails(unit, row, index) {
  * @param {HTMLElement} listElement - The UL element to render stats into.
  * @param {boolean} showMaxStats - True if "Max Stats" should be displayed.
  * @param {boolean} showMaxLevel - True if "Max Level" should be displayed.
+ * @param {number} currentLevel - The level to calculate stats for.
  */
-function updateAppliedStats(baseUnit, selectedMods, listElement, showMaxStats, showMaxLevel) {
+function updateAppliedStats(baseUnit, selectedMods, listElement, showMaxStats, showMaxLevel, currentLevel) {
     listElement.innerHTML = ''; // Clear previous stats
 
     let unitToDisplay = { ...baseUnit };
 
-    // Apply Max Level effect first if enabled
-    if (showMaxLevel) {
-        unitToDisplay = { ...unitToDisplay }; // Create a fresh copy to modify
-        // Apply "TBD" for max level stats.
-        // In a real scenario, you'd calculate actual max level stats here.
-        // For now, we'll just mark relevant numeric stats as TBD.
-        Object.keys(unitToDisplay).forEach(key => {
-            // Only apply TBD to numeric stats that are typically affected by leveling
-            if (typeof unitToDisplay[key] === 'number' && ['HP', 'Damage', 'Cooldown', 'CritChance', 'CritDamage', 'Accuracy', 'EvadeChance'].includes(key)) {
-                unitToDisplay[key] = 'TBD (Lvl 25)';
-            }
-        });
-    }
+    // Determine the level for calculation
+    const levelForCalculation = showMaxLevel ? 25 : currentLevel;
 
-    // Apply individual mods if Max Stats is not enabled
-    if (!showMaxStats) {
-        unitToDisplay = applyModsToUnit(unitToDisplay, selectedMods);
-    }
+    // Calculate stats at the determined level, then apply mods
+    unitToDisplay = getUnitStatsAtLevel(baseUnit, levelForCalculation, selectedMods);
 
 
     unitColumnOrder.slice(1).forEach(key => { // Skip 'Image'
@@ -696,7 +754,7 @@ function updateAppliedStats(baseUnit, selectedMods, listElement, showMaxStats, s
             } else if (typeof baseValue === 'string' && typeof currentDisplayedValue === 'string' && baseValue !== currentDisplayedValue) {
                 li.classList.add('font-bold', 'text-blue-600', 'dark:text-blue-300');
             }
-        } else if (showMaxLevel && String(currentDisplayedValue).includes('TBD')) {
+        } else if (showMaxLevel && String(currentDisplayedValue).includes('TBD')) { // This TBD logic should no longer be needed if calculations are active
              li.classList.add('font-bold', 'text-blue-600', 'dark:text-blue-300');
         }
         listElement.appendChild(li);
