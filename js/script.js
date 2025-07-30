@@ -460,8 +460,16 @@ function renderUnitTable(dataToRender) {
     }
 
     dataToRender.forEach((unit, index) => {
-        // Determine which unit data to display (base or mod-affected)
-        const unitToDisplay = modEffectsEnabled ? applyModsToUnit(unit, mods) : unit;
+        // Determine the level for calculation based on global toggle
+        const levelForDisplay = maxLevelGlobalEnabled ? 25 : 1;
+
+        // Calculate unit stats at the determined level (level 1 or max level)
+        let unitToDisplay = getUnitStatsAtLevel(unit, levelForDisplay, []); // No mods applied yet for this base calculation
+
+        // Apply global mod effects if enabled, on top of the leveled stats
+        if (modEffectsEnabled) {
+            unitToDisplay = applyModsToUnit(unitToDisplay, mods);
+        }
 
         const row = unitTableBody.insertRow();
         row.classList.add('cursor-pointer', 'unit-row'); // Add base classes
@@ -715,10 +723,6 @@ function toggleUnitDetails(unit, clickedRow, index) {
     modApplyDiv.classList.add('flex-1', 'p-3', 'rounded-lg', 'bg-blue-50', 'dark:bg-blue-900', 'shadow-inner');
     modApplyDiv.innerHTML = `<h3 class="font-semibold text-lg mb-2 text-blue-800 dark:text-blue-200">Apply Mods:</h3>
                              <div class="mb-4 flex items-center">
-                                 <input type="checkbox" id="toggleMaxStats" class="mr-2 rounded text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400">
-                                 <label for="toggleMaxStats" class="text-gray-700 dark:text-gray-300">Show Max Stats (TBD)</label>
-                             </div>
-                             <div class="mb-4 flex items-center">
                                  <input type="checkbox" id="toggleMaxLevelUnit" class="mr-2 rounded text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400">
                                  <label for="toggleMaxLevelUnit" class="text-gray-700 dark:text-gray-300">Show Max Level (25)</label>
                              </div>
@@ -735,7 +739,7 @@ function toggleUnitDetails(unit, clickedRow, index) {
                              <ul id="activeModEffectsList" class="space-y-1 text-gray-700 dark:text-gray-200"></ul>`; // New section for mod effects
     detailContent.appendChild(modApplyDiv);
 
-    const toggleMaxStats = modApplyDiv.querySelector('#toggleMaxStats');
+    // Removed toggleMaxStats as requested
     const toggleMaxLevelUnit = modApplyDiv.querySelector('#toggleMaxLevelUnit'); // New DOM element for Max Level
     const levelInput = modApplyDiv.querySelector('#levelInput'); // New DOM element for Level Input
     const modCheckboxesContainer = modApplyDiv.querySelector('#modCheckboxesContainer');
@@ -794,9 +798,9 @@ function toggleUnitDetails(unit, clickedRow, index) {
                         selectedModsForUnit = selectedModsForUnit.filter(m => m.id !== changedModId);
                     }
 
-                    // Ensure max stats toggle is off if individual mods are being selected
-                    toggleMaxStats.checked = false;
-                    updateAppliedStats(unit, selectedModsForUnit, appliedStatsList, toggleMaxStats.checked, toggleMaxLevelUnit.checked, parseInt(levelInput.value), activeModEffectsList);
+                    // Ensure max level toggle is off if individual mods are being selected
+                    toggleMaxLevelUnit.checked = false; // Uncheck max level if a specific mod is chosen
+                    updateAppliedStats(unit, selectedModsForUnit, appliedStatsList, false, toggleMaxLevelUnit.checked, parseInt(levelInput.value), activeModEffectsList);
                 });
 
                 label.appendChild(checkbox);
@@ -807,27 +811,17 @@ function toggleUnitDetails(unit, clickedRow, index) {
         }
     });
 
-    // Event listener for Max Stats toggle
-    toggleMaxStats.addEventListener('change', () => {
-        if (toggleMaxStats.checked) {
-            // Uncheck all individual mod checkboxes and Max Level toggle if Max Stats is enabled
-            modCheckboxesContainer.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-            selectedModsForUnit = []; // Clear selected mods
-            toggleMaxLevelUnit.checked = false; // Uncheck Max Level
-        }
-        updateAppliedStats(unit, selectedModsForUnit, appliedStatsList, toggleMaxStats.checked, toggleMaxLevelUnit.checked, parseInt(levelInput.value), activeModEffectsList);
-    });
-
     // Event listener for Max Level toggle
     toggleMaxLevelUnit.addEventListener('change', () => {
-        // Max Level can be combined with other mods, but not with Max Stats
         if (toggleMaxLevelUnit.checked) {
-            toggleMaxStats.checked = false; // Uncheck Max Stats if Max Level is enabled
             levelInput.value = 25; // Set level to 25 when max level is toggled
+            // Uncheck all individual mod checkboxes if Max Level is enabled
+            modCheckboxesContainer.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
+            selectedModsForUnit = []; // Clear selected mods
         } else {
             levelInput.value = 1; // Reset level to 1 when max level is untoggled
         }
-        updateAppliedStats(unit, selectedModsForUnit, appliedStatsList, toggleMaxStats.checked, toggleMaxLevelUnit.checked, parseInt(levelInput.value), activeModEffectsList);
+        updateAppliedStats(unit, selectedModsForUnit, appliedStatsList, false, toggleMaxLevelUnit.checked, parseInt(levelInput.value), activeModEffectsList);
     });
 
     // Event listener for Level Input
@@ -842,7 +836,7 @@ function toggleUnitDetails(unit, clickedRow, index) {
         }
         // If level is manually changed, uncheck the Max Level toggle
         toggleMaxLevelUnit.checked = false;
-        updateAppliedStats(unit, selectedModsForUnit, appliedStatsList, toggleMaxStats.checked, toggleMaxLevelUnit.checked, level, activeModEffectsList);
+        updateAppliedStats(unit, selectedModsForUnit, appliedStatsList, false, toggleMaxLevelUnit.checked, level, activeModEffectsList);
     });
 
 
@@ -857,7 +851,7 @@ function toggleUnitDetails(unit, clickedRow, index) {
  * @param {Object} baseUnit - The original unit object.
  * @param {Array<Object>} selectedMods - The mods currently selected for this unit.
  * @param {HTMLElement} listElement - The UL element to render stats into.
- * @param {boolean} showMaxStats - True if "Max Stats" should be displayed.
+ * @param {boolean} showMaxStats - This parameter is now unused but kept for function signature consistency.
  * @param {boolean} showMaxLevel - True if "Max Level" should be displayed.
  * @param {number} currentLevel - The level to calculate stats for.
  * @param {HTMLElement} activeModEffectsListElement - The UL element to render active mod effects into.

@@ -253,8 +253,8 @@ th {
 }
 
 @keyframes spin {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
 }
 
 /* Styles for expandable unit details */
@@ -328,11 +328,13 @@ th {
 /* Input and Select elements styling */
 input[type="text"], input[type="number"], select {
     font-size: 0.95rem; /* Consistent font size for inputs */
+    /* Ensure borders are clearly visible in light mode */
+    border-color: #9ca3af; /* gray-400, slightly darker for better visibility */
 }
 
 /* Placeholder text color */
 ::placeholder {
-    color: #9ca3af; /* gray-400 */
+    color: #6b7280; /* gray-500, darker for better contrast */
     opacity: 1; /* Firefox fix */
 }
 
