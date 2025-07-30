@@ -53,7 +53,7 @@ const unitColumnOrder = [
 ];
 
 // Define ALL possible unit stats for the detailed dropdown view
-// Removed: Distance, CritChance, CritDamage, AttackEffect, AttackEffectType,
+// Re-added: Distance, CritChance, CritDamage, AttackEffect, AttackEffectType,
 // AttackEffectLifesteal, AttackEffectKey, Knockback, Accuracy, EvadeChance,
 // HPOffset, ShadowStepDistance, ShadowStepCooldown
 const allUnitStatsForDropdown = [
@@ -683,7 +683,7 @@ function toggleUnitDetails(unit, clickedRow, index) {
     allUnitStatsForDropdown.forEach(key => {
         const li = document.createElement('li');
         let displayValue = unit[key];
-        // Apply specific formatting for percentages and numbers (only HP, Damage, Cooldown remain here)
+        // Apply specific formatting for percentages and numbers
         if (['Cooldown', 'HP', 'Damage', 'Distance', 'CritChance', 'CritDamage', 'AttackEffectLifesteal', 'Knockback', 'Accuracy', 'EvadeChance'].includes(key)) {
             displayValue = typeof displayValue === 'number' ? displayValue.toFixed(2) : displayValue;
         }
