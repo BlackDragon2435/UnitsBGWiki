@@ -36,12 +36,12 @@ let expandedUnitRowId = null; // To keep track of the currently expanded row
 // Define the order of rarities for consistent filtering and display
 const rarityOrder = ["Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythic", "Demonic", "Ancient"];
 
-// Define the order of columns for unit table display
+// Define the order of columns for unit table display (HP Offset and Shadow Step removed)
 const unitColumnOrder = [
     'Image', 'Label', 'Class', 'Rarity', 'HP', 'Damage', 'Cooldown', 'Distance',
     'CritChance', 'CritDamage', 'AttackEffect', 'AttackEffectType',
     'AttackEffectLifesteal', 'AttackEffectKey', 'Knockback', 'Accuracy',
-    'EvadeChance', 'HPOffset', 'ShadowStepDistance', 'ShadowStepCooldown'
+    'EvadeChance' // HPOffset, ShadowStepDistance, ShadowStepCooldown removed
 ];
 
 // --- Utility Functions ---
@@ -248,17 +248,22 @@ function applySingleModEffect(unit, mod) {
         const chance = effect.chance; // Keep chance for potential future use or display
 
         // Ensure the unit property exists and is a number or N/A
-        if (modifiedUnit[stat] === undefined || modifiedUnit[stat] === 'N/A') {
-            // If the stat is N/A but the mod provides an amount, initialize it.
-            // This is a common case for CritChance, CritDamage, EvadeChance, Accuracy
-            if (typeof amount === 'number' && ['CritChance', 'CritDamage', 'EvadeChance', 'Accuracy', 'HPOffset', 'ShadowStepDistance', 'ShadowStepCooldown', 'Knockback'].includes(stat)) {
-                modifiedUnit[stat] = 0; // Initialize to 0 for addition
-            } else if (stat === 'AttackEffectLifesteal' && typeof amount === 'number') {
-                modifiedUnit[stat] = 0; // Initialize Lifesteal to 0 if N/A
-            } else {
-                return; // Cannot apply mod to non-numeric or non-relevant "N/A" stat
-            }
+        // Only apply if the stat is relevant and exists in the modifiedUnit
+        if (modifiedUnit[stat] === undefined) {
+             return; // Stat does not exist on the unit, skip applying mod
         }
+
+        // Initialize N/A stats if a mod applies a numeric amount to them
+        if (modifiedUnit[stat] === 'N/A' && typeof amount === 'number') {
+            if (['CritChance', 'CritDamage', 'EvadeChance', 'Accuracy', 'Knockback'].includes(stat)) {
+                modifiedUnit[stat] = 0; // Initialize to 0 for addition
+            } else if (stat === 'AttackEffectLifesteal') {
+                modifiedUnit[stat] = 0; // Initialize Lifesteal to 0 if N/A
+            }
+        } else if (modifiedUnit[stat] === 'N/A' && typeof chance === 'number' && stat === 'Lifesteal') {
+             modifiedUnit.AttackEffectLifesteal = 0; // Initialize Lifesteal if N/A and mod has chance
+        }
+
 
         switch (stat) {
             case "HP":
@@ -300,18 +305,13 @@ function applySingleModEffect(unit, mod) {
                 }
                 break;
             case "Knockback":
-            case "HPOffset":
-            case "ShadowStepDistance":
-            case "ShadowStepCooldown":
                 if (typeof modifiedUnit[stat] === 'number' && typeof amount === 'number') {
                     modifiedUnit[stat] += amount;
                 } else if (modifiedUnit[stat] === 'N/A' && typeof amount === 'number') {
                     modifiedUnit[stat] = amount;
                 }
                 break;
-            // For effects like "Frost", "Fire", "Poison", "Mirror", we might just update
-            // the AttackEffect or AttackEffectType fields, or add a new property for active effects.
-            // For now, we'll just note their presence.
+            // Removed HPOffset, ShadowStepDistance, ShadowStepCooldown from here
             case "Frost":
             case "Fire":
             case "Poison":
@@ -362,16 +362,21 @@ function getUnitStatsAtLevel(baseUnit, level, selectedMods) {
     if (gameData.StatsByClass[unitClass]) {
         const classStats = gameData.StatsByClass[unitClass];
         for (const statKey in classStats) {
-            if (classStats[statKey]._attributes && classStats[statKey]._attributes[unitRarity] !== undefined) {
+            // Ensure the stat exists on the unit and is a number
+            if (typeof calculatedUnit[statKey] === 'number' &&
+                classStats[statKey]._attributes &&
+                classStats[statKey]._attributes[unitRarity] !== undefined) {
+
                 const modifier = classStats[statKey]._attributes[unitRarity];
-                if (typeof calculatedUnit[statKey] === 'number') {
-                    if (statKey === 'Cooldown') {
-                        // Cooldown modifiers are additive (e.g., -0.05s)
-                        calculatedUnit[statKey] = Math.max(0.1, calculatedUnit[statKey] + modifier);
-                    } else {
-                        // Other stats are multiplicative (e.g., HP * (1 + 0.18))
-                        calculatedUnit[statKey] = calculatedUnit[statKey] * (1 + modifier);
-                    }
+                // Apply level scaling: (base_stat * (1 + modifier * (level - 1)))
+                // This assumes linear scaling per level based on the modifier
+                if (statKey === 'Cooldown') {
+                    // Cooldown modifiers are additive and reduce cooldown
+                    // We apply the modifier per level, linearly
+                    calculatedUnit[statKey] = Math.max(0.1, calculatedUnit[statKey] + (modifier * (level - 1)));
+                } else {
+                    // Other stats are multiplicative
+                    calculatedUnit[statKey] = calculatedUnit[statKey] * (1 + modifier * (level - 1));
                 }
             }
         }
@@ -544,7 +549,7 @@ function toggleUnitDetails(unit, clickedRow, index) {
     detailRow.dataset.unitIndex = index; // Link to the unit row
 
     const detailCell = detailRow.insertCell(0);
-    detailCell.colSpan = unitColumnOrder.length; // Span all columns
+    detailCell.colSpan = unitColumnOrder.length + 1; // Span all columns (including image)
     detailCell.classList.add('p-4', 'pt-2');
 
     const detailContent = document.createElement('div');
@@ -588,7 +593,7 @@ function toggleUnitDetails(unit, clickedRow, index) {
                                         class="p-1 border border-gray-300 dark:border-gray-600 rounded-md w-20 text-center
                                                bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
                              </div>
-                             <div id="modCheckboxesContainer" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-x-4 gap-y-2 mb-4 text-gray-700 dark:text-gray-200"></div>
+                             <div id="modCheckboxesContainer" class="flex gap-x-4 gap-y-2 mb-4 text-gray-700 dark:text-gray-200 overflow-x-auto pb-2"></div>
                              <h3 class="font-semibold text-lg mb-2 text-blue-800 dark:text-blue-200">Stats with Mods:</h3>
                              <ul id="appliedStatsList" class="space-y-1 text-gray-700 dark:text-gray-200"></ul>`;
     detailContent.appendChild(modApplyDiv);
@@ -615,7 +620,7 @@ function toggleUnitDetails(unit, clickedRow, index) {
     rarityOrder.forEach(rarity => {
         if (modsByRarity[rarity].length > 0) {
             const rarityColumn = document.createElement('div');
-            rarityColumn.classList.add('flex', 'flex-col', 'p-2', 'rounded-md', 'border', 'border-gray-200', 'dark:border-gray-600'); // Column styling
+            rarityColumn.classList.add('flex', 'flex-col', 'p-2', 'rounded-md', 'border', 'border-gray-200', 'dark:border-gray-600', 'flex-shrink-0'); // Column styling
 
             const rarityHeader = document.createElement('h4');
             rarityHeader.classList.add('font-bold', 'text-base', 'mt-2', 'mb-1', 'w-full', `text-rarity-${rarity.toLowerCase()}`); // Add rarity color class
