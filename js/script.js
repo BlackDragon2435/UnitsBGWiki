@@ -1128,3 +1128,69 @@ window.onload = async function() { // Made onload async
         filterAndRenderUnits();
     });
 };
+
+
+// --- Initialization ---
+
+// Event Listeners
+window.onload = async function() { // Made onload async
+    initializeDarkMode(); // Set initial dark mode state
+
+    loadingSpinner.classList.remove('hidden'); // Show spinner
+    unitTableContainer.classList.add('hidden'); // Hide unit table
+    modsContent.classList.add('hidden'); // Ensure mods content is hidden initially
+    tierListContent.classList.add('hidden'); // Ensure tier list content is hidden initially
+
+    // Parse units and mods data
+    units = parseData(rawUnitData, 'units');
+    mods = parseData(rawModData, 'mods'); // Parse mod data
+
+    // Fetch tier list data and wait for it to complete
+    tierList = await fetchTierListData(); // Await the tier list fetch
+
+    populateRarityFilter();
+    populateClassFilter(); // Populate class filter after parsing
+    filterAndRenderUnits(); // Initial render of units (now with tierList available)
+    renderModTable(mods); // Initial render of mods (will be hidden initially)
+
+    loadingSpinner.classList.add('hidden'); // Hide spinner
+    unitTableContainer.classList.remove('hidden'); // Show unit table
+
+    // Search and Filter Events
+    // Debounce the search input to improve performance
+    const debouncedFilterAndRenderUnits = debounce(filterAndRenderUnits, 300);
+    searchInput.addEventListener('input', debouncedFilterAndRenderUnits);
+    rarityFilter.addEventListener('change', filterAndRenderUnits);
+    classFilter.addEventListener('change', filterAndRenderUnits);
+
+    // Table Header Sorting Events
+    tableHeaders.forEach(header => {
+        header.addEventListener('click', () => {
+            const sortColumn = header.dataset.sort;
+            if (sortColumn) {
+                sortData(sortColumn);
+            }
+        });
+    });
+
+    // Dark Mode Toggle Event
+    darkModeToggle.addEventListener('click', toggleDarkMode);
+
+    // Tab Switching Events
+    unitsTab.addEventListener('click', () => switchTab('unitsTab'));
+    modsTab.addEventListener('click', () => switchTab('modsTab'));
+    tierListTab.addEventListener('click', () => switchTab('tierListTab')); // Tier List Tab event
+
+    // Mod Effects Toggle Event (global)
+    toggleModEffects.addEventListener('change', () => {
+        modEffectsEnabled = toggleModEffects.checked;
+        filterAndRenderUnits(); // Re-render units to apply/remove global mod effects
+    });
+
+    // Global Max Level Toggle Event
+    toggleMaxLevel.addEventListener('change', () => {
+        maxLevelGlobalEnabled = toggleMaxLevel.checked;
+        // Re-render units to apply/remove global max level effects
+        filterAndRenderUnits();
+    });
+};
