@@ -1,12 +1,14 @@
 // js/script.js
-import { rawUnitData } from './unitsData.js';
-import { rawModData } from './modsData.js';
-import { unitImages } from './unitImages.js';
-import { gameData } from './gameData.js'; // Import gameData
+// This file handles fetching, parsing, filtering, and rendering unit and mod data,
+// along with the unit tier list, from Google Sheets CSV URLs.
 
-// IMPORTANT: Replace this with the actual public CSV URL of your Google Sheet
-// Go to your Google Sheet -> File -> Share -> Publish to web -> Select the sheet -> Choose CSV -> Copy the URL
-const GOOGLE_SHEET_TIER_LIST_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQO78VJA7y_g5zHpzw1gTaJhLV2mjNdRxA33zcj1WPFj-QYxQS09nInTQXg6kXNJcjm4f7Gk7lPVZuV/pub?output=csv'; // <<< REPLACE THIS LINE
+import { unitImages } from './unitImages.js';
+import { gameData } from './gameData.js'; // Import gameData (unchanged)
+
+// IMPORTANT: New Google Sheet Public CSV URLs
+const GOOGLE_SHEET_TIER_LIST_CSV_URL = 'https://docs.google.com/sheets/d/e/2PACX-1vQO78VJA7y_g5zHpzw1gTaJhLV2mjNdRxA33zcj1WPFj-QYxQS09nInTQXg6kXNJcjm4f7Gk7lPVZuV/pub?gid=0&single=true&output=csv';
+const GOOGLE_SHEET_UNIT_DATA_CSV_URL = 'https://docs.google.com/sheets/d/e/2PACX-1vQO78VJA7y_g5zHpzw1gTaJhLV2mjNdRxA33zcj1WPFj-QYxQS09nInTQXg6kXNJcjm4f7Gk7lPVZuV/pub?gid=201310748&single=true&output=csv';
+const GOOGLE_SHEET_MOD_DATA_CSV_URL = 'https://docs.google.com/sheets/d/e/2PACX-1vQO78VJA7y_g5zHpzw1gTaJhLV2mjNdRxA33zcj1WPFj-QYxQS09nInTQXg6kXNJcjm4f7Gk7lPVZuV/pub?gid=331730679&single=true&output=csv';
 
 let units = []; // Stores parsed unit data
 let mods = [];  // Stores parsed mod data
@@ -89,175 +91,155 @@ function normalizeString(str) {
 }
 
 /**
- * Parses the raw string data into an array of objects.
- * Handles "N/A" conversion to actual null for easier numeric operations,
- * and number parsing.
- * For mod data, it groups properties by their "Title" to form complete mod objects.
- * @param {string} dataString - The raw string data from the text file.
- * @param {string} dataType - 'units' or 'mods' to determine parsing logic.
- * @returns {Array<Object>} An array of parsed objects.
+ * Fetches CSV data from a given URL.
+ * @param {string} url - The URL of the CSV file.
+ * @returns {Promise<Array<Object>>} A promise that resolves to an array of objects,
+ * where each object represents a row in the CSV.
  */
-function parseData(dataString, dataType) {
-    const parsedItems = [];
-    const itemLines = dataString.split(/[\r\n]+/).filter(line => line.trim() !== '');
-
-    if (dataType === 'units') {
-        const unitBlocks = dataString.match(/\["([^"]+)"\] = \{([^}]+)\},/g);
-
-        if (!unitBlocks) {
-            console.warn("No unit blocks found in the provided data string.");
-            return parsedItems;
+async function fetchCSVData(url) {
+    try {
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status} from ${url}`);
         }
+        const csvText = await response.text();
+        return parseCSV(csvText);
+    } catch (error) {
+        console.error(`Error fetching data from ${url}:`, error);
+        return [];
+    }
+}
 
-        unitBlocks.forEach(block => {
-            const unitNameMatch = block.match(/\["([^"]+)"\] = \{/);
-            if (!unitNameMatch) return;
+/**
+ * Parses CSV text into an array of objects.
+ * Assumes the first row is the header.
+ * @param {string} csvText - The CSV data as a string.
+ * @returns {Array<Object>} An array of objects, where each object represents a row.
+ */
+function parseCSV(csvText) {
+    const lines = csvText.trim().split('\n');
+    if (lines.length === 0) return [];
 
-            const unitName = unitNameMatch[1];
-            const propertiesString = block.match(/\{([^}]+)\}/)[1];
+    const headers = lines[0].split(',').map(header => header.trim());
+    const data = [];
 
-            const unit = {};
-            const propertyMatches = propertiesString.matchAll(/\["([^"]+)"\] = (.+?),/g);
+    for (let i = 1; i < lines.length; i++) {
+        const values = lines[i].split(',').map(value => value.trim());
+        if (values.length !== headers.length) {
+            console.warn(`Skipping malformed CSV row: ${lines[i]}`);
+            continue;
+        }
+        const rowObject = {};
+        headers.forEach((header, index) => {
+            rowObject[header] = values[index];
+        });
+        data.push(rowObject);
+    }
+    return data;
+}
 
-            for (const match of propertyMatches) {
-                const key = match[1];
-                let value = match[2].trim();
-
-                if (value === '"N/A"') {
-                    value = 'N/A'; // Keep "N/A" as string for display
-                } else if (value === 'true') {
-                    value = true;
-                } else if (value === 'false') {
-                    value = false;
-                } else if (!isNaN(parseFloat(value)) && isFinite(value)) {
-                    value = parseFloat(value);
-                } else {
-                    value = value.replace(/^"|"$/g, ''); // Remove quotes from string values
-                }
+/**
+ * Processes raw unit data from CSV into a structured format.
+ * Converts string "N/A" to 'N/A' and parses numbers.
+ * @param {Array<Object>} csvData - Array of objects from CSV parsing.
+ * @returns {Array<Object>} Array of processed unit objects.
+ */
+function processUnitCSVData(csvData) {
+    return csvData.map(row => {
+        const unit = {};
+        for (const key in row) {
+            let value = row[key];
+            // Convert "N/A" to 'N/A' string for display consistency
+            if (value === 'N/A') {
+                unit[key] = 'N/A';
+            } else if (!isNaN(parseFloat(value)) && isFinite(value)) {
+                // Attempt to parse numbers, but keep "N/A" as string
+                unit[key] = parseFloat(value);
+            } else {
                 unit[key] = value;
             }
-            // Add a normalized label for easier matching with tier list
-            unit.NormalizedLabel = normalizeString(unit.Label);
-            parsedItems.push(unit);
-        });
-
-    } else if (dataType === 'mods') {
-        const tempModGroups = {}; // Group properties by their "prefix" like "SmallPoison"
-
-        itemLines.forEach(line => {
-            const match = line.match(/\["([^"]+)"\] = (.+?),/);
-            if (!match) return;
-
-            const fullKey = match[1]; // e.g., "SmallPoison/Chance" or "Default/Title"
-            let value = match[2].trim();
-
-            if (value === '"N/A"') {
-                value = 'N/A';
-            } else if (value === 'true') {
-                value = true;
-            } else if (value === 'false') {
-                value = false;
-            } else if (!isNaN(parseFloat(value)) && isFinite(value)) {
-                value = parseFloat(value);
-            } else {
-                value = value.replace(/^"|"$/g, '');
-            }
-
-            const keyParts = fullKey.split('/');
-            if (keyParts.length === 2) {
-                const groupName = keyParts[0]; // e.g., "SmallPoison"
-                const propertyName = keyParts[1]; // e.g., "Chance", "Title", "Stat"
-
-                tempModGroups[groupName] = tempModGroups[groupName] || {};
-                tempModGroups[groupName][propertyName] = value;
-            } else if (keyParts.length === 1 && keyParts[0] === "Default") {
-                // Handle "Default" specific properties if needed, e.g., Default/Title
-                // This assumes "Default" is a special mod group
-                tempModGroups["Default"] = tempModGroups["Default"] || {};
-                tempModGroups["Default"][fullKey] = value; // Store as "Default/Title" directly
-            }
-        });
-
-        // Now, iterate through the grouped data to create final mod objects
-        for (const groupName in tempModGroups) {
-            const modGroup = tempModGroups[groupName];
-
-            // Only create a mod if it has a Title
-            if (modGroup.Title) {
-                const mod = {
-                    id: groupName, // e.g., "SmallPoison" - used for internal tracking
-                    label: modGroup.Title,
-                    rarity: modGroup.Rarity || 'Common', // Default if not specified
-                    effects: []
-                };
-
-                // Construct the effect object based on available properties in the group
-                const effect = {};
-                if (modGroup.Stat) effect.stat = modGroup.Stat;
-                if (modGroup.Amount !== undefined) effect.amount = modGroup.Amount;
-                if (modGroup.Chance !== undefined) effect.chance = modGroup.Chance;
-                if (modGroup.Effect) effect.description = modGroup.Effect; // Add effect description from raw data
-
-                if (Object.keys(effect).length > 0) {
-                    mod.effects.push(effect);
-                }
-
-                // Generate a readable effect description if not already provided
-                let effectDescParts = [];
-                if (modGroup.Effect) {
-                    effectDescParts.push(modGroup.Effect);
-                } else {
-                    mod.effects.forEach(eff => {
-                        let desc = '';
-                        const stat = eff.stat;
-                        const amount = eff.amount;
-                        const chance = eff.chance;
-
-                        if (stat === "HP" || stat === "Damage") {
-                            if (typeof amount === 'number') {
-                                desc += `Increases ${stat} by ${(amount * 100).toFixed(0)}%`;
-                            }
-                        } else if (stat === "Cooldown") {
-                            if (typeof amount === 'number') {
-                                desc += `Reduces ${stat} by ${Math.abs(amount).toFixed(2)}s`;
-                            }
-                        } else if (stat === "CritChance" || stat === "EvadeChance" || stat === "Accuracy") {
-                            if (typeof amount === 'number') {
-                                desc += `Increases ${stat} by ${(amount * 100).toFixed(0)}%`;
-                            }
-                        } else if (stat === "CritDamageCoeff") {
-                             if (typeof amount === 'number') {
-                                desc += `Increases Crit Damage Multiplier by ${(amount * 100).toFixed(0)}%`;
-                            }
-                        } else if (stat === "Lifesteal") {
-                             if (typeof amount === 'number') {
-                                desc += `Adds ${amount}% Lifesteal`;
-                            } else if (typeof chance === 'number') { // Special case for Lifesteal with chance
-                                desc += `Adds ${(chance * 100).toFixed(0)}% Lifesteal`;
-                            }
-                        } else if (stat === "Frost" || stat === "Fire" || stat === "Poison" || stat === "Mirror") {
-                            if (typeof chance === 'number') {
-                                desc += `Applies ${stat} with ${(chance * 100).toFixed(0)}% chance`;
-                            }
-                        } else if (mod.label === "Default") { // Handle the "Default" mod specifically
-                            desc += "Default unit properties";
-                        }
-
-                        // Add chance if it's not already part of the main description for certain effects
-                        if (typeof chance === 'number' && !["Frost", "Fire", "Poison", "Mirror", "Lifesteal"].includes(stat) && desc) {
-                            desc += ` (Chance: ${(chance * 100).toFixed(0)}%)`;
-                        }
-                        if (desc) effectDescParts.push(desc);
-                    });
-                }
-                mod.effectDescription = effectDescParts.join('; ') || 'No defined effect';
-                mod.appliesTo = "All"; // Default, as not specified in the mod data
-
-                parsedItems.push(mod);
-            }
         }
-    }
-    return parsedItems;
+        unit.NormalizedLabel = normalizeString(unit.Label);
+        return unit;
+    });
+}
+
+/**
+ * Processes raw mod data from CSV into a structured format.
+ * Reconstructs mod objects with effects array and description.
+ * @param {Array<Object>} csvData - Array of objects from CSV parsing.
+ * @returns {Array<Object>} Array of processed mod objects.
+ */
+function processModCSVData(csvData) {
+    return csvData.map(row => {
+        const mod = {
+            id: row.ModName, // Using ModName as a unique ID
+            label: row.ModName,
+            rarity: row.Rarity || 'Common',
+            effects: []
+        };
+
+        const effect = {};
+        if (row.Stat && row.Stat !== 'N/A') effect.stat = row.Stat;
+        // Parse Amount and Chance as numbers if they exist and are not "N/A"
+        if (row.Amount && row.Amount !== 'N/A') effect.amount = parseFloat(row.Amount);
+        if (row.Chance && row.Chance !== 'N/A') effect.chance = parseFloat(row.Chance);
+        if (row.Effect && row.Effect !== 'N/A') effect.description = row.Effect;
+
+        if (Object.keys(effect).length > 0) {
+            mod.effects.push(effect);
+        }
+
+        // Generate a readable effect description if not already provided or if it's "N/A"
+        if (!mod.effectDescription || mod.effectDescription === 'N/A') {
+            let effectDescParts = [];
+            mod.effects.forEach(eff => {
+                let desc = '';
+                const stat = eff.stat;
+                const amount = eff.amount;
+                const chance = eff.chance;
+
+                if (stat === "HP" || stat === "Damage") {
+                    if (typeof amount === 'number') {
+                        desc += `Increases ${stat} by ${(amount * 100).toFixed(0)}%`;
+                    }
+                } else if (stat === "Cooldown") {
+                    if (typeof amount === 'number') {
+                        desc += `Reduces ${stat} by ${Math.abs(amount).toFixed(2)}s`;
+                    }
+                } else if (stat === "CritChance" || stat === "EvadeChance" || stat === "Accuracy") {
+                    if (typeof amount === 'number') {
+                        desc += `Increases ${stat} by ${(amount * 100).toFixed(0)}%`;
+                    }
+                } else if (stat === "CritDamageCoeff") {
+                    if (typeof amount === 'number') {
+                        desc += `Increases Crit Damage Multiplier by ${(amount * 100).toFixed(0)}%`;
+                    }
+                } else if (stat === "Lifesteal") {
+                    if (typeof amount === 'number') {
+                        desc += `Heals by ${amount} HP for each attack`; // Amount is direct HP value
+                    } else if (typeof chance === 'number') {
+                        desc += `Heals by ${(chance * 100).toFixed(0)}% HP for each attack`; // If chance, assume percentage
+                    }
+                } else if (stat === "Knockback") {
+                    if (typeof amount === 'number') {
+                        desc += `Adds ${amount} Knockback`;
+                    }
+                } else if (["Frost", "Fire", "Poison", "Mirror"].includes(stat)) {
+                    if (typeof chance === 'number') {
+                        desc += `Applies ${stat} with ${(chance * 100).toFixed(0)}% chance`;
+                    } else {
+                        desc += `Applies ${stat}`; // If no chance specified, just state it applies
+                    }
+                }
+
+                if (desc) effectDescParts.push(desc);
+            });
+            mod.effectDescription = effectDescParts.join('; ') || (mod.label === "Default" ? "Default unit properties" : 'No defined effect');
+        }
+        mod.appliesTo = "All"; // Default, as not specified in the mod data
+        return mod;
+    });
 }
 
 
@@ -418,33 +400,6 @@ function getUnitStatsAtLevel(baseUnit, level, selectedMods) {
 
 
 /**
- * Formats a value for display in the table.
- * @param {*} value - The value to format.
- * @returns {string} The formatted string.
- */
-function formatDisplayValue(value) {
-    if (value === 'N/A') return 'N/A';
-    if (typeof value === 'number') {
-        // Format percentages for CritChance, EvadeChance, Accuracy
-        if (['CritChance', 'EvadeChance', 'Accuracy'].includes(currentSortColumn)) { // This check is not ideal for general formatting
-            return (value * 100).toFixed(2) + '%';
-        }
-        // Format Cooldown to 2 decimal places
-        if (['Cooldown'].includes(currentSortColumn)) {
-            return value.toFixed(2);
-        }
-        // General number formatting
-        if (!Number.isInteger(value)) {
-            return value.toFixed(2);
-        }
-    }
-    return String(value);
-}
-
-
-// --- Rendering Functions ---
-
-/**
  * Renders the unit table rows based on the provided data.
  * @param {Array<Object>} dataToRender - The array of unit objects to display.
  */
@@ -557,7 +512,7 @@ async function fetchTierListData() {
     tierListTableContainer.classList.add('hidden');
     noTierListMessage.classList.add('hidden');
     try {
-        if (!GOOGLE_SHEET_TIER_LIST_CSV_URL || GOOGLE_SHEET_TIER_LIST_CSV_URL === 'YOUR_GOOGLE_SHEET_PUBLIC_CSV_URL_HERE') {
+        if (!GOOGLE_SHEET_TIER_LIST_CSV_URL) {
             throw new Error("Google Sheet Tier List URL is not configured. Please update script.js with your public CSV URL.");
         }
 
@@ -566,7 +521,15 @@ async function fetchTierListData() {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const csvText = await response.text();
-        return parseCSV(csvText);
+        // Tier list CSV already has correct headers and values, so direct parseCSV is fine
+        const parsedTierList = parseCSV(csvText);
+        // Add a normalized UnitName for easier matching with units data
+        return parsedTierList.map(item => {
+            if (item['UnitName']) {
+                item.NormalizedUnitName = normalizeString(item['UnitName']);
+            }
+            return item;
+        });
     } catch (error) {
         console.error("Error fetching tier list data:", error);
         noTierListMessage.textContent = `Failed to load tier list: ${error.message}`;
@@ -577,37 +540,6 @@ async function fetchTierListData() {
     }
 }
 
-/**
- * Parses CSV text into an array of objects.
- * Assumes the first row is the header.
- * @param {string} csvText - The CSV data as a string.
- * @returns {Array<Object>} An array of objects, where each object represents a row.
- */
-function parseCSV(csvText) {
-    const lines = csvText.trim().split('\n');
-    if (lines.length === 0) return [];
-
-    const headers = lines[0].split(',').map(header => header.trim());
-    const data = [];
-
-    for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(',').map(value => value.trim());
-        if (values.length !== headers.length) {
-            console.warn(`Skipping malformed CSV row: ${lines[i]}`);
-            continue;
-        }
-        const rowObject = {};
-        headers.forEach((header, index) => {
-            rowObject[header] = values[index];
-        });
-        // Add a normalized UnitName for easier matching with units data
-        if (rowObject['UnitName']) {
-            rowObject.NormalizedUnitName = normalizeString(rowObject['UnitName']);
-        }
-        data.push(rowObject);
-    }
-    return data;
-}
 
 /**
  * Renders the tier list table.
@@ -625,8 +557,7 @@ function renderTierListTable(dataToRender) {
     }
 
     // Define the order of columns for the tier list table
-    // Corrected to match the actual CSV headers from the screenshot
-    const tierListColumnOrder = ['UnitName', 'Tier', 'NumericalRank', 'Notes']; // Updated to match screenshot headers
+    const tierListColumnOrder = ['UnitName', 'Tier', 'NumericalRank', 'Notes'];
 
     dataToRender.forEach(item => {
         const row = tierListTableBody.insertRow();
@@ -635,10 +566,10 @@ function renderTierListTable(dataToRender) {
         tierListColumnOrder.forEach(key => {
             const cell = row.insertCell();
             cell.classList.add('py-4', 'px-6', 'text-sm');
-            if (key === 'UnitName' || key === 'Tier') { // Use 'UnitName' for styling
+            if (key === 'UnitName' || key === 'Tier') {
                 cell.classList.add('font-medium', 'text-gray-900', 'dark:text-gray-100', 'whitespace-nowrap');
             } else {
-                cell.classList.add('text-gray-500', 'dark:text-gray-300', 'text-wrap'); // Allow text wrapping for reasoning
+                cell.classList.add('text-gray-500', 'dark:text-gray-300', 'text-wrap');
             }
             cell.textContent = item[key] !== undefined ? item[key] : 'N/A';
         });
@@ -739,9 +670,8 @@ function toggleUnitDetails(unit, clickedRow, index) {
                              <ul id="activeModEffectsList" class="space-y-1 text-gray-700 dark:text-gray-200"></ul>`; // New section for mod effects
     detailContent.appendChild(modApplyDiv);
 
-    // Removed toggleMaxStats as requested
-    const toggleMaxLevelUnit = modApplyDiv.querySelector('#toggleMaxLevelUnit'); // New DOM element for Max Level
-    const levelInput = modApplyDiv.querySelector('#levelInput'); // New DOM element for Level Input
+    const toggleMaxLevelUnit = modApplyDiv.querySelector('#toggleMaxLevelUnit');
+    const levelInput = modApplyDiv.querySelector('#levelInput');
     const modCheckboxesContainer = modApplyDiv.querySelector('#modCheckboxesContainer');
     const appliedStatsList = modApplyDiv.querySelector('#appliedStatsList');
     const activeModEffectsList = modApplyDiv.querySelector('#activeModEffectsList'); // New DOM element for mod effects
@@ -1128,6 +1058,76 @@ async function switchTab(tabId) { // Made async to await fetchTierListData
         expandedUnitRowId = null;
     }
 }
+
+
+// --- Initialization ---
+
+// Event Listeners
+window.onload = async function() { // Made onload async
+    initializeDarkMode(); // Set initial dark mode state
+
+    loadingSpinner.classList.remove('hidden'); // Show spinner
+    unitTableContainer.classList.add('hidden'); // Hide unit table
+    modsContent.classList.add('hidden'); // Ensure mods content is hidden initially
+    tierListContent.classList.add('hidden'); // Ensure tier list content is hidden initially
+
+    // Fetch and process unit data from CSV
+    const rawUnitsCSVData = await fetchCSVData(GOOGLE_SHEET_UNIT_DATA_CSV_URL);
+    units = processUnitCSVData(rawUnitsCSVData);
+
+    // Fetch and process mod data from CSV
+    const rawModsCSVData = await fetchCSVData(GOOGLE_SHEET_MOD_DATA_CSV_URL);
+    mods = processModCSVData(rawModsCSVData);
+
+    // Fetch tier list data and wait for it to complete
+    tierList = await fetchTierListData();
+
+    populateRarityFilter();
+    populateClassFilter(); // Populate class filter after parsing
+    filterAndRenderUnits(); // Initial render of units (now with tierList available)
+    renderModTable(mods); // Initial render of mods (will be hidden initially)
+
+    loadingSpinner.classList.add('hidden'); // Hide spinner
+    unitTableContainer.classList.remove('hidden'); // Show unit table
+
+    // Search and Filter Events
+    // Debounce the search input to improve performance
+    const debouncedFilterAndRenderUnits = debounce(filterAndRenderUnits, 300);
+    searchInput.addEventListener('input', debouncedFilterAndRenderUnits);
+    rarityFilter.addEventListener('change', filterAndRenderUnits);
+    classFilter.addEventListener('change', filterAndRenderUnits);
+
+    // Table Header Sorting Events
+    tableHeaders.forEach(header => {
+        header.addEventListener('click', () => {
+            const sortColumn = header.dataset.sort;
+            if (sortColumn) {
+                sortData(sortColumn);
+            }
+        });
+    });
+
+    // Dark Mode Toggle Event
+    darkModeToggle.addEventListener('click', toggleDarkMode);
+
+    // Tab Switching Events
+    unitsTab.addEventListener('click', () => switchTab('unitsTab'));
+    modsTab.addEventListener('click', () => switchTab('modsTab'));
+    tierListTab.addEventListener('click', () => switchTab('tierListTab')); // Tier List Tab event
+
+    // Mod Effects Toggle Event (global)
+    toggleModEffects.addEventListener('change', () => {
+        modEffectsEnabled = toggleModEffects.checked;
+        filterAndRenderUnits(); // Re-render units to apply/remove global mod effects
+    });
+
+    // Global Max Level Toggle Event
+    toggleMaxLevel.addEventListener('change', () => {
+        maxLevelGlobalEnabled = toggleMaxLevel.checked;
+        // Re-render units to apply/remove global max level effects
+        filterAndRenderUnits();
+    });
+};
 
 
 // --- Initialization ---
