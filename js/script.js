@@ -4,13 +4,15 @@ import { rawModData } from './modsData.js';
 import { unitImages } from './unitImages.js';
 import { gameData } from './gameData.js'; // Import gameData
 
+<<<<<<< HEAD
 // IMPORTANT: Replace this with the actual public CSV URL of your Google Sheet
 // Go to your Google Sheet -> File -> Share -> Publish to web -> Select the sheet -> Choose CSV -> Copy the URL
 const GOOGLE_SHEET_TIER_LIST_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQO78VJA7y_g5zHpzw1gTaJhLV2mjNdRxA33zcj1WPFj-QYxQS09nInTQXg6kXNJcjm4f7Gk7lPVZuV/pub?output=csv'; // <<< REPLACE THIS LINE
 
+=======
+>>>>>>> parent of bf8591b (Tier Attempt)
 let units = []; // Stores parsed unit data
 let mods = [];  // Stores parsed mod data
-let tierList = []; // Stores parsed tier list data
 let currentSortColumn = null;
 let currentSortDirection = 'asc'; // 'asc' or 'desc'
 let modEffectsEnabled = false; // State for global mod effects toggle
@@ -30,36 +32,24 @@ const sunIcon = document.getElementById('sunIcon');
 const moonIcon = document.getElementById('moonIcon');
 const unitsTab = document.getElementById('unitsTab');
 const modsTab = document.getElementById('modsTab');
-const tierListTab = document.getElementById('tierListTab'); // New Tier List Tab
 const unitsContent = document.getElementById('unitsContent');
 const modsContent = document.getElementById('modsContent');
-const tierListContent = document.getElementById('tierListContent'); // New Tier List Content
 const toggleModEffects = document.getElementById('toggleModEffects');
 const toggleMaxLevel = document.getElementById('toggleMaxLevel'); // Global Max Level toggle
 const modsTableBody = document.querySelector('#modsTable tbody');
-const tierListTableBody = document.getElementById('tierListTableBody'); // New Tier List Table Body
-const tierListSpinner = document.getElementById('tierListSpinner'); // New Tier List Spinner
-const tierListTableContainer = document.getElementById('tierListTableContainer'); // New Tier List Table Container
-const noTierListMessage = document.getElementById('noTierListMessage'); // New No Tier List Message
 
 let expandedUnitRowId = null; // To keep track of the currently expanded row
 
 // Define the order of rarities for consistent filtering and display
 const rarityOrder = ["Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythic", "Demonic", "Ancient"];
 
-// Define the order of columns for unit table display (simplified for main view)
+// Define the order of columns for unit table display (HP Offset and Shadow Step removed)
 const unitColumnOrder = [
-    'Image', 'Label', 'Class', 'Rarity', 'HP', 'Damage', 'Cooldown'
-];
-
-// Define ALL possible unit stats for the detailed dropdown view
-const allUnitStatsForDropdown = [
-    'Label', 'Class', 'Rarity', 'HP', 'Damage', 'Cooldown', 'Distance',
+    'Image', 'Label', 'Class', 'Rarity', 'HP', 'Damage', 'Cooldown', 'Distance',
     'CritChance', 'CritDamage', 'AttackEffect', 'AttackEffectType',
     'AttackEffectLifesteal', 'AttackEffectKey', 'Knockback', 'Accuracy',
-    'EvadeChance'
+    'EvadeChance' // HPOffset, ShadowStepDistance, ShadowStepCooldown removed
 ];
-
 
 // --- Utility Functions ---
 
@@ -415,14 +405,15 @@ function formatDisplayValue(value) {
     if (value === 'N/A') return 'N/A';
     if (typeof value === 'number') {
         // Format percentages for CritChance, EvadeChance, Accuracy
-        // This check is not ideal for general formatting, should be based on column type
-        // However, for simplified main table, these won't be directly sortable/displayed
-        // so this function's primary use will be for the detailed dropdown.
-        if (value >= 0 && value <= 1) { // Heuristic for percentage-like values
+        if (['CritChance', 'EvadeChance', 'Accuracy'].includes(currentSortColumn)) { // This check is not ideal for general formatting
             return (value * 100).toFixed(2) + '%';
         }
         // Format Cooldown to 2 decimal places
-        if (value % 1 !== 0) { // Check if it has a decimal part
+        if (['Cooldown'].includes(currentSortColumn)) {
+            return value.toFixed(2);
+        }
+        // General number formatting
+        if (!Number.isInteger(value)) {
             return value.toFixed(2);
         }
     }
@@ -469,17 +460,22 @@ function renderUnitTable(dataToRender) {
         unitColumnOrder.slice(1).forEach(key => { // Skip 'Image' as it's handled above
             const cell = row.insertCell();
             let displayValue = unitToDisplay[key];
-
-            // Apply specific styling for the 'Label' column to prevent collapse
-            if (key === 'Label') {
-                cell.classList.add('font-semibold', 'text-lg', `rarity-${unitToDisplay.Rarity.replace(/\s/g, '')}`, 'min-w-[100px]'); // min-width to prevent collapse
-            } else if (['Class', 'Rarity'].includes(key)) {
-                cell.classList.add('font-medium', 'text-base', 'min-w-[70px]'); // min-width for class/rarity
-            } else if (['HP', 'Damage', 'Cooldown'].includes(key)) { // Apply min-width to core stats
-                cell.classList.add('text-base', 'min-w-[60px]', 'text-center'); // Center numbers
-                displayValue = typeof displayValue === 'number' ? displayValue.toFixed(2) : displayValue; // Format numbers
+            // Custom formatting for specific keys
+            if (key === 'CritChance' || key === 'EvadeChance' || key === 'Accuracy') {
+                displayValue = typeof displayValue === 'number' ? (displayValue * 100).toFixed(2) + '%' : displayValue;
+            } else if (key === 'Cooldown' || key === 'CritDamage' || key === 'AttackEffectLifesteal') {
+                displayValue = typeof displayValue === 'number' ? displayValue.toFixed(2) : displayValue;
             }
 
+            // Apply specific styling for the 'Label' column
+            if (key === 'Label') {
+                // Apply rarity class to the cell itself for background color and text color
+                cell.classList.add('font-semibold', 'text-lg', `rarity-${unitToDisplay.Rarity.replace(/\s/g, '')}`);
+            } else if (['Class', 'Rarity'].includes(key)) {
+                cell.classList.add('font-medium', 'text-base'); // Make Class and Rarity slightly bolder and clearer
+            } else {
+                cell.classList.add('text-base'); // Default size for other stats
+            }
             cell.textContent = displayValue !== undefined ? displayValue : 'N/A';
         });
 
@@ -513,98 +509,6 @@ function renderModTable(dataToRender) {
                 cell.classList.add('text-gray-500', 'dark:text-gray-300');
             }
             cell.textContent = mod[key] !== undefined ? mod[key] : 'N/A';
-        });
-    });
-}
-
-/**
- * Fetches and parses tier list data from a Google Sheet CSV URL.
- * @returns {Promise<Array<Object>>} A promise that resolves to an array of tier list objects.
- */
-async function fetchTierListData() {
-    tierListSpinner.classList.remove('hidden');
-    tierListTableContainer.classList.add('hidden');
-    noTierListMessage.classList.add('hidden');
-    try {
-        if (!GOOGLE_SHEET_TIER_LIST_CSV_URL || GOOGLE_SHEET_TIER_LIST_CSV_URL === 'YOUR_GOOGLE_SHEET_PUBLIC_CSV_URL_HERE') {
-            throw new Error("Google Sheet Tier List URL is not configured. Please update script.js with your public CSV URL.");
-        }
-
-        const response = await fetch(GOOGLE_SHEET_TIER_LIST_CSV_URL);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const csvText = await response.text();
-        return parseCSV(csvText);
-    } catch (error) {
-        console.error("Error fetching tier list data:", error);
-        noTierListMessage.textContent = `Failed to load tier list: ${error.message}`;
-        noTierListMessage.classList.remove('hidden');
-        return [];
-    } finally {
-        tierListSpinner.classList.add('hidden');
-    }
-}
-
-/**
- * Parses CSV text into an array of objects.
- * Assumes the first row is the header.
- * @param {string} csvText - The CSV data as a string.
- * @returns {Array<Object>} An array of objects, where each object represents a row.
- */
-function parseCSV(csvText) {
-    const lines = csvText.trim().split('\n');
-    if (lines.length === 0) return [];
-
-    const headers = lines[0].split(',').map(header => header.trim());
-    const data = [];
-
-    for (let i = 1; i < lines.length; i++) {
-        const values = lines[i].split(',').map(value => value.trim());
-        if (values.length !== headers.length) {
-            console.warn(`Skipping malformed CSV row: ${lines[i]}`);
-            continue;
-        }
-        const rowObject = {};
-        headers.forEach((header, index) => {
-            rowObject[header] = values[index];
-        });
-        data.push(rowObject);
-    }
-    return data;
-}
-
-/**
- * Renders the tier list table.
- * @param {Array<Object>} dataToRender - The array of tier list objects to display.
- */
-function renderTierListTable(dataToRender) {
-    tierListTableBody.innerHTML = ''; // Clear existing rows
-    if (dataToRender.length === 0) {
-        noTierListMessage.classList.remove('hidden');
-        tierListTableContainer.classList.add('hidden');
-        return;
-    } else {
-        noTierListMessage.classList.add('hidden');
-        tierListTableContainer.classList.remove('hidden');
-    }
-
-    // Define the order of columns for the tier list table
-    const tierListColumnOrder = ['Unit Name', 'Tier', 'Reasoning']; // Adjusted header names for display
-
-    dataToRender.forEach(item => {
-        const row = tierListTableBody.insertRow();
-        row.classList.add('bg-white', 'dark:bg-gray-700');
-
-        tierListColumnOrder.forEach(key => {
-            const cell = row.insertCell();
-            cell.classList.add('py-4', 'px-6', 'text-sm');
-            if (key === 'Unit Name' || key === 'Tier') {
-                cell.classList.add('font-medium', 'text-gray-900', 'dark:text-gray-100', 'whitespace-nowrap');
-            } else {
-                cell.classList.add('text-gray-500', 'dark:text-gray-300', 'text-wrap'); // Allow text wrapping for reasoning
-            }
-            cell.textContent = item[key] !== undefined ? item[key] : 'N/A';
         });
     });
 }
@@ -666,14 +570,12 @@ function toggleUnitDetails(unit, clickedRow, index) {
     detailContent.appendChild(baseStatsDiv);
 
     const baseStatsList = baseStatsDiv.querySelector('#baseStatsList');
-    // Use allUnitStatsForDropdown to ensure all stats are displayed in the dropdown
-    allUnitStatsForDropdown.forEach(key => {
+    unitColumnOrder.slice(1).forEach(key => { // Skip 'Image'
         const li = document.createElement('li');
         let displayValue = unit[key];
-        // Apply specific formatting for percentages and numbers
-        if (['CritChance', 'EvadeChance', 'Accuracy'].includes(key)) {
+        if (key === 'CritChance' || key === 'EvadeChance' || key === 'Accuracy') {
             displayValue = typeof displayValue === 'number' ? (displayValue * 100).toFixed(2) + '%' : displayValue;
-        } else if (['Cooldown', 'CritDamage', 'AttackEffectLifesteal', 'HP', 'Damage', 'Knockback'].includes(key)) {
+        } else if (key === 'Cooldown' || key === 'CritDamage' || key === 'AttackEffectLifesteal') {
             displayValue = typeof displayValue === 'number' ? displayValue.toFixed(2) : displayValue;
         }
         li.textContent = `${key}: ${displayValue !== undefined ? displayValue : 'N/A'}`;
@@ -700,9 +602,7 @@ function toggleUnitDetails(unit, clickedRow, index) {
                              </div>
                              <div id="modCheckboxesContainer" class="flex gap-x-4 gap-y-2 mb-4 text-gray-700 dark:text-gray-200 overflow-x-auto pb-2"></div>
                              <h3 class="font-semibold text-lg mb-2 text-blue-800 dark:text-blue-200">Stats with Mods:</h3>
-                             <ul id="appliedStatsList" class="space-y-1 text-gray-700 dark:text-gray-200"></ul>
-                             <h3 class="font-semibold text-lg mt-4 mb-2 text-blue-800 dark:text-blue-200">Active Mod Effects:</h3>
-                             <ul id="activeModEffectsList" class="space-y-1 text-gray-700 dark:text-gray-200"></ul>`; // New section for mod effects
+                             <ul id="appliedStatsList" class="space-y-1 text-gray-700 dark:text-gray-200"></ul>`;
     detailContent.appendChild(modApplyDiv);
 
     const toggleMaxStats = modApplyDiv.querySelector('#toggleMaxStats');
@@ -710,7 +610,6 @@ function toggleUnitDetails(unit, clickedRow, index) {
     const levelInput = modApplyDiv.querySelector('#levelInput'); // New DOM element for Level Input
     const modCheckboxesContainer = modApplyDiv.querySelector('#modCheckboxesContainer');
     const appliedStatsList = modApplyDiv.querySelector('#appliedStatsList');
-    const activeModEffectsList = modApplyDiv.querySelector('#activeModEffectsList'); // New DOM element for mod effects
 
     // Store selected mods for this specific unit's detail view
     let selectedModsForUnit = [];
@@ -766,7 +665,7 @@ function toggleUnitDetails(unit, clickedRow, index) {
 
                     // Ensure max stats toggle is off if individual mods are being selected
                     toggleMaxStats.checked = false;
-                    updateAppliedStats(unit, selectedModsForUnit, appliedStatsList, toggleMaxStats.checked, toggleMaxLevelUnit.checked, parseInt(levelInput.value), activeModEffectsList);
+                    updateAppliedStats(unit, selectedModsForUnit, appliedStatsList, toggleMaxStats.checked, toggleMaxLevelUnit.checked, parseInt(levelInput.value));
                 });
 
                 label.appendChild(checkbox);
@@ -785,7 +684,7 @@ function toggleUnitDetails(unit, clickedRow, index) {
             selectedModsForUnit = []; // Clear selected mods
             toggleMaxLevelUnit.checked = false; // Uncheck Max Level
         }
-        updateAppliedStats(unit, selectedModsForUnit, appliedStatsList, toggleMaxStats.checked, toggleMaxLevelUnit.checked, parseInt(levelInput.value), activeModEffectsList);
+        updateAppliedStats(unit, selectedModsForUnit, appliedStatsList, toggleMaxStats.checked, toggleMaxLevelUnit.checked, parseInt(levelInput.value));
     });
 
     // Event listener for Max Level toggle
@@ -797,7 +696,7 @@ function toggleUnitDetails(unit, clickedRow, index) {
         } else {
             levelInput.value = 1; // Reset level to 1 when max level is untoggled
         }
-        updateAppliedStats(unit, selectedModsForUnit, appliedStatsList, toggleMaxStats.checked, toggleMaxLevelUnit.checked, parseInt(levelInput.value), activeModEffectsList);
+        updateAppliedStats(unit, selectedModsForUnit, appliedStatsList, toggleMaxStats.checked, toggleMaxLevelUnit.checked, parseInt(levelInput.value));
     });
 
     // Event listener for Level Input
@@ -812,12 +711,12 @@ function toggleUnitDetails(unit, clickedRow, index) {
         }
         // If level is manually changed, uncheck the Max Level toggle
         toggleMaxLevelUnit.checked = false;
-        updateAppliedStats(unit, selectedModsForUnit, appliedStatsList, toggleMaxStats.checked, toggleMaxLevelUnit.checked, level, activeModEffectsList);
+        updateAppliedStats(unit, selectedModsForUnit, appliedStatsList, toggleMaxStats.checked, toggleMaxLevelUnit.checked, level);
     });
 
 
     // Initial display of applied stats (no mods applied yet)
-    updateAppliedStats(unit, selectedModsForUnit, appliedStatsList, false, false, parseInt(levelInput.value), activeModEffectsList);
+    updateAppliedStats(unit, selectedModsForUnit, appliedStatsList, false, false, parseInt(levelInput.value));
 
     detailCell.appendChild(detailContent);
 }
@@ -830,11 +729,9 @@ function toggleUnitDetails(unit, clickedRow, index) {
  * @param {boolean} showMaxStats - True if "Max Stats" should be displayed.
  * @param {boolean} showMaxLevel - True if "Max Level" should be displayed.
  * @param {number} currentLevel - The level to calculate stats for.
- * @param {HTMLElement} activeModEffectsListElement - The UL element to render active mod effects into.
  */
-function updateAppliedStats(baseUnit, selectedMods, listElement, showMaxStats, showMaxLevel, currentLevel, activeModEffectsListElement) {
+function updateAppliedStats(baseUnit, selectedMods, listElement, showMaxStats, showMaxLevel, currentLevel) {
     listElement.innerHTML = ''; // Clear previous stats
-    activeModEffectsListElement.innerHTML = ''; // Clear previous mod effects
 
     let unitToDisplay = { ...baseUnit };
 
@@ -844,48 +741,36 @@ function updateAppliedStats(baseUnit, selectedMods, listElement, showMaxStats, s
     // Calculate stats at the determined level, then apply mods
     unitToDisplay = getUnitStatsAtLevel(baseUnit, levelForCalculation, selectedMods);
 
-    // Render allUnitStatsForDropdown in the dropdown's "Stats with Mods" section
-    allUnitStatsForDropdown.forEach(key => {
+
+    unitColumnOrder.slice(1).forEach(key => { // Skip 'Image'
         const li = document.createElement('li');
         let displayValue = unitToDisplay[key];
-        // Apply specific formatting for percentages and numbers
-        if (['CritChance', 'EvadeChance', 'Accuracy'].includes(key)) {
+        if (key === 'CritChance' || key === 'EvadeChance' || key === 'Accuracy') {
             displayValue = typeof displayValue === 'number' ? (displayValue * 100).toFixed(2) + '%' : displayValue;
-        } else if (['Cooldown', 'CritDamage', 'AttackEffectLifesteal', 'HP', 'Damage', 'Knockback'].includes(key)) {
+        } else if (key === 'Cooldown' || key === 'CritDamage' || key === 'AttackEffectLifesteal') {
             displayValue = typeof displayValue === 'number' ? displayValue.toFixed(2) : displayValue;
         }
         li.textContent = `${key}: ${displayValue !== undefined ? displayValue : 'N/A'}`;
 
-        // Highlight changes from base stats (considering the level calculation)
-        const baseValueAtLevel1 = baseUnit[key]; // Compare against base level 1 stats
+        // Highlight changes from base stats
+        // This logic needs to consider the 'TBD' state from Max Level
+        const baseValue = baseUnit[key];
         const currentDisplayedValue = unitToDisplay[key];
 
-        // Only highlight if the base value at level 1 is a number and different from current
-        if (typeof baseValueAtLevel1 === 'number' && typeof currentDisplayedValue === 'number' && baseValueAtLevel1 !== currentDisplayedValue) {
-            li.classList.add('font-bold', 'text-blue-600', 'dark:text-blue-300');
-        } else if (typeof baseValueAtLevel1 === 'string' && typeof currentDisplayedValue === 'string' && baseValueAtLevel1 !== currentDisplayedValue) {
-            // For string changes (like AttackEffect becoming 'Fire, Frost')
-            li.classList.add('font-bold', 'text-blue-600', 'dark:text-blue-300');
+        if (baseValue !== currentDisplayedValue && baseValue !== 'N/A' && currentDisplayedValue !== 'N/A') {
+            const baseNum = parseFloat(baseValue);
+            const currentNum = parseFloat(currentDisplayedValue);
+
+            if (!isNaN(baseNum) && !isNaN(currentNum) && baseNum !== currentNum) {
+                li.classList.add('font-bold', 'text-blue-600', 'dark:text-blue-300');
+            } else if (typeof baseValue === 'string' && typeof currentDisplayedValue === 'string' && baseValue !== currentDisplayedValue) {
+                li.classList.add('font-bold', 'text-blue-600', 'dark:text-blue-300');
+            }
+        } else if (showMaxLevel && String(currentDisplayedValue).includes('TBD')) { // This TBD logic should no longer be needed if calculations are active
+             li.classList.add('font-bold', 'text-blue-600', 'dark:text-blue-300');
         }
         listElement.appendChild(li);
     });
-
-    // Populate Active Mod Effects
-    if (selectedMods.length > 0) {
-        selectedMods.forEach(mod => {
-            if (mod.effectDescription && mod.effectDescription !== 'No defined effect') {
-                const li = document.createElement('li');
-                li.classList.add('text-gray-700', 'dark:text-gray-200');
-                li.innerHTML = `<span class="font-semibold">${mod.label} (${mod.rarity}):</span> ${mod.effectDescription}`;
-                activeModEffectsListElement.appendChild(li);
-            }
-        });
-    } else {
-        const li = document.createElement('li');
-        li.classList.add('text-gray-500', 'dark:text-gray-400');
-        li.textContent = 'No mods currently applied.';
-        activeModEffectsListElement.appendChild(li);
-    }
 }
 
 
@@ -1047,7 +932,7 @@ function initializeDarkMode() {
  * Switches between unit and mod tabs.
  * @param {string} tabId - The ID of the tab to activate ('unitsTab' or 'modsTab').
  */
-async function switchTab(tabId) { // Made async to await fetchTierListData
+function switchTab(tabId) {
     // Deactivate all tab buttons and hide all tab contents
     document.querySelectorAll('.tab-button').forEach(button => button.classList.remove('active'));
     document.querySelectorAll('.tab-content').forEach(content => content.classList.add('hidden'));
@@ -1060,10 +945,6 @@ async function switchTab(tabId) { // Made async to await fetchTierListData
     } else if (tabId === 'modsTab') {
         modsContent.classList.remove('hidden');
         renderModTable(mods); // Render mods when switching to mods tab
-    } else if (tabId === 'tierListTab') { // Handle new Tier List tab
-        tierListContent.classList.remove('hidden');
-        tierList = await fetchTierListData(); // Fetch and store tier list data
-        renderTierListTable(tierList); // Render tier list table
     }
     // Close any expanded unit details when switching tabs
     if (expandedUnitRowId !== null) {
@@ -1088,7 +969,6 @@ window.onload = function() {
     loadingSpinner.classList.remove('hidden'); // Show spinner
     unitTableContainer.classList.add('hidden'); // Hide unit table
     modsContent.classList.add('hidden'); // Ensure mods content is hidden initially
-    tierListContent.classList.add('hidden'); // Ensure tier list content is hidden initially
 
     // Simulate a delay for parsing data
     setTimeout(() => {
@@ -1126,7 +1006,6 @@ window.onload = function() {
     // Tab Switching Events
     unitsTab.addEventListener('click', () => switchTab('unitsTab'));
     modsTab.addEventListener('click', () => switchTab('modsTab'));
-    tierListTab.addEventListener('click', () => switchTab('tierListTab')); // New Tier List Tab Listener
 
     // Mod Effects Toggle Event (global)
     toggleModEffects.addEventListener('change', () => {
