@@ -47,7 +47,7 @@
 
                 <div class="mb-4 flex items-center">
                     <input type="checkbox" id="toggleModEffects" class="mr-2 rounded text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400">
-                    <label for="toggleModEffects" class="text-gray-700 dark:text-gray-300">Show Mod Effects (Placeholder)</label>
+                    <label for="toggleModEffects" class="text-gray-700 dark:text-gray-300">Show Global Mod Effects (All applicable mods)</label>
                 </div>
 
                 <div id="loadingSpinner" class="spinner"></div>
@@ -55,6 +55,7 @@
                     <table id="unitTable" class="min-w-full">
                         <thead>
                             <tr>
+                                <th data-sort="Image" class="w-16">Image</th> <!-- New Image Header -->
                                 <th data-sort="Label">Label</th>
                                 <th data-sort="Class">Class</th>
                                 <th data-sort="Rarity">Rarity</th>
@@ -87,27 +88,18 @@
             <!-- Mods Tab Content -->
             <section id="modsContent" class="tab-content hidden">
                 <h2 class="text-2xl font-semibold mb-4">Mod Data</h2>
-                <p class="text-gray-700 dark:text-gray-300">This section will display mod data. Once you provide the structure for your mod data, we can implement sorting, filtering, and detailed views here.</p>
+                <p class="text-gray-700 dark:text-gray-300 mb-4">Here you can see all available mods and their effects. Click on a unit in the "Units" tab to see how individual mods affect its stats.</p>
                 <div id="modsTableContainer" class="overflow-x-auto rounded-xl shadow-md mt-6">
                     <table id="modsTable" class="min-w-full">
                         <thead>
                             <tr>
-                                <th class="py-3 px-6 text-left text-xs font-medium text-gray-50 uppercase tracking-wider">Mod Name (Placeholder)</th>
-                                <th class="py-3 px-6 text-left text-xs font-medium text-gray-50 uppercase tracking-wider">Effect (Placeholder)</th>
-                                <th class="py-3 px-6 text-left text-xs font-medium text-gray-50 uppercase tracking-wider">Applies To (Placeholder)</th>
+                                <th class="py-3 px-6 text-left text-xs font-medium text-gray-50 uppercase tracking-wider">Mod Name</th>
+                                <th class="py-3 px-6 text-left text-xs font-medium text-gray-50 uppercase tracking-wider">Rarity</th>
+                                <th class="py-3 px-6 text-left text-xs font-medium text-gray-50 uppercase tracking-wider">Effect Description</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-700 dark:divide-gray-600">
-                            <tr class="bg-white dark:bg-gray-700">
-                                <td class="py-4 px-6 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">Mod A</td>
-                                <td class="py-4 px-6 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">Increases HP by 10%</td>
-                                <td class="py-4 px-6 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">Warriors</td>
-                            </tr>
-                            <tr class="bg-gray-50 dark:bg-gray-750">
-                                <td class="py-4 px-6 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">Mod B</td>
-                                <td class="py-4 px-6 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">Reduces Cooldown by 0.1s</td>
-                                <td class="py-4 px-6 whitespace-nowrap text-sm text-gray-500 dark:text-gray-300">Rangers</td>
-                            </tr>
+                            <!-- Mod data will be inserted here by JavaScript -->
                         </tbody>
                     </table>
                 </div>

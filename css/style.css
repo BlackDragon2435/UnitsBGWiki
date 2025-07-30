@@ -133,6 +133,8 @@ th, td {
 .rarity-Common, .rarity-Uncommon, .rarity-Rare, .rarity-Epic, .rarity-Legendary, .rarity-Mythic {
     color: #1f2937; /* Dark text for lighter backgrounds */
 }
+/* For Demonic and Ancient, text is white as background is dark */
+
 
 /* Spinner */
 .spinner {
@@ -151,4 +153,30 @@ th, td {
 @keyframes spin {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
+}
+
+/* Styles for expandable unit details */
+.unit-row.expanded {
+    border-bottom: none; /* Remove border from expanded row */
+}
+.unit-details-row td {
+    border-top: none; /* Remove top border from detail row */
+    padding-top: 0.5rem; /* Adjust padding */
+    padding-bottom: 0.5rem;
+}
+.unit-details-row {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Style for mod checkboxes in detailed view */
+#modCheckboxes label {
+    margin-right: 1rem;
+}
+#modCheckboxes input[type="checkbox"] {
+    cursor: pointer;
 }
