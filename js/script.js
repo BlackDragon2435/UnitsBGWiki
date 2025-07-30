@@ -952,9 +952,11 @@ function sortData(column) {
             return currentSortDirection === 'asc' ? indexA - indexB : indexB - indexA;
         }
 
-        // Custom sort for CommunityRanking (assuming A, B, C, D, F where A is best)
+        // Custom sort for CommunityRanking (S > A > B > C > D > F)
         if (column === 'CommunityRanking') {
-            const rankingOrder = ['S+', 'S', 'A+', 'A', 'B+', 'B', 'C+', 'C', 'D+', 'D', 'F', 'N/A'];
+            // Define the desired sorting order for tiers
+            const rankingOrder = ['S', 'A', 'B', 'C', 'D', 'F', 'N/A']; // 'N/A' should be last
+
             // Find tier for unit A using normalized labels
             const tierInfoA = tierList.find(tierUnit => tierUnit.NormalizedUnitName === a.NormalizedLabel);
             const tierA = tierInfoA ? tierInfoA.Tier : 'N/A';
@@ -965,7 +967,13 @@ function sortData(column) {
             const tierB = tierInfoB ? tierInfoB.Tier : 'N/A';
             const indexB = rankingOrder.indexOf(tierB);
 
-            return currentSortDirection === 'asc' ? indexA - indexB : indexB - indexA;
+            // Handle cases where a tier might not be found in rankingOrder (e.g., new tiers)
+            // Push unknown tiers to the end
+            const finalIndexA = indexA === -1 ? rankingOrder.length : indexA;
+            const finalIndexB = indexB === -1 ? rankingOrder.length : indexB;
+
+
+            return currentSortDirection === 'asc' ? finalIndexA - finalIndexB : finalIndexB - finalIndexA;
         }
 
         // Handle "N/A" values by treating them as lowest/highest for sorting
