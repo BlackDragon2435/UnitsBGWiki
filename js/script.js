@@ -91,15 +91,18 @@ function normalizeString(str) {
 }
 
 /**
- * Fetches CSV data from a given URL using content_fetcher to bypass CORS.
+ * Fetches CSV data from a given URL.
  * @param {string} url - The URL of the CSV file.
  * @returns {Promise<Array<Object>>} A promise that resolves to an array of objects,
  * where each object represents a row in the CSV.
  */
 async function fetchCSVData(url) {
     try {
-        // Use content_fetcher.fetch to bypass CORS restrictions
-        const csvText = await content_fetcher.fetch({ url: url });
+        const response = await fetch(url);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status} from ${url}`);
+        }
+        const csvText = await response.text();
         return parseCSV(csvText);
     } catch (error) {
         console.error(`Error fetching data from ${url}:`, error);
@@ -513,8 +516,11 @@ async function fetchTierListData() {
             throw new Error("Google Sheet Tier List URL is not configured. Please update script.js with your public CSV URL.");
         }
 
-        // Use content_fetcher.fetch to bypass CORS restrictions
-        const csvText = await content_fetcher.fetch({ url: GOOGLE_SHEET_TIER_LIST_CSV_URL });
+        const response = await fetch(GOOGLE_SHEET_TIER_LIST_CSV_URL);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const csvText = await response.text();
         // Tier list CSV already has correct headers and values, so direct parseCSV is fine
         const parsedTierList = parseCSV(csvText);
         // Add a normalized UnitName for easier matching with units data
