@@ -6,6 +6,12 @@ body {
     line-height: 1.6; /* Improved line height for readability */
 }
 
+/* New class for centering main page titles */
+.main-page-title {
+    text-align: center;
+    width: 100%; /* Ensure it takes full width to center effectively */
+}
+
 /* Table styles */
 table {
     width: 100%;
@@ -25,6 +31,7 @@ th, td {
 /* Table headers - ensure nowrap for clarity and sorting icons */
 th {
     white-space: nowrap;
+    text-align: center; /* Centering headers as requested */
 }
 
 /* --- Responsive Table Column Hiding --- */
@@ -38,8 +45,8 @@ th {
 }
 
 /* Hide all other columns by default */
-#unitTable th:nth-child(n+3), /* Class, Rarity, Community Ranking, HP, Damage, Cooldown */
-#unitTable td:nth-child(n+3) { /* Class, Rarity, Community Ranking, HP, Damage, Cooldown */
+#unitTable th:nth-child(n+3), /* Class, Rarity, Community Ranking, HP, Damage, Cooldown, DPS */
+#unitTable td:nth-child(n+3) { /* Class, Rarity, Community Ranking, HP, Damage, Cooldown, DPS */
     display: none;
 }
 
@@ -61,14 +68,16 @@ th {
     }
 }
 
-/* Large screens (lg): Show HP, Damage, Cooldown */
+/* Large screens (lg): Show HP, Damage, Cooldown, DPS */
 @media (min-width: 1024px) {
     #unitTable th:nth-child(6), /* HP */
     #unitTable td:nth-child(6), /* HP */
     #unitTable th:nth-child(7), /* Damage */
     #unitTable td:nth-child(7), /* Damage */
     #unitTable th:nth-child(8), /* Cooldown */
-    #unitTable td:nth-child(8) { /* Cooldown */
+    #unitTable td:nth-child(8), /* Cooldown */
+    #unitTable th:nth-child(9), /* DPS */
+    #unitTable td:nth-child(9) { /* DPS */
         display: table-cell;
     }
 }
@@ -81,9 +90,11 @@ th {
     padding: 0.5rem;
 }
 #unitTable tbody td:nth-child(2) { /* Label - allow text wrapping */
-    width: 200px; /* Increased width to give more room for wrapping */
-    min-width: 180px; /* Ensure a minimum width for wrapping */
+    width: 350px; /* Increased width significantly for better wrapping */
+    min-width: 320px; /* Ensure a minimum width for wrapping */
     white-space: normal; /* Allow text to wrap */
+    word-break: break-word; /* Ensure long words break if necessary */
+    padding-right: 1rem; /* Added more right padding for extra space */
 }
 #unitTable tbody td:nth-child(3), /* Class */
 #unitTable tbody td:nth-child(4) { /* Rarity */
@@ -91,12 +102,12 @@ th {
     min-width: 80px;
 }
 #unitTable tbody td:nth-child(5) { /* Community Ranking */
-    width: 120px; /* Increased width to prevent header truncation */
-    min-width: 120px;
+    width: 150px; /* Increased width to prevent header truncation */
+    min-width: 150px;
     text-align: center;
 }
-/* Numerical stats (HP, Damage, Cooldown) */
-#unitTable tbody td:nth-child(n+6):nth-child(-n+8) { /* HP to Cooldown */
+/* Numerical stats (HP, Damage, Cooldown, DPS) */
+#unitTable tbody td:nth-child(n+6):nth-child(-n+9) { /* HP to DPS */
     width: 80px; /* Increased width to prevent header truncation */
     min-width: 80px;
     text-align: center;
@@ -127,7 +138,7 @@ th {
 #unitTable tbody td:nth-child(4) { /* Rarity */
     font-weight: 500; /* font-medium */
     font-size: 1rem; /* text-base */
-    color: #4b5563; /* gray-600 */
+    color: #1f2937; /* Dark text for light mode */
 }
 
 .dark #unitTable tbody td:nth-child(3),
@@ -138,7 +149,7 @@ th {
 /* Styling for other stats columns */
 #unitTable tbody td:nth-child(n+5) { /* All columns from Community Ranking onwards */
     font-size: 1rem; /* text-base */
-    color: #374151; /* gray-800 */
+    color: #1f2937; /* Dark text for light mode */
 }
 
 .dark #unitTable tbody td:nth-child(n+5) {
@@ -149,7 +160,7 @@ th {
 /* Light Mode Table Styles */
 .light body {
     background-color: #f3f4f6; /* gray-100 */
-    color: #374151; /* gray-800 */
+    color: #000000; /* Black for better contrast */
 }
 .light main {
     background-color: #ffffff; /* white */
@@ -161,7 +172,7 @@ th {
     position: sticky;
     top: 0;
     z-index: 10;
-    border-bottom: 1px solid #e5e7eb; /* border-gray-200 */
+    border-bottom: 1px solid #a0a7af; /* Darker gray for better border visibility */
     transition: background-color 0.2s ease-in-out; /* Smooth transition on hover */
 }
 .light th:hover {
@@ -178,11 +189,12 @@ th {
     transition: background-color 0.2s ease-in-out; /* Smooth transition on hover */
 }
 .light td {
-    border-bottom: 1px solid #e5e7eb; /* border-gray-200 */
+    border-bottom: 1px solid #a0a7af; /* Darker gray for better border visibility */
+    color: #000000; /* Ensure all table cell text is black in light mode */
 }
 .light .tab-button {
     background-color: #e5e7eb; /* gray-200 */
-    color: #374151; /* gray-800 */
+    color: #000000; /* Black for better contrast */
 }
 .light .tab-button.active {
     background-color: #3b82f6; /* blue-500 */
@@ -190,6 +202,11 @@ th {
 }
 .light .tab-button:hover:not(.active) {
     background-color: #d1d5db; /* gray-300 */
+}
+
+/* Ensure all headings are black in light mode */
+.light h1, .light h2, .light h3, .light h4, .light h5, .light h6 {
+    color: #000000; /* Black text for headings in light mode */
 }
 
 
@@ -315,7 +332,7 @@ th {
 #modCheckboxesContainer label, #toggleMaxLevelUnit + label { /* Removed #toggleMaxStats + label */
     margin-right: 1rem;
     font-size: 0.95rem; /* text-base for labels */
-    color: #374151; /* Default text color for labels */
+    color: #000000; /* Black text for better readability in light mode */
 }
 
 .dark #modCheckboxesContainer label, .dark #toggleMaxLevelUnit + label { /* Removed .dark #toggleMaxStats + label */
@@ -332,6 +349,11 @@ th {
     font-weight: 700; /* font-bold */
     margin-top: 0.75rem;
     margin-bottom: 0.5rem;
+    color: #000000; /* Black text for light mode */
+}
+
+.dark #modCheckboxesContainer h4 {
+    color: #f9fafb; /* Even lighter for headings in dark mode */
 }
 
 /* Make the mod checkboxes container vertically scrollable */
@@ -344,7 +366,7 @@ th {
 /* Improve general text contrast in the detail view */
 .unit-details-row ul li {
     font-size: 0.95rem; /* Consistent size for list items */
-    color: #374151; /* Darker text for better readability in light mode */
+    color: #000000; /* Black text for better readability in light mode */
 }
 
 .dark .unit-details-row ul li {
@@ -354,7 +376,7 @@ th {
 .unit-details-row h3 {
     font-size: 1.125rem; /* text-lg for subheadings */
     font-weight: 600; /* font-semibold */
-    color: #1f2937; /* Even darker for headings in light mode */
+    color: #000000; /* Black for headings in light mode */
 }
 
 .dark .unit-details-row h3 {
@@ -365,17 +387,36 @@ th {
 input[type="text"], input[type="number"], select {
     font-size: 0.95rem; /* Consistent font size for inputs */
     /* Ensure borders are clearly visible in light mode */
-    border-color: #9ca3af; /* gray-400, slightly darker for better visibility */
+    border: 1px solid #6b7280; /* gray-500, darker for better visibility in light mode */
+    color: #000000; /* Black text for inputs in light mode */
+    background-color: #ffffff; /* White background for inputs in light mode */
+}
+
+.light select {
+    color: #000000; /* Black text for select in light mode */
+    font-weight: 600; /* Thicker font for select in light mode */
+}
+
+.light select option {
+    color: #000000; /* Black text for options in light mode */
+    background-color: #ffffff; /* White background for options in light mode */
+    font-weight: 600; /* Thicker font for options in light mode */
+}
+
+.dark input[type="text"], .dark input[type="number"], .dark select {
+    border-color: #6b7280; /* gray-500 for dark mode, visible */
+    color: #e5e7eb; /* Light text for inputs in dark mode */
+    background-color: #374151; /* gray-700 background for inputs in dark mode */
 }
 
 /* Placeholder text color */
 ::placeholder {
-    color: #6b7280; /* gray-500, darker for better contrast */
+    color: #000000; /* Black for better contrast in light mode */
     opacity: 1; /* Firefox fix */
 }
 
 .dark::placeholder {
-    color: #6b7280; /* gray-500 */
+    color: #9ca3af; /* gray-400, lighter for better contrast in dark mode */
 }
 
 /* New styles for the header image */
