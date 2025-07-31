@@ -1,6 +1,6 @@
 // js/script.js
-// This file has been corrected to handle the loading of data more robustly
-// and prevent errors when DOM elements might not be available.
+// This file has been rewritten to be more robust, handling data loading,
+// DOM readiness, and preventing errors more gracefully.
 
 // import { rawUnitData } from './unitsData.js';
 // import { rawModData } from './modsData.js';
@@ -9,7 +9,10 @@ import { gameData } from './gameData.js'; // Import gameData
 
 // IMPORTANT: Base URL for your published Google Sheet
 // This URL should point to your Google Sheet published to web as CSV.
-// The specific sheets are then targeted using '&gid={sheet_id}'
+// To get this URL, go to File > Share > Publish to web > Publish to web > Link.
+// Choose the sheet and format as "Comma-separated values (.csv)", then copy the URL.
+// The URL should not contain "docs.googleusercontent.com/pub" - it must be a direct
+// publish link.
 const GOOGLE_SHEET_BASE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQO78VJA7y_g5zHpzw1gTaJhLV2mjNdRxA33zcj1WPFj-QYxQS09nInTQXg6kXNJcjm4f7Gk7lPVZuV/pub?output=csv';
 
 // Specific URLs for each sheet using their GIDs
@@ -18,29 +21,17 @@ const GOOGLE_SHEET_TIER_LIST_CSV_URL = GOOGLE_SHEET_BASE_URL + '&gid=0&single=tr
 const GOOGLE_SHEET_MOD_DATA_CSV_URL = GOOGLE_SHEET_BASE_URL + '&gid=729050965&single=true'; // Mod Info (Sheet 3)
 
 let allUnits = [];
-let allMods = [];
+let allMods = {}; // Changed to an object for easier lookup
 let tierListData = [];
 let modEffectsEnabled = false; // Global toggle for mod effects
 let maxLevelGlobalEnabled = false; // Global toggle for Max Level effects
 
-// DOM elements
-const unitsTab = document.getElementById('units-tab-btn');
-const modsTab = document.getElementById('mods-tab-btn');
-const tierListTab = document.getElementById('tier-list-tab-btn');
-const unitsContent = document.getElementById('units-content');
-const modsContent = document.getElementById('mods-content');
-const tierListContent = document.getElementById('tier-list-content');
-const searchInput = document.getElementById('search-input');
-const rarityFilter = document.getElementById('rarity-filter');
-const classFilter = document.getElementById('class-filter');
-const unitTableBody = document.getElementById('unitTableBody');
-const modsTableBody = document.getElementById('modsTableBody');
-const tableHeaders = document.querySelectorAll('#unitsTable th[data-sort]');
-const tierListTableBody = document.getElementById('tierListTableBody');
-const loadingSpinner = document.getElementById('loadingSpinner');
-const darkModeToggle = document.getElementById('darkModeToggle');
-const toggleModEffects = document.getElementById('toggleModEffects');
-const toggleMaxLevel = document.getElementById('toggleMaxLevel');
+// DOM elements - defined globally for easy access after DOMContentLoaded
+let unitsTab, modsTab, tierListTab;
+let unitsContent, modsContent, tierListContent;
+let searchInput, rarityFilter, classFilter;
+let unitTableBody, modsTableBody, tableHeaders, tierListTableBody;
+let loadingSpinner, darkModeToggle, toggleModEffects, toggleMaxLevel;
 
 const defaultMaxLevel = 25; // Default max level for calculations
 
@@ -49,7 +40,6 @@ const fetchAndParseCSV = async (url) => {
     try {
         const response = await fetch(url);
         if (!response.ok) {
-            // Handle the 400 error specifically
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const text = await response.text();
@@ -58,13 +48,13 @@ const fetchAndParseCSV = async (url) => {
         const data = lines.slice(1).map(line => {
             const values = line.split(',').map(value => value.trim());
             return headers.reduce((obj, header, index) => {
-                obj[header] = values[index];
+                obj[header] = values[index] || ''; // Handle potential missing values
                 return obj;
             }, {});
         });
         return data;
     } catch (error) {
-        console.error('Failed to fetch or parse CSV:', error);
+        console.error('Failed to fetch or parse CSV:', url, error);
         return [];
     }
 };
@@ -155,8 +145,8 @@ const calculateStats = (unit, level) => {
 
 // Function to render the units table
 const renderUnits = (units) => {
-    if (!unitTableBody) return; // Defensive check
-    unitTableBody.innerHTML = ''; // Clear existing table rows
+    if (!unitTableBody) return;
+    unitTableBody.innerHTML = '';
     const fragment = document.createDocumentFragment();
 
     units.forEach(unit => {
@@ -189,7 +179,6 @@ const renderUnits = (units) => {
 
 // Function to filter and render units
 const filterAndRenderUnits = () => {
-    // Defensive check to prevent TypeError
     if (!searchInput || !rarityFilter || !classFilter) {
         console.warn('Filter elements not found. Skipping filter and render.');
         return;
@@ -222,8 +211,8 @@ const debounce = (func, delay) => {
 
 // Function to render the mods table
 const renderMods = (mods) => {
-    if (!modsTableBody) return; // Defensive check
-    modsTableBody.innerHTML = ''; // Clear existing table rows
+    if (!modsTableBody) return;
+    modsTableBody.innerHTML = '';
     const fragment = document.createDocumentFragment();
 
     Object.keys(mods).forEach(modKey => {
@@ -255,7 +244,7 @@ const renderTierList = (tierList) => {
         return;
     }
     
-    tierListTableBody.innerHTML = ''; // Clear existing table rows
+    tierListTableBody.innerHTML = '';
 
     if (!tierList || tierList.length === 0) {
         tierListTableContainer.classList.add('hidden');
@@ -282,25 +271,23 @@ const renderTierList = (tierList) => {
 };
 
 // Function for table sorting
-let sortDirection = {}; // Store sort direction for each column
+let sortDirection = {};
 const sortData = (column) => {
     const isNumber = ['HP', 'Damage', 'AttackRate', 'DPS', 'Range'].includes(column);
     const sortMultiplier = (sortDirection[column] === 'asc') ? 1 : -1;
 
     let dataToSort = allUnits;
 
-    // Sort the data
     dataToSort.sort((a, b) => {
         let valueA, valueB;
         if (isNumber) {
-            // Need to get the calculated stats for sorting if max level is enabled
             if (maxLevelGlobalEnabled) {
                 const statsA = calculateStats(a, defaultMaxLevel);
                 const statsB = calculateStats(b, defaultMaxLevel);
                 valueA = parseFloat(statsA[column.toLowerCase()] || 0);
                 valueB = parseFloat(statsB[column.toLowerCase()] || 0);
             } else {
-                valueA = parseFloat(a[column] || 0); // Use 0 for "N/A" to avoid errors
+                valueA = parseFloat(a[column] || 0);
                 valueB = parseFloat(b[column] || 0);
             }
         } else {
@@ -313,10 +300,7 @@ const sortData = (column) => {
         return 0;
     });
 
-    // Toggle the sort direction for the next click
     sortDirection[column] = (sortDirection[column] === 'asc') ? 'desc' : 'asc';
-
-    // Re-render with the sorted data
     renderUnits(dataToSort);
 };
 
@@ -327,21 +311,18 @@ const toggleDarkMode = () => {
 
 // Function to switch tabs
 const switchTab = (tabId) => {
-    // Hide all content sections
     if (unitsContent) unitsContent.classList.add('hidden');
     if (modsContent) modsContent.classList.add('hidden');
     if (tierListContent) tierListContent.classList.add('hidden');
 
-    // Remove 'active' class from all buttons
     if (unitsTab) unitsTab.classList.remove('active-tab');
     if (modsTab) modsTab.classList.remove('active-tab');
     if (tierListTab) tierListTab.classList.remove('active-tab');
 
-    // Show the selected content and add 'active' class to the button
     if (tabId === 'unitsTab' && unitsContent && unitsTab) {
         unitsContent.classList.remove('hidden');
         unitsTab.classList.add('active-tab');
-        filterAndRenderUnits(); // Re-render units when tab is switched
+        filterAndRenderUnits();
     } else if (tabId === 'modsTab' && modsContent && modsTab) {
         modsContent.classList.remove('hidden');
         modsTab.classList.add('active-tab');
@@ -351,28 +332,33 @@ const switchTab = (tabId) => {
     }
 };
 
-// Initialize the app
-window.onload = async () => {
+// Main initialization function
+const init = async () => {
+    // Show spinner while loading
     if (loadingSpinner) {
       loadingSpinner.classList.remove('hidden');
     }
 
+    // Fetch all data
     const [unitDataCSV, modDataCSV, tierListCSV] = await Promise.all([
         fetchAndParseCSV(GOOGLE_SHEET_UNIT_DATA_CSV_URL),
         fetchAndParseCSV(GOOGLE_SHEET_MOD_DATA_CSV_URL),
         fetchAndParseCSV(GOOGLE_SHEET_TIER_LIST_CSV_URL)
     ]);
 
+    // Process unit data
     if (unitDataCSV.length > 0) {
         allUnits = unitDataCSV;
         console.log('Units loaded from Google Sheet.');
     } else {
         console.warn('Could not load units from Google Sheet. Using fallback method if available.');
+        // Optionally, use local raw data here if it exists
     }
 
+    // Process mod data
     if (modDataCSV.length > 0) {
         allMods = modDataCSV.reduce((acc, mod) => {
-            if (mod.Title) { // Ensure there's a title to use as a key
+            if (mod.Title) {
                 acc[mod.Title] = mod;
             }
             return acc;
@@ -380,8 +366,10 @@ window.onload = async () => {
         console.log('Mods loaded from Google Sheet.');
     } else {
         console.warn('Could not load mods from Google Sheet. Using fallback method if available.');
+        // Optionally, use local raw data here
     }
 
+    // Process tier list data
     if (tierListCSV.length > 0) {
         tierListData = tierListCSV;
         console.log('Tier list loaded from Google Sheet.');
@@ -389,23 +377,39 @@ window.onload = async () => {
         console.warn('Could not load tier list from Google Sheet.');
     }
 
-    // Now that all data is loaded, hide the spinner
+    // Find and assign DOM elements
+    unitsTab = document.getElementById('units-tab-btn');
+    modsTab = document.getElementById('mods-tab-btn');
+    tierListTab = document.getElementById('tier-list-tab-btn');
+    unitsContent = document.getElementById('units-content');
+    modsContent = document.getElementById('mods-content');
+    tierListContent = document.getElementById('tier-list-content');
+    searchInput = document.getElementById('search-input');
+    rarityFilter = document.getElementById('rarity-filter');
+    classFilter = document.getElementById('class-filter');
+    unitTableBody = document.getElementById('unitTableBody');
+    modsTableBody = document.getElementById('modsTableBody');
+    tableHeaders = document.querySelectorAll('#unitsTable th[data-sort]');
+    tierListTableBody = document.getElementById('tierListTableBody');
+    loadingSpinner = document.getElementById('loadingSpinner');
+    darkModeToggle = document.getElementById('darkModeToggle');
+    toggleModEffects = document.getElementById('toggleModEffects');
+    toggleMaxLevel = document.getElementById('toggleMaxLevel');
+
+    // Hide the spinner once data and DOM are ready
     if (loadingSpinner) {
       loadingSpinner.classList.add('hidden');
     }
 
-    // Initial render of units
+    // Initial render and setup
     filterAndRenderUnits();
     renderMods(allMods);
     renderTierList(tierListData);
-
-    // Initial check for dark mode preference
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
         document.documentElement.classList.add('dark');
     }
-
-    // Event listeners - only add if elements exist
-    // Debounce the search input to improve performance
+    
+    // Set up event listeners
     if (searchInput) {
         const debouncedFilterAndRenderUnits = debounce(filterAndRenderUnits, 300);
         searchInput.addEventListener('input', debouncedFilterAndRenderUnits);
@@ -440,4 +444,11 @@ window.onload = async () => {
         filterAndRenderUnits();
       });
     }
+
+    // Set default tab
+    switchTab('unitsTab');
 };
+
+// Initialize the app after the DOM is fully loaded
+document.addEventListener('DOMContentLoaded', init);
+
