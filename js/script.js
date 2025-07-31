@@ -983,20 +983,22 @@ function sortData(column) {
             const tierInfoA = tierList.find(tierUnit => tierUnit.NormalizedUnitName === a.NormalizedLabel);
             const tierInfoB = tierList.find(tierUnit => tierUnit.NormalizedUnitName === b.NormalizedLabel);
 
-            // Get NumericalRank. Treat 'N/A' or missing as Infinity to push them to the bottom.
-            const rankA = tierInfoA && typeof tierInfoA.NumericalRank === 'number' ? tierInfoA.NumericalRank : Infinity;
-            const rankB = tierInfoB && typeof tierInfoB.NumericalRank === 'number' ? tierInfoB.NumericalRank : Infinity;
+            // Get NumericalRank. Treat 'N/A' or missing as 0 to push them to the appropriate end.
+            const rankA = tierInfoA && typeof tierInfoA.NumericalRank === 'number' ? tierInfoA.NumericalRank : 0;
+            const rankB = tierInfoB && typeof tierInfoB.NumericalRank === 'number' ? tierInfoB.NumericalRank : 0;
 
             if (currentSortDirection === 'asc') {
                 // For ascending (S on top), we want HIGHER NumericalRank to come first.
                 // So, if rankA is 900 (S) and rankB is 700 (B), we want A before B.
                 // rankB - rankA will be 700 - 900 = -200, which correctly places A before B.
+                // If rankA is 0 (N/A) and rankB is 700, 700 - 0 = 700, B comes after A (N/A at bottom).
                 return rankB - rankA;
             } else {
                 // For descending (F on top), we want LOWER NumericalRank to come first.
                 // So, if rankA is 900 (S) and rankB is 500 (D), we want D before S.
                 // rankA - rankB will be 900 - 500 = 400, which incorrectly places S before D.
                 // We need rankA - rankB to put lower values first in "descending" visual order.
+                // If rankA is 0 (N/A) and rankB is 700, 0 - 700 = -700, A comes before B (N/A at top).
                 return rankA - rankB;
             }
         }
