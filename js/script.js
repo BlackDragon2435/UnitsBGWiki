@@ -11,7 +11,7 @@ import { gameData } from './gameData.js'; // Import gameData
 const GOOGLE_SHEET_BASE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQO78VJA7y_g5zHpzw1gTaJhLV2mjNdRxA33zcj1WPFj-QYxQS09nInTQXg6kXNJcjm4f7Gk7lPVZuV/pub?output=csv';
 
 // Specific URLs for each sheet using their GIDs
-const NEW_GOOGLE_SHEET_BASE_URL = 'https://docs.google.com/spreadsheets/d/1CG1QQI8OyvNVglxqlqPT9fqRo7FNy3SJfpLGvZcMxvQ/pub?output=csv';
+const NEW_GOOGLE_SHEET_BASE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQO78VJA7y_g5zHpzw1gTaJhLV2mjNdRxA33zcj1WPFj-QYxQS09nInTQXg6kXNJcjm4f7Gk7lPVZuV/pub?output=csv';
 const GOOGLE_SHEET_UNIT_DATA_CSV_URL = NEW_GOOGLE_SHEET_BASE_URL + '&gid=201310748&single=true'; // Unit Info (Sheet 1)
 const GOOGLE_SHEET_TIER_LIST_CSV_URL = NEW_GOOGLE_SHEET_BASE_URL + '&gid=0&single=true'; // Tier List (Sheet 2) - Assuming gid=0 is still Tier List
 const GOOGLE_SHEET_MOD_DATA_CSV_URL = NEW_GOOGLE_SHEET_BASE_URL + '&gid=331730679&single=true'; // Mod List (Sheet 3) - Assuming gid=331730679 is still Mod List
