@@ -18,69 +18,71 @@
                 <!-- Updated image source to the publicly hosted URL -->
                 <img src="https://tr.rbxcdn.com/180DAY-03e365f1fea92684ef841ae041d4677e/150/150/Image/Webp/noFilter" 
                      alt="Units Battlegrounds Logo" 
-                     class="header-image mr-4 rounded-lg shadow-md">
-                <h1 class="text-3xl sm:text-4xl font-bold text-center">Unit & Mod Compendium</h1>
+                     class="h-20 w-20 sm:h-24 sm:w-24 rounded-full border-4 border-blue-400 shadow-lg mr-4">
+                <h1 class="text-3xl sm:text-5xl font-extrabold text-blue-600 dark:text-blue-400 drop-shadow-lg">Unit & Mod Compendium</h1>
             </div>
-            <button id="darkModeToggle" class="absolute right-0 p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-200 shadow-md">
-                <svg id="sunIcon" class="w-6 h-6 text-yellow-500 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h1M3 12h1m15.325-7.757l-.707-.707M4.343 19.657l-.707-.707M19.657 4.343l-.707.707M4.343 4.343l-.707.707M18 12a6 6 0 11-12 0 6 6 0 0112 0z"></path></svg>
-                <svg id="moonIcon" class="w-6 h-6 text-gray-800 dark:text-gray-100" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+            <!-- Dark Mode Toggle -->
+            <button id="darkModeToggle" class="absolute right-0 top-1/2 -translate-y-1/2 p-2 rounded-full bg-gray-200 dark:bg-gray-700 shadow-md hover:scale-105 transition-transform duration-200">
+                <svg id="sunIcon" class="w-6 h-6 text-yellow-500 hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h1M4 12H3m15.325 6.675l-.707.707M6.343 6.343l-.707-.707m12.728 0l-.707-.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                <svg id="moonIcon" class="w-6 h-6 text-gray-800 dark:text-gray-100" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9 9 0 008.354-5.646z"></path></svg>
             </button>
         </header>
 
-        <nav class="mb-6">
-            <ul class="flex justify-center space-x-4">
-                <li><button id="unitsTab" class="tab-button active">Units</button></li>
-                <li><button id="modsTab" class="tab-button">Mods</button></li>
-                <li><button id="tierListTab" class="tab-button">Tier List</button></li>
+        <nav class="mb-8">
+            <ul class="flex justify-center space-x-4 sm:space-x-8 text-lg sm:text-xl font-medium">
+                <li><button id="unitsTab" class="tab-button active px-4 py-2 rounded-lg transition-colors duration-300">Units</button></li>
+                <li><button id="modsTab" class="tab-button px-4 py-2 rounded-lg transition-colors duration-300">Mods</button></li>
+                <li><button id="tierListTab" class="tab-button px-4 py-2 rounded-lg transition-colors duration-300">Tier List</button></li>
             </ul>
         </nav>
 
-        <main class="bg-white dark:bg-gray-800 p-6 sm:p-8 rounded-xl shadow-lg transition-colors duration-300">
-            <!-- Units Tab Content -->
+        <main>
+            <!-- Units Content -->
             <section id="unitsContent" class="tab-content">
-                <h2 class="text-2xl font-semibold mb-4">Unit Data</h2>
-                <!-- Added flex-wrap to this container -->
-                <div class="mb-6 flex flex-col md:flex-row items-center justify-between space-y-4 md:space-y-0 md:space-x-4 flex-wrap">
+                <div class="mb-6 flex flex-col sm:flex-row items-center justify-between gap-4">
                     <input type="text" id="searchInput" placeholder="Search units..."
-                           class="p-3 border border-gray-300 dark:border-gray-600 rounded-md w-full md:w-1/3 focus:ring-blue-500 focus:border-blue-500 shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
-                    <select id="rarityFilter" class="p-3 border border-gray-300 dark:border-gray-600 rounded-md w-full md:w-1/4 focus:ring-blue-500 focus:border-blue-500 shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
-                        <option value="">All Rarity</option>
-                        <!-- Rarity options populated by JS -->
+                           class="flex-1 p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
+                    <select id="rarityFilter"
+                            class="p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
+                        <!-- Options populated by JS -->
                     </select>
-                    <select id="classFilter" class="p-3 border border-gray-300 dark:border-gray-600 rounded-md w-full md:w-1/4 focus:ring-blue-500 focus:border-blue-500 shadow-sm bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100">
-                        <option value="">All Classes</option>
-                        <!-- Class options populated by JS -->
+                    <select id="classFilter"
+                            class="p-3 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-100">
+                        <!-- Options populated by JS -->
                     </select>
                 </div>
-
-                <!-- Added flex-wrap to this container -->
-                <div class="mb-4 flex items-center space-x-4 flex-wrap">
+                <div class="mb-6 flex items-center space-x-4">
                     <div class="flex items-center">
                         <input type="checkbox" id="toggleModEffects" class="mr-2 rounded text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400">
-                        <label for="toggleModEffects" class="text-gray-700 dark:text-gray-300">Show Global Mod Effects (All applicable mods)</label>
+                        <label for="toggleModEffects" class="text-gray-700 dark:text-gray-300">Apply Global Mod Effects</label>
                     </div>
                     <div class="flex items-center">
                         <input type="checkbox" id="toggleMaxLevel" class="mr-2 rounded text-blue-600 focus:ring-blue-500 dark:focus:ring-blue-400">
-                        <label for="toggleMaxLevel" class="text-gray-700 dark:text-gray-300">Show Max Level</label>
+                        <label for="toggleMaxLevel" class="text-gray-700 dark:text-gray-300">Show Max Level (25) Stats</label>
                     </div>
                 </div>
 
-                <div id="loadingSpinner" class="spinner"></div>
+                <div id="loadingSpinner" class="text-center py-8 hidden">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+                    <p class="text-blue-600 dark:text-blue-400 mt-4">Loading Units...</p>
+                </div>
+
                 <div id="unitTableContainer" class="overflow-x-auto rounded-xl shadow-md hidden">
-                    <table id="unitTable" class="min-w-full">
-                        <thead>
+                    <table id="unitTable" class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
+                        <thead class="bg-blue-600 dark:bg-blue-800 text-white">
                             <tr>
-                                <th data-sort="Image" class="w-16">Image</th>
-                                <th data-sort="Label">Unit Name</th>
-                                <th data-sort="Class">Class</th>
-                                <th data-sort="Rarity">Rarity</th>
-                                <th data-sort="CommunityRanking">Community Ranking</th>
-                                <th data-sort="HP">HP</th>
-                                <th data-sort="Damage">Damage</th>
-                                <th data-sort="Cooldown">Cooldown</th>
+                                <th class="py-3 px-6 text-left text-xs font-medium uppercase tracking-wider">Image</th>
+                                <th class="py-3 px-6 text-left text-xs font-medium uppercase tracking-wider" data-sort="Label">Unit Name</th>
+                                <th class="py-3 px-6 text-left text-xs font-medium uppercase tracking-wider" data-sort="Class">Class</th>
+                                <th class="py-3 px-6 text-left text-xs font-medium uppercase tracking-wider" data-sort="Rarity">Rarity</th>
+                                <th class="py-3 px-6 text-left text-xs font-medium uppercase tracking-wider" data-sort="CommunityRanking">Community Ranking</th>
+                                <th class="py-3 px-6 text-left text-xs font-medium uppercase tracking-wider" data-sort="HP">HP</th>
+                                <th class="py-3 px-6 text-left text-xs font-medium uppercase tracking-wider" data-sort="Damage">Damage</th>
+                                <th class="py-3 px-6 text-left text-xs font-medium uppercase tracking-wider" data-sort="Cooldown">Cooldown</th>
+                                <th class="py-3 px-6 text-left text-xs font-medium uppercase tracking-wider" data-sort="DPS">DPS</th> <!-- NEW DPS HEADER -->
                             </tr>
                         </thead>
-                        <tbody id="unitTableBody">
+                        <tbody id="unitTableBody" class="bg-white divide-y divide-gray-200 dark:bg-gray-700 dark:divide-gray-600">
                             <!-- Unit data will be inserted here by JavaScript -->
                         </tbody>
                     </table>
@@ -88,17 +90,16 @@
                 <p id="noResultsMessage" class="text-center text-gray-600 dark:text-gray-400 mt-4 hidden">No units found matching your criteria.</p>
             </section>
 
-            <!-- Mods Tab Content -->
+            <!-- Mods Content -->
             <section id="modsContent" class="tab-content hidden">
-                <h2 class="text-2xl font-semibold mb-4">Mod Data</h2>
-                <p class="text-gray-700 dark:text-gray-300 mb-4">Here you can see all available mods and their effects. Click on a unit in the "Units" tab to see how individual mods affect its stats.</p>
-                <div id="modsTableContainer" class="overflow-x-auto rounded-xl shadow-md mt-6">
-                    <table id="modsTable" class="min-w-full">
-                        <thead>
+                <h2 class="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-200">Available Mods</h2>
+                <div class="overflow-x-auto rounded-xl shadow-md">
+                    <table id="modsTable" class="min-w-full divide-y divide-gray-200 dark:divide-gray-600">
+                        <thead class="bg-blue-600 dark:bg-blue-800 text-white">
                             <tr>
-                                <th class="py-3 px-6 text-left text-xs font-medium text-gray-50 uppercase tracking-wider">Mod Name</th>
-                                <th class="py-3 px-6 text-left text-xs font-medium text-gray-50 uppercase tracking-wider">Rarity</th>
-                                <th class="py-3 px-6 text-left text-xs font-medium text-gray-50 uppercase tracking-wider">Effect Description</th>
+                                <th class="py-3 px-6 text-left text-xs font-medium uppercase tracking-wider">Mod Name</th>
+                                <th class="py-3 px-6 text-left text-xs font-medium uppercase tracking-wider">Rarity</th>
+                                <th class="py-3 px-6 text-left text-xs font-medium uppercase tracking-wider">Effect Description</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200 dark:bg-gray-700 dark:divide-gray-600">
@@ -108,11 +109,13 @@
                 </div>
             </section>
 
-            <!-- Tier List Tab Content -->
+            <!-- Tier List Content -->
             <section id="tierListContent" class="tab-content hidden">
-                <h2 class="text-2xl font-semibold mb-4">Unit Tier List</h2>
-                <p class="text-gray-700 dark:text-gray-300 mb-4">This section displays a community-driven tier list for units, based on external data.</p>
-                <div id="tierListSpinner" class="spinner"></div>
+                <h2 class="text-2xl font-bold mb-4 text-gray-800 dark:text-gray-200">Community Tier List</h2>
+                <div id="tierListSpinner" class="text-center py-8 hidden">
+                    <div class="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+                    <p class="text-blue-600 dark:text-blue-400 mt-4">Loading Tier List...</p>
+                </div>
                 <div id="tierListTableContainer" class="overflow-x-auto rounded-xl shadow-md hidden mt-6">
                     <table id="tierListTable" class="min-w-full">
                         <thead>
