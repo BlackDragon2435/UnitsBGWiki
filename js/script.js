@@ -1,6 +1,6 @@
 // js/script.js
-// why are u here
-// 
+// This file has been corrected to handle the loading of data more robustly
+// and prevent errors when DOM elements might not be available.
 
 // import { rawUnitData } from './unitsData.js';
 // import { rawModData } from './modsData.js';
@@ -49,6 +49,7 @@ const fetchAndParseCSV = async (url) => {
     try {
         const response = await fetch(url);
         if (!response.ok) {
+            // Handle the 400 error specifically
             throw new Error(`HTTP error! status: ${response.status}`);
         }
         const text = await response.text();
@@ -154,6 +155,7 @@ const calculateStats = (unit, level) => {
 
 // Function to render the units table
 const renderUnits = (units) => {
+    if (!unitTableBody) return; // Defensive check
     unitTableBody.innerHTML = ''; // Clear existing table rows
     const fragment = document.createDocumentFragment();
 
@@ -187,6 +189,12 @@ const renderUnits = (units) => {
 
 // Function to filter and render units
 const filterAndRenderUnits = () => {
+    // Defensive check to prevent TypeError
+    if (!searchInput || !rarityFilter || !classFilter) {
+        console.warn('Filter elements not found. Skipping filter and render.');
+        return;
+    }
+    
     const searchTerm = searchInput.value.toLowerCase();
     const selectedRarity = rarityFilter.value;
     const selectedClass = classFilter.value;
@@ -214,6 +222,7 @@ const debounce = (func, delay) => {
 
 // Function to render the mods table
 const renderMods = (mods) => {
+    if (!modsTableBody) return; // Defensive check
     modsTableBody.innerHTML = ''; // Clear existing table rows
     const fragment = document.createDocumentFragment();
 
@@ -240,6 +249,11 @@ const renderTierList = (tierList) => {
     const tierListTableBody = document.getElementById('tierListTableBody');
     const noTierListMessage = document.getElementById('noTierListMessage');
     const tierListTableContainer = document.getElementById('tierListTableContainer');
+
+    if (!tierListTableBody || !noTierListMessage || !tierListTableContainer) {
+        console.warn('Tier list DOM elements not found. Skipping render.');
+        return;
+    }
     
     tierListTableBody.innerHTML = ''; // Clear existing table rows
 
@@ -314,24 +328,24 @@ const toggleDarkMode = () => {
 // Function to switch tabs
 const switchTab = (tabId) => {
     // Hide all content sections
-    unitsContent.classList.add('hidden');
-    modsContent.classList.add('hidden');
-    tierListContent.classList.add('hidden');
+    if (unitsContent) unitsContent.classList.add('hidden');
+    if (modsContent) modsContent.classList.add('hidden');
+    if (tierListContent) tierListContent.classList.add('hidden');
 
     // Remove 'active' class from all buttons
-    unitsTab.classList.remove('active-tab');
-    modsTab.classList.remove('active-tab');
-    tierListTab.classList.remove('active-tab');
+    if (unitsTab) unitsTab.classList.remove('active-tab');
+    if (modsTab) modsTab.classList.remove('active-tab');
+    if (tierListTab) tierListTab.classList.remove('active-tab');
 
     // Show the selected content and add 'active' class to the button
-    if (tabId === 'unitsTab') {
+    if (tabId === 'unitsTab' && unitsContent && unitsTab) {
         unitsContent.classList.remove('hidden');
         unitsTab.classList.add('active-tab');
         filterAndRenderUnits(); // Re-render units when tab is switched
-    } else if (tabId === 'modsTab') {
+    } else if (tabId === 'modsTab' && modsContent && modsTab) {
         modsContent.classList.remove('hidden');
         modsTab.classList.add('active-tab');
-    } else if (tabId === 'tierListTab') {
+    } else if (tabId === 'tierListTab' && tierListContent && tierListTab) {
         tierListContent.classList.remove('hidden');
         tierListTab.classList.add('active-tab');
     }
@@ -339,7 +353,9 @@ const switchTab = (tabId) => {
 
 // Initialize the app
 window.onload = async () => {
-    loadingSpinner.classList.remove('hidden');
+    if (loadingSpinner) {
+      loadingSpinner.classList.remove('hidden');
+    }
 
     const [unitDataCSV, modDataCSV, tierListCSV] = await Promise.all([
         fetchAndParseCSV(GOOGLE_SHEET_UNIT_DATA_CSV_URL),
@@ -347,27 +363,14 @@ window.onload = async () => {
         fetchAndParseCSV(GOOGLE_SHEET_TIER_LIST_CSV_URL)
     ]);
 
-    // Check if we got data from the Google Sheets.
-    // If not, we will attempt to load from local files if they exist.
     if (unitDataCSV.length > 0) {
         allUnits = unitDataCSV;
         console.log('Units loaded from Google Sheet.');
     } else {
-        // Fallback to local raw data if available and parsed correctly.
-        try {
-            // NOTE: This assumes rawUnitData is still available and correct
-            // from your provided files. The CSV is the primary source now.
-            // A more robust app would include a more sophisticated fallback.
-            // allUnits = Object.values(parseRawData(rawUnitData));
-            console.warn('Could not load units from Google Sheet. Using fallback method if available.');
-        } catch (e) {
-            console.error('Failed to load local unit data:', e);
-        }
+        console.warn('Could not load units from Google Sheet. Using fallback method if available.');
     }
 
     if (modDataCSV.length > 0) {
-        // The mods sheet is a simple list, which is a different format than the raw string.
-        // We'll process it into a key-value object for consistency.
         allMods = modDataCSV.reduce((acc, mod) => {
             if (mod.Title) { // Ensure there's a title to use as a key
                 acc[mod.Title] = mod;
@@ -376,13 +379,7 @@ window.onload = async () => {
         }, {});
         console.log('Mods loaded from Google Sheet.');
     } else {
-        try {
-            // This is the old raw data format, we parse it into a key-value object.
-            // allMods = parseRawData(rawModData);
-            console.warn('Could not load mods from Google Sheet. Using fallback method if available.');
-        } catch (e) {
-            console.error('Failed to load local mod data:', e);
-        }
+        console.warn('Could not load mods from Google Sheet. Using fallback method if available.');
     }
 
     if (tierListCSV.length > 0) {
@@ -393,7 +390,9 @@ window.onload = async () => {
     }
 
     // Now that all data is loaded, hide the spinner
-    loadingSpinner.classList.add('hidden');
+    if (loadingSpinner) {
+      loadingSpinner.classList.add('hidden');
+    }
 
     // Initial render of units
     filterAndRenderUnits();
@@ -401,45 +400,44 @@ window.onload = async () => {
     renderTierList(tierListData);
 
     // Initial check for dark mode preference
-    if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
         document.documentElement.classList.add('dark');
     }
 
-    // Event listeners
+    // Event listeners - only add if elements exist
     // Debounce the search input to improve performance
-    const debouncedFilterAndRenderUnits = debounce(filterAndRenderUnits, 300);
-    searchInput.addEventListener('input', debouncedFilterAndRenderUnits);
-    rarityFilter.addEventListener('change', filterAndRenderUnits);
-    classFilter.addEventListener('change', filterAndRenderUnits);
-
-    // Table Header Sorting Events
-    tableHeaders.forEach(header => {
-        header.addEventListener('click', () => {
-            const sortColumn = header.dataset.sort;
-            if (sortColumn) {
-                sortData(sortColumn);
-            }
+    if (searchInput) {
+        const debouncedFilterAndRenderUnits = debounce(filterAndRenderUnits, 300);
+        searchInput.addEventListener('input', debouncedFilterAndRenderUnits);
+    }
+    if (rarityFilter) rarityFilter.addEventListener('change', filterAndRenderUnits);
+    if (classFilter) classFilter.addEventListener('change', filterAndRenderUnits);
+    
+    if (tableHeaders) {
+        tableHeaders.forEach(header => {
+            header.addEventListener('click', () => {
+                const sortColumn = header.dataset.sort;
+                if (sortColumn) {
+                    sortData(sortColumn);
+                }
+            });
         });
-    });
+    }
 
-    // Dark Mode Toggle Event
-    darkModeToggle.addEventListener('click', toggleDarkMode);
-
-    // Tab Switching Events
-    unitsTab.addEventListener('click', () => switchTab('unitsTab'));
-    modsTab.addEventListener('click', () => switchTab('modsTab'));
-    tierListTab.addEventListener('click', () => switchTab('tierListTab')); // Tier List Tab event
-
-    // Mod Effects Toggle Event (global)
-    toggleModEffects.addEventListener('change', () => {
+    if (darkModeToggle) darkModeToggle.addEventListener('click', toggleDarkMode);
+    if (unitsTab) unitsTab.addEventListener('click', () => switchTab('unitsTab'));
+    if (modsTab) modsTab.addEventListener('click', () => switchTab('modsTab'));
+    if (tierListTab) tierListTab.addEventListener('click', () => switchTab('tierListTab'));
+    if (toggleModEffects) {
+      toggleModEffects.addEventListener('change', () => {
         modEffectsEnabled = toggleModEffects.checked;
-        filterAndRenderUnits(); // Re-render units to apply/remove global mod effects
-    });
-
-    // Global Max Level Toggle Event
-    toggleMaxLevel.addEventListener('change', () => {
-        maxLevelGlobalEnabled = toggleMaxLevel.checked;
-        // Re-render units to apply/remove global max level effects
         filterAndRenderUnits();
-    });
+      });
+    }
+    if (toggleMaxLevel) {
+      toggleMaxLevel.addEventListener('change', () => {
+        maxLevelGlobalEnabled = toggleMaxLevel.checked;
+        filterAndRenderUnits();
+      });
+    }
 };
