@@ -65,7 +65,7 @@ const allUnitStatsForDropdown = [
     'Label', 'Class', 'Rarity', 'HP', 'Damage', 'Cooldown', 'Distance',
     'CritChance', 'CritDamage', 'AttackEffect', 'AttackEffectType',
     'AttackEffectLifesteal', 'AttackEffectKey', 'Knockback', 'Accuracy',
-    'EvadeChance', 'HPOffset', 'ShadowStepDistance', 'ShadowStepCooldown'
+    'EvadeChance', 'HPOffset', 'ShadowStepDistance', 'ShadowStepCooldown', 'DPS' // Added DPS
 ];
 
 
@@ -356,21 +356,14 @@ function applySingleModEffect(unit, mod) {
              return; // Stat does not exist on the unit, skip applying mod
         }
 
-        // Initialize N/A stats if a mod applies a numeric amount to them
-        if (modifiedUnit[stat] === 'N/A' && typeof amount === 'number') {
-            if (['CritChance', 'CritDamage', 'EvadeChance', 'Accuracy', 'Knockback'].includes(stat)) {
-                modifiedUnit[stat] = 0; // Initialize to 0 for addition
-            } else if (stat === 'AttackEffectLifesteal') {
-                modifiedUnit[stat] = 0; // Initialize Lifesteal to 0 if N/A
-            }
-        } else if (modifiedUnit[stat] === 'N/A' && typeof chance === 'number' && stat === 'Lifesteal') {
-             modifiedUnit.AttackEffectLifesteal = 0; // Initialize Lifesteal if N/A and mod has chance
-        }
-
+        // Initialize N/A stats if a mod applies a numerical amount to them
+        // This is handled by getUnitStatsAtLevel ensuring numerical values (0 for N/A)
+        // So, we can directly work with modifiedUnit[stat] as a number here.
 
         switch (stat) {
             case "HP":
             case "Damage":
+            case "DPS": // Added DPS calculation
                 if (typeof modifiedUnit[stat] === 'number' && typeof amount === 'number') {
                     modifiedUnit[stat] = modifiedUnit[stat] * (1 + amount);
                 }
@@ -450,6 +443,7 @@ function applyModsToUnit(baseUnit, modsToApply) {
 
 /**
  * Calculates a unit's stats at a specific level, applying class/rarity modifiers and then mods.
+ * Handles 'N/A' values by treating them as 0 for calculations, and reverting back if needed.
  * @param {Object} baseUnit - The original unit object (level 1 stats).
  * @param {number} level - The target level for the unit.
  * @param {Array<Object>} selectedMods - An array of mod objects to apply.
@@ -458,27 +452,41 @@ function applyModsToUnit(baseUnit, modsToApply) {
 function getUnitStatsAtLevel(baseUnit, level, selectedMods) {
     let calculatedUnit = { ...baseUnit }; // Start with base stats
 
-    const unitClass = baseUnit.Class;
-    const unitRarity = baseUnit.Rarity;
+    // Store original N/A status for numerical stats
+    const originalNAStatus = {};
+    const numericalStats = ['HP', 'Damage', 'Cooldown', 'Distance', 'CritChance', 'CritDamage',
+                            'AttackEffectLifesteal', 'Knockback', 'Accuracy', 'EvadeChance', 'DPS'];
+
+    numericalStats.forEach(statKey => {
+        if (calculatedUnit[statKey] === 'N/A' || calculatedUnit[statKey] === null || calculatedUnit[statKey] === undefined) {
+            originalNAStatus[statKey] = true;
+            calculatedUnit[statKey] = 0; // Treat N/A as 0 for calculations
+        } else {
+            calculatedUnit[statKey] = parseFloat(calculatedUnit[statKey]); // Ensure it's a number
+            if (isNaN(calculatedUnit[statKey])) { // If it's still not a number after parsing, treat as 0
+                originalNAStatus[statKey] = true; // Mark as originally N/A if it couldn't be parsed
+                calculatedUnit[statKey] = 0;
+            }
+        }
+    });
+
+    const unitClass = calculatedUnit.Class;
+    const unitRarity = calculatedUnit.Rarity;
 
     // Apply StatsByClass modifiers based on unit's class and rarity
     if (gameData.StatsByClass[unitClass]) {
         const classStats = gameData.StatsByClass[unitClass];
         for (const statKey in classStats) {
-            // Ensure the stat exists on the unit and is a number
-            if (typeof calculatedUnit[statKey] === 'number' &&
+            // Ensure the stat is one we want to scale and has a numeric value
+            if (numericalStats.includes(statKey) && typeof calculatedUnit[statKey] === 'number' &&
                 classStats[statKey]._attributes &&
                 classStats[statKey]._attributes[unitRarity] !== undefined) {
 
                 const modifier = classStats[statKey]._attributes[unitRarity];
                 // Apply level scaling: (base_stat * (1 + modifier * (level - 1)))
-                // This assumes linear scaling per level based on the modifier
                 if (statKey === 'Cooldown') {
-                    // Cooldown modifiers are additive and reduce cooldown
-                    // We apply the modifier per level, linearly
                     calculatedUnit[statKey] = Math.max(0.1, calculatedUnit[statKey] + (modifier * (level - 1)));
                 } else {
-                    // Other stats are multiplicative
                     calculatedUnit[statKey] = calculatedUnit[statKey] * (1 + modifier * (level - 1));
                 }
             }
@@ -487,6 +495,13 @@ function getUnitStatsAtLevel(baseUnit, level, selectedMods) {
 
     // Apply selected mods on top of the class/rarity modified stats
     calculatedUnit = applyModsToUnit(calculatedUnit, selectedMods);
+
+    // After all calculations, if a stat was originally 'N/A' and is now 0, revert to 'N/A' for display
+    numericalStats.forEach(statKey => {
+        if (originalNAStatus[statKey] && calculatedUnit[statKey] === 0) {
+            calculatedUnit[statKey] = 'N/A';
+        }
+    });
 
     return calculatedUnit;
 }
@@ -539,6 +554,7 @@ function renderUnitTable(dataToRender) {
         const levelForDisplay = maxLevelGlobalEnabled ? 25 : 1;
 
         // Calculate unit stats at the determined level (level 1 or max level)
+        // Pass the original unit to getUnitStatsAtLevel to preserve N/A status for display logic
         let unitToDisplay = getUnitStatsAtLevel(unit, levelForDisplay, []); // No mods applied yet for this base calculation
 
         // Apply global mod effects if enabled, on top of the leveled stats
@@ -916,13 +932,17 @@ function updateAppliedStats(baseUnit, selectedMods, listElement, showMaxStats, s
         li.textContent = `${key}: ${displayValue !== undefined ? displayValue : 'N/A'}`;
 
         // Highlight changes from base stats (considering the level calculation)
-        const baseValueAtLevel1 = baseUnit[key]; // Compare against base level 1 stats
-        const currentDisplayedValue = unitToDisplay[key];
+        // This logic needs to compare against the original baseUnit, not the one processed by getUnitStatsAtLevel
+        const originalBaseValue = baseUnit[key];
 
-        // Only highlight if the base value at level 1 is a number and different from current
-        if (typeof baseValueAtLevel1 === 'number' && typeof currentDisplayedValue === 'number' && baseValueAtLevel1 !== currentDisplayedValue) {
+        // Only highlight if the original base value was a number or N/A, and the current displayed value is different
+        if (
+            (typeof originalBaseValue === 'number' || originalBaseValue === 'N/A') &&
+            (typeof displayValue === 'number' || displayValue === 'N/A') &&
+            originalBaseValue !== displayValue // Compare directly
+        ) {
             li.classList.add('font-bold', 'text-blue-600', 'dark:text-blue-300');
-        } else if (typeof baseValueAtLevel1 === 'string' && typeof currentDisplayedValue === 'string' && baseValueAtLevel1 !== currentDisplayedValue) {
+        } else if (typeof originalBaseValue === 'string' && typeof displayValue === 'string' && originalBaseValue !== displayValue) {
             // For string changes (like AttackEffect becoming 'Fire, Frost')
             li.classList.add('font-bold', 'text-blue-600', 'dark:text-blue-300');
         }
