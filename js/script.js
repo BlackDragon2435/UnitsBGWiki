@@ -62,10 +62,10 @@ const unitColumnOrder = [
 
 // Define ALL possible unit stats for the detailed dropdown view
 const allUnitStatsForDropdown = [
-    'Label', 'Class', 'Rarity', 'HP', 'Damage', 'Cooldown', 'Distance',
+    'Label', 'Class', 'Rarity', 'HP', 'Damage', 'Cooldown', 'DPS', 'Distance', // DPS moved
     'CritChance', 'CritDamage', 'AttackEffect', 'AttackEffectType',
     'AttackEffectLifesteal', 'AttackEffectKey', 'Knockback', 'Accuracy',
-    'EvadeChance', 'HPOffset', 'ShadowStepDistance', 'ShadowStepCooldown', 'DPS' // Added DPS
+    'EvadeChance', 'HPOffset', 'ShadowStepDistance', 'ShadowStepCooldown'
 ];
 
 
@@ -495,6 +495,14 @@ function getUnitStatsAtLevel(baseUnit, level, selectedMods) {
 
     // Apply selected mods on top of the class/rarity modified stats
     calculatedUnit = applyModsToUnit(calculatedUnit, selectedMods);
+
+    // Calculate DPS after all other relevant stats have been updated
+    if (typeof calculatedUnit.Damage === 'number' && typeof calculatedUnit.Cooldown === 'number' && calculatedUnit.Cooldown > 0) {
+        calculatedUnit.DPS = calculatedUnit.Damage / calculatedUnit.Cooldown;
+    } else {
+        calculatedUnit.DPS = 0; // Set to 0 if calculation is not possible or results in non-positive cooldown
+    }
+
 
     // After all calculations, if a stat was originally 'N/A' and is now 0, revert to 'N/A' for display
     numericalStats.forEach(statKey => {
@@ -1055,7 +1063,7 @@ function filterAndRenderUnits() {
         const matchesSearch = Object.values(unit).some(value =>
             String(value).toLowerCase().includes(searchTerm)
         );
-        const matchesRarity = selectedRarity === '' || unit.Rarity === selectedRarity;
+        const matchesRarity = selectedRarity === '' || unit.Rarity === selectedRity;
         const matchesClass = selectedClass === '' || unit.Class === selectedClass;
 
         return matchesSearch && matchesRarity && matchesClass;
