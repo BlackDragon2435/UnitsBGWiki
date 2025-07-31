@@ -223,9 +223,6 @@ function parseGoogleSheetCSV(csvText) {
                 case 'Knockback':
                 case 'Accuracy':
                 case 'EvadeChance':
-                case 'HPOffset':
-                case 'ShadowStepDistance':
-                case 'ShadowStepCooldown':
                 case 'Amount': // For Mod data
                 case 'Chance': // For Mod data
                 case 'NumericalRank': // For Tier List data
@@ -758,11 +755,26 @@ function toggleUnitDetails(unit, clickedRow, index) {
     // Left side: Base Stats
     const baseStatsDiv = document.createElement('div');
     baseStatsDiv.classList.add('flex-1', 'p-3', 'rounded-lg', 'bg-gray-100', 'dark:bg-gray-600', 'shadow-inner');
-    baseStatsDiv.innerHTML = `<h3 class="font-semibold text-lg mb-2 text-gray-800 dark:text-gray-100">Base Stats:</h3>
-                              <ul id="baseStatsList" class="space-y-1 text-gray-700 dark:text-gray-200"></ul>`;
-    detailContent.appendChild(baseStatsDiv);
 
-    const baseStatsList = baseStatsDiv.querySelector('#baseStatsList');
+    // NEW: Add a larger image for the detailed view
+    const detailImage = document.createElement('img');
+    detailImage.src = unit.ImageURL || unitImages[unit.Label] || `https://placehold.co/100x100/cccccc/333333?text=${unit.Label.substring(0,2)}`; // Larger, dynamic placeholder
+    detailImage.alt = unit.Label;
+    detailImage.classList.add('w-24', 'h-24', 'md:w-32', 'md:h-32', 'rounded-full', 'object-cover', 'shadow-md', 'mb-4', 'mx-auto'); // Larger, centered
+    baseStatsDiv.appendChild(detailImage);
+
+    const baseStatsHeader = document.createElement('h3');
+    baseStatsHeader.classList.add('font-semibold', 'text-lg', 'mb-2', 'text-gray-800', 'dark:text-gray-100');
+    baseStatsHeader.textContent = 'Base Stats:';
+    baseStatsDiv.appendChild(baseStatsHeader);
+
+    const baseStatsList = document.createElement('ul');
+    baseStatsList.id = 'baseStatsList';
+    baseStatsList.classList.add('space-y-1', 'text-gray-700', 'dark:text-gray-200');
+    baseStatsDiv.appendChild(baseStatsList);
+
+    detailContent.appendChild(baseStatsDiv); // Append the fully constructed baseStatsDiv
+
     // Use allUnitStatsForDropdown to ensure all stats are displayed in the dropdown
     allUnitStatsForDropdown.forEach(key => {
         const li = document.createElement('li');
@@ -814,8 +826,8 @@ function toggleUnitDetails(unit, clickedRow, index) {
     const modsByRarity = {};
     rarityOrder.forEach(rarity => modsByRarity[rarity] = []);
     mods.forEach(mod => {
-        if (modsByRarity[mod.rarity]) {
-            modsByRarity[mod.rarity].push(mod);
+        if (modsByRarity[rarity]) {
+            modsByRarity[rarity].push(mod);
         }
     });
 
