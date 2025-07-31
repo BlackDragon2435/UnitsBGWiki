@@ -3,7 +3,7 @@
 // import { rawUnitData } from './unitsData.js';
 // import { rawModData } from './modsData.js';
 import { unitImages } from './unitImages.js';
-import { gameData } from './gameData.js'; // Import gameData
+import { gameData } from './gameData.js'; // Import gameData - Corrected syntax
 
 // IMPORTANT: Base URL for your published Google Sheet
 // This URL should point to your Google Sheet published to web as CSV.
@@ -418,7 +418,7 @@ function calculateDPS(unit) {
     const cooldown = typeof unit.Cooldown === 'number' && unit.Cooldown > 0 ? unit.Cooldown : Infinity;
     const critChance = typeof unit.CritChance === 'number' ? unit.CritChance : 0;
 
-    // Correctly handle CritDamage when it's 'N/A' or 0.
+    // Correctly handle CritDamage when it's 'N/A' or not a number.
     // If CritDamage is 'N/A' (string) or not a number, treat its multiplier as 1 (no bonus/penalty).
     // Otherwise, use the parsed numerical value.
     let effectiveCritDamage = 1; // Default to 1 (no crit damage bonus/penalty)
@@ -1012,22 +1012,24 @@ function sortData(column) {
             }
         }
 
-        // Handle "N/A" values by treating them as lowest/highest for sorting
-        // This general N/A handling is now less critical for CommunityRanking
-        // because it's handled specifically above, but good to keep for other columns.
-        if (valA === 'N/A' && valB === 'N/A') return 0;
-        if (valA === 'N/A') return currentSortDirection === 'asc' ? 1 : -1;
-        if (valB === 'N/A') return currentSortDirection === 'asc' ? -1 : 1;
+        // Handle "N/A" values by treating them as 0 for numerical sorting
+        let numericValA = valA;
+        let numericValB = valB;
 
-        // Numeric comparison (including DPS)
-        if (typeof valA === 'number' && typeof valB === 'number') {
+        if (column === 'DPS' || column === 'HP' || column === 'Damage' || column === 'Cooldown') {
+            if (valA === 'N/A') numericValA = 0;
+            if (valB === 'N/A') numericValB = 0;
+        }
+
+        // Numeric comparison
+        if (typeof numericValA === 'number' && typeof numericValB === 'number') {
             // Special handling for DPS rounding during sort comparison
             if (column === 'DPS') {
-                const roundedValA = Math.round(valA);
-                const roundedValB = Math.round(valB);
+                const roundedValA = Math.round(numericValA);
+                const roundedValB = Math.round(numericValB);
                 return currentSortDirection === 'asc' ? roundedValA - roundedValB : roundedValB - roundedValA;
             }
-            return currentSortDirection === 'asc' ? valA - valB : valB - valA;
+            return currentSortDirection === 'asc' ? numericValA - numericValB : numericValB - numericValA;
         }
         // String comparison
         return currentSortDirection === 'asc' ?
@@ -1134,9 +1136,6 @@ function initializeDarkMode() {
         updateDarkModeIcons(true);
     } else {
         document.documentElement.classList.remove('dark');
-        document.body.classList.remove('dark');
-        document.body.classList.add('light');
-        updateDarkModeIcons(false);
     }
 }
 
