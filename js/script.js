@@ -1,6 +1,6 @@
 // js/script.js
-// This file has been rewritten to be more robust, handling data loading,
-// DOM readiness, and preventing errors more gracefully.
+// This file has been updated to fix the DPS calculation and handle the MultiAttack value.
+// It also includes more robust error handling for DOM element access.
 
 // import { rawUnitData } from './unitsData.js';
 // import { rawModData } from './modsData.js';
@@ -26,12 +26,24 @@ let tierListData = [];
 let modEffectsEnabled = false; // Global toggle for mod effects
 let maxLevelGlobalEnabled = false; // Global toggle for Max Level effects
 
-// DOM elements - defined globally for easy access after DOMContentLoaded
-let unitsTab, modsTab, tierListTab;
-let unitsContent, modsContent, tierListContent;
-let searchInput, rarityFilter, classFilter;
-let unitTableBody, modsTableBody, tableHeaders, tierListTableBody;
-let loadingSpinner, darkModeToggle, toggleModEffects, toggleMaxLevel;
+// DOM elements - defined globally for easy access
+const unitsTab = document.getElementById('units-tab-btn');
+const modsTab = document.getElementById('mods-tab-btn');
+const tierListTab = document.getElementById('tier-list-tab-btn');
+const unitsContent = document.getElementById('units-content');
+const modsContent = document.getElementById('mods-content');
+const tierListContent = document.getElementById('tier-list-content');
+const searchInput = document.getElementById('search-input');
+const rarityFilter = document.getElementById('rarity-filter');
+const classFilter = document.getElementById('class-filter');
+const unitTableBody = document.getElementById('unitTableBody');
+const modsTableBody = document.getElementById('modsTableBody');
+const tableHeaders = document.querySelectorAll('#unitsTable th[data-sort]');
+const tierListTableBody = document.getElementById('tierListTableBody');
+const loadingSpinner = document.getElementById('loadingSpinner');
+const darkModeToggle = document.getElementById('darkModeToggle');
+const toggleModEffects = document.getElementById('toggleModEffects');
+const toggleMaxLevel = document.getElementById('toggleMaxLevel');
 
 const defaultMaxLevel = 25; // Default max level for calculations
 
@@ -92,49 +104,48 @@ const parseRawData = (rawData) => {
 
 // Function to calculate a stat based on a unit's level, class, and rarity
 const calculateStat = (baseStat, unit, statKey, level) => {
-    if (baseStat === null || baseStat === undefined) {
+    if (baseStat === null || baseStat === undefined || baseStat === 'N/A') {
         return null;
     }
 
     // Get the modifier data from gameData.js
     const classData = gameData.StatModifiersByClass[unit.Class];
     if (!classData || !classData[statKey]) {
-        return baseStat;
+        return parseFloat(baseStat);
     }
 
     const modifier = classData[statKey];
-    let levelModifier = modifier._value;
+    let levelModifier = parseFloat(modifier._value);
 
     // Apply rarity-specific modifier from gameData.js if it exists
     if (modifier._attributes && modifier._attributes[unit.Rarity] !== undefined) {
-        levelModifier = modifier._attributes[unit.Rarity];
+        levelModifier = parseFloat(modifier._attributes[unit.Rarity]);
     }
 
     // Calculate the total modifier percentage
     const totalModifier = levelModifier * (level - 1);
 
     // The formula is Stat = BaseStat * (1 + Modifier * (Level - 1))
-    return baseStat * (1 + totalModifier);
+    return parseFloat(baseStat) * (1 + totalModifier);
 };
 
 // Function to calculate all stats for a given unit and level
 const calculateStats = (unit, level) => {
     const calculatedHP = calculateStat(unit.HP, unit, 'HP', level);
     const calculatedDamage = calculateStat(unit.Damage, unit, 'Damage', level);
-    // Use 'Cooldown' from the data as the base for 'Attack Rate'
-    const calculatedAttackRate = calculateStat(unit.Cooldown, unit, 'Cooldown', level);
+    const calculatedCooldown = calculateStat(unit.Cooldown, unit, 'Cooldown', level);
 
     // Account for multi-attack. Assumes a new column in the sheet called "MultiAttack".
     // If not present, it defaults to 1.
-    const multiAttack = parseInt(unit.MultiAttack) || 1;
+    const multiAttack = parseFloat(unit.MultiAttack) || 1;
     
     // Calculate DPS, multiplying damage by the multi-attack value
-    const calculatedDPS = (calculatedDamage && calculatedAttackRate) ? ((calculatedDamage * multiAttack) / calculatedAttackRate).toFixed(2) : 'N/A';
+    const calculatedDPS = (calculatedDamage && calculatedCooldown) ? ((calculatedDamage * multiAttack) / calculatedCooldown).toFixed(2) : 'N/A';
 
     return {
         hp: calculatedHP ? calculatedHP.toFixed(0) : 'N/A',
         damage: calculatedDamage ? calculatedDamage.toFixed(2) : 'N/A',
-        attackRate: calculatedAttackRate ? calculatedAttackRate.toFixed(2) : 'N/A',
+        cooldown: calculatedCooldown ? calculatedCooldown.toFixed(2) : 'N/A',
         dps: calculatedDPS
     };
 };
@@ -156,7 +167,7 @@ const renderUnits = (units) => {
         const unitImage = unitImages[unit.Label] || 'https://placehold.co/60x60/1f2937/d1d5db?text=No+Img';
         const level = maxLevelGlobalEnabled ? defaultMaxLevel : 1;
 
-        const { hp, damage, attackRate, dps } = calculateStats(unit, level);
+        const { hp, damage, cooldown, dps } = calculateStats(unit, level);
         
         row.innerHTML = `
             <td class="py-2 px-4 text-center">
@@ -167,9 +178,9 @@ const renderUnits = (units) => {
             <td class="py-2 px-4 text-center">${unit.Class}</td>
             <td class="py-2 px-4 text-center font-bold">${hp}</td>
             <td class="py-2 px-4 text-center">${damage}</td>
-            <td class="py-2 px-4 text-center">${attackRate}s</td>
+            <td class="py-2 px-4 text-center">${cooldown}s</td>
             <td class="py-2 px-4 text-center hidden md:table-cell">${dps}</td>
-            <td class="py-2 px-4 text-center hidden lg:table-cell">${unit.Range}m</td>
+            <td class="py-2 px-4 text-center hidden lg:table-cell">${unit.Range || 'N/A'}</td>
         `;
         fragment.appendChild(row);
     });
@@ -179,23 +190,27 @@ const renderUnits = (units) => {
 
 // Function to filter and render units
 const filterAndRenderUnits = () => {
-    if (!searchInput || !rarityFilter || !classFilter) {
-        console.warn('Filter elements not found. Skipping filter and render.');
-        return;
+    try {
+        if (!searchInput || !rarityFilter || !classFilter) {
+            console.warn('Filter elements not found. Skipping filter and render.');
+            return;
+        }
+        
+        const searchTerm = searchInput.value.toLowerCase();
+        const selectedRarity = rarityFilter.value;
+        const selectedClass = classFilter.value;
+
+        const filteredUnits = allUnits.filter(unit => {
+            const matchesSearch = !searchTerm || (unit.Label && unit.Label.toLowerCase().includes(searchTerm));
+            const matchesRarity = selectedRarity === 'All' || unit.Rarity === selectedRarity;
+            const matchesClass = selectedClass === 'All' || unit.Class === selectedClass;
+            return matchesSearch && matchesRarity && matchesClass;
+        });
+
+        renderUnits(filteredUnits);
+    } catch (error) {
+        console.error('Error during filterAndRenderUnits:', error);
     }
-    
-    const searchTerm = searchInput.value.toLowerCase();
-    const selectedRarity = rarityFilter.value;
-    const selectedClass = classFilter.value;
-
-    const filteredUnits = allUnits.filter(unit => {
-        const matchesSearch = !searchTerm || unit.Label.toLowerCase().includes(searchTerm);
-        const matchesRarity = selectedRarity === 'All' || unit.Rarity === selectedRarity;
-        const matchesClass = selectedClass === 'All' || unit.Class === selectedClass;
-        return matchesSearch && matchesRarity && matchesClass;
-    });
-
-    renderUnits(filteredUnits);
 };
 
 // Simple debounce function to limit how often a function is called
@@ -220,12 +235,12 @@ const renderMods = (mods) => {
         const row = document.createElement('tr');
         row.className = 'border-b hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors duration-150';
         row.innerHTML = `
-            <td class="py-2 px-4">${mod.Title}</td>
-            <td class="py-2 px-4">${mod.Rarity}</td>
-            <td class="py-2 px-4">${mod.Stat}</td>
+            <td class="py-2 px-4">${mod.Title || 'N/A'}</td>
+            <td class="py-2 px-4">${mod.Rarity || 'N/A'}</td>
+            <td class="py-2 px-4">${mod.Stat || 'N/A'}</td>
             <td class="py-2 px-4">${mod.Amount !== null ? mod.Amount : 'N/A'}</td>
             <td class="py-2 px-4">${mod.Chance !== null ? `${(mod.Chance * 100).toFixed(2)}%` : 'N/A'}</td>
-            <td class="py-2 px-4">${mod.Effect}</td>
+            <td class="py-2 px-4">${mod.Effect || 'N/A'}</td>
         `;
         fragment.appendChild(row);
     });
@@ -260,10 +275,10 @@ const renderTierList = (tierList) => {
         const row = document.createElement('tr');
         row.className = 'bg-white border-b dark:bg-gray-800 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-600';
         row.innerHTML = `
-            <td class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap dark:text-white">${item.UnitName}</td>
-            <td class="py-4 px-6 text-gray-500 dark:text-gray-400">${item.Tier}</td>
-            <td class="py-4 px-6 text-gray-500 dark:text-gray-400">${item.NumericalRank}</td>
-            <td class="py-4 px-6 text-gray-500 dark:text-gray-400">${item.Notes}</td>
+            <td class="py-4 px-6 font-medium text-gray-900 whitespace-nowrap dark:text-white">${item.UnitName || 'N/A'}</td>
+            <td class="py-4 px-6 text-gray-500 dark:text-gray-400">${item.Tier || 'N/A'}</td>
+            <td class="py-4 px-6 text-gray-500 dark:text-gray-400">${item.NumericalRank || 'N/A'}</td>
+            <td class="py-4 px-6 text-gray-500 dark:text-gray-400">${item.Notes || 'N/A'}</td>
         `;
         fragment.appendChild(row);
     });
@@ -273,7 +288,7 @@ const renderTierList = (tierList) => {
 // Function for table sorting
 let sortDirection = {};
 const sortData = (column) => {
-    const isNumber = ['HP', 'Damage', 'AttackRate', 'DPS', 'Range'].includes(column);
+    const isNumber = ['HP', 'Damage', 'Cooldown', 'DPS', 'Range'].includes(column);
     const sortMultiplier = (sortDirection[column] === 'asc') ? 1 : -1;
 
     let dataToSort = allUnits;
@@ -284,6 +299,7 @@ const sortData = (column) => {
             if (maxLevelGlobalEnabled) {
                 const statsA = calculateStats(a, defaultMaxLevel);
                 const statsB = calculateStats(b, defaultMaxLevel);
+                // Use the calculated stat value from the returned object
                 valueA = parseFloat(statsA[column.toLowerCase()] || 0);
                 valueB = parseFloat(statsB[column.toLowerCase()] || 0);
             } else {
@@ -326,6 +342,7 @@ const switchTab = (tabId) => {
     } else if (tabId === 'modsTab' && modsContent && modsTab) {
         modsContent.classList.remove('hidden');
         modsTab.classList.add('active-tab');
+        // No need to render mods again, they are static
     } else if (tabId === 'tierListTab' && tierListContent && tierListTab) {
         tierListContent.classList.remove('hidden');
         tierListTab.classList.add('active-tab');
@@ -334,82 +351,70 @@ const switchTab = (tabId) => {
 
 // Main initialization function
 const init = async () => {
-    // Show spinner while loading
     if (loadingSpinner) {
       loadingSpinner.classList.remove('hidden');
     }
 
-    // Fetch all data
-    const [unitDataCSV, modDataCSV, tierListCSV] = await Promise.all([
-        fetchAndParseCSV(GOOGLE_SHEET_UNIT_DATA_CSV_URL),
-        fetchAndParseCSV(GOOGLE_SHEET_MOD_DATA_CSV_URL),
-        fetchAndParseCSV(GOOGLE_SHEET_TIER_LIST_CSV_URL)
-    ]);
+    try {
+        const [unitDataCSV, modDataCSV, tierListCSV] = await Promise.all([
+            fetchAndParseCSV(GOOGLE_SHEET_UNIT_DATA_CSV_URL),
+            fetchAndParseCSV(GOOGLE_SHEET_MOD_DATA_CSV_URL),
+            fetchAndParseCSV(GOOGLE_SHEET_TIER_LIST_CSV_URL)
+        ]);
 
-    // Process unit data
-    if (unitDataCSV.length > 0) {
-        allUnits = unitDataCSV;
-        console.log('Units loaded from Google Sheet.');
-    } else {
-        console.warn('Could not load units from Google Sheet. Using fallback method if available.');
-        // Optionally, use local raw data here if it exists
+        if (unitDataCSV.length > 0) {
+            allUnits = unitDataCSV;
+            console.log('Units loaded from Google Sheet.');
+        } else {
+            console.warn('Could not load units from Google Sheet. Using fallback method if available.');
+        }
+
+        if (modDataCSV.length > 0) {
+            allMods = modDataCSV.reduce((acc, mod) => {
+                if (mod.Title) {
+                    acc[mod.Title] = mod;
+                }
+                return acc;
+            }, {});
+            console.log('Mods loaded from Google Sheet.');
+        } else {
+            console.warn('Could not load mods from Google Sheet. Using fallback method if available.');
+        }
+
+        if (tierListCSV.length > 0) {
+            tierListData = tierListCSV;
+            console.log('Tier list loaded from Google Sheet.');
+        } else {
+            console.warn('Could not load tier list from Google Sheet.');
+        }
+    } catch (error) {
+        console.error('An error occurred during data fetching:', error);
     }
 
-    // Process mod data
-    if (modDataCSV.length > 0) {
-        allMods = modDataCSV.reduce((acc, mod) => {
-            if (mod.Title) {
-                acc[mod.Title] = mod;
-            }
-            return acc;
-        }, {});
-        console.log('Mods loaded from Google Sheet.');
-    } else {
-        console.warn('Could not load mods from Google Sheet. Using fallback method if available.');
-        // Optionally, use local raw data here
-    }
-
-    // Process tier list data
-    if (tierListCSV.length > 0) {
-        tierListData = tierListCSV;
-        console.log('Tier list loaded from Google Sheet.');
-    } else {
-        console.warn('Could not load tier list from Google Sheet.');
-    }
-
-    // Find and assign DOM elements
-    unitsTab = document.getElementById('units-tab-btn');
-    modsTab = document.getElementById('mods-tab-btn');
-    tierListTab = document.getElementById('tier-list-tab-btn');
-    unitsContent = document.getElementById('units-content');
-    modsContent = document.getElementById('mods-content');
-    tierListContent = document.getElementById('tier-list-content');
-    searchInput = document.getElementById('search-input');
-    rarityFilter = document.getElementById('rarity-filter');
-    classFilter = document.getElementById('class-filter');
-    unitTableBody = document.getElementById('unitTableBody');
-    modsTableBody = document.getElementById('modsTableBody');
-    tableHeaders = document.querySelectorAll('#unitsTable th[data-sort]');
-    tierListTableBody = document.getElementById('tierListTableBody');
-    loadingSpinner = document.getElementById('loadingSpinner');
-    darkModeToggle = document.getElementById('darkModeToggle');
-    toggleModEffects = document.getElementById('toggleModEffects');
-    toggleMaxLevel = document.getElementById('toggleMaxLevel');
-
-    // Hide the spinner once data and DOM are ready
     if (loadingSpinner) {
       loadingSpinner.classList.add('hidden');
     }
 
     // Initial render and setup
-    filterAndRenderUnits();
-    renderMods(allMods);
-    renderTierList(tierListData);
+    if (document.readyState === 'complete') {
+        filterAndRenderUnits();
+        renderMods(allMods);
+        renderTierList(tierListData);
+        switchTab('unitsTab'); // Set default tab
+    } else {
+        window.onload = () => {
+            filterAndRenderUnits();
+            renderMods(allMods);
+            renderTierList(tierListData);
+            switchTab('unitsTab'); // Set default tab
+        };
+    }
+    
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
         document.documentElement.classList.add('dark');
     }
     
-    // Set up event listeners
+    // Event listeners
     if (searchInput) {
         const debouncedFilterAndRenderUnits = debounce(filterAndRenderUnits, 300);
         searchInput.addEventListener('input', debouncedFilterAndRenderUnits);
@@ -444,11 +449,6 @@ const init = async () => {
         filterAndRenderUnits();
       });
     }
-
-    // Set default tab
-    switchTab('unitsTab');
 };
 
-// Initialize the app after the DOM is fully loaded
-document.addEventListener('DOMContentLoaded', init);
-
+init();
