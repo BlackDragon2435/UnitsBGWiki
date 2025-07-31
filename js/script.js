@@ -1,22 +1,20 @@
 // js/script.js
-// Removed local data imports as data will now be fetched from Google Sheets
+// Why are you looking here. There isnt a arg.. yet
 // import { rawUnitData } from './unitsData.js';
 // import { rawModData } from './modsData.js';
-import { unitImages } = './unitImages.js';
+import { unitImages } from './unitImages.js';
 import { gameData } from './gameData.js'; // Import gameData
 
 // IMPORTANT: Base URL for your published Google Sheet
 // This URL should point to your Google Sheet published to web as CSV.
 // The specific sheets are then targeted using '&gid={sheet_id}'
-// Reverting to the confirmed working public URL
-const NEW_GOOGLE_SHEET_BASE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQO78VJA7y_g5zHpzw1gTaJhLV2mjNdRxA33zcj1WPFj-QYxQS09nInTQXg6kXNJcjm4f7Gk7lPVZuV/pub?output=csv';
+const GOOGLE_SHEET_BASE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQO78VJA7y_g5zHpzw1gTaJhLV2mjNdRxA33zcj1WPFj-QYxQS09nInTQXg6kXNJcjm4f7Gk7lPVZuV/pub?output=csv';
 
 // Specific URLs for each sheet using their GIDs
-// Ensure these GIDs correspond to the correct sheets in YOUR published spreadsheet.
-// You can find GIDs by opening each sheet in your browser and looking at the URL.
+const NEW_GOOGLE_SHEET_BASE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQO78VJA7y_g5zHpzw1gTaJhLV2mjNdRxA33zcj1WPFj-QYxQS09nInTQXg6kXNJcjm4f7Gk7lPVZuV/pub?output=csv';
 const GOOGLE_SHEET_UNIT_DATA_CSV_URL = NEW_GOOGLE_SHEET_BASE_URL + '&gid=201310748&single=true'; // Unit Info (Sheet 1)
-const GOOGLE_SHEET_TIER_LIST_CSV_URL = NEW_GOOGLE_SHEET_BASE_URL + '&gid=0&single=true'; // Tier List (Sheet 2)
-const GOOGLE_SHEET_MOD_DATA_CSV_URL = NEW_GOOGLE_SHEET_BASE_URL + '&gid=331730679&single=true'; // Mod List (Sheet 3)
+const GOOGLE_SHEET_TIER_LIST_CSV_URL = NEW_GOOGLE_SHEET_BASE_URL + '&gid=0&single=true'; // Tier List (Sheet 2) - Assuming gid=0 is still Tier List
+const GOOGLE_SHEET_MOD_DATA_CSV_URL = NEW_GOOGLE_SHEET_BASE_URL + '&gid=331730679&single=true'; // Mod List (Sheet 3) - Assuming gid=331730679 is still Mod List
 
 
 let units = []; // Stores parsed unit data
