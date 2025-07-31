@@ -1051,7 +1051,7 @@ function filterAndRenderUnits() {
         const matchesSearch = Object.values(unit).some(value =>
             String(value).toLowerCase().includes(searchTerm)
         );
-        const matchesRarity = selectedRarity === '' || unit.Rarity === selectedRarity;
+        const matchesRarity = selectedRarity === '' || unit.Rarity === selectedRity;
         const matchesClass = selectedClass === '' || unit.Class === selectedClass;
 
         return matchesSearch && matchesRarity && matchesClass;
@@ -1129,13 +1129,18 @@ function initializeDarkMode() {
     const savedTheme = localStorage.getItem('theme');
     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
+    // Prioritize dark mode: If no theme is saved, or if saved theme is 'dark', or if system prefers dark
     if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
         document.documentElement.classList.add('dark');
         document.body.classList.add('dark');
-        document.body.classList.remove('light');
+        document.body.classList.remove('light'); // Ensure light class is removed
         updateDarkModeIcons(true);
     } else {
+        // If savedTheme is 'light' or system prefers light, set to light mode
         document.documentElement.classList.remove('dark');
+        document.body.classList.remove('dark');
+        document.body.classList.add('light'); // Ensure light class is added
+        updateDarkModeIcons(false);
     }
 }
 

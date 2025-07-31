@@ -196,6 +196,41 @@ th {
     background-color: #d1d5db; /* gray-300 */
 }
 
+/* Light mode specific adjustments for better contrast and usability */
+.light #searchInput,
+.light #rarityFilter,
+.light #classFilter,
+.light #levelInput {
+    background-color: #ffffff; /* White background for inputs in light mode */
+    color: #1f2937; /* Dark text for inputs */
+    border-color: #d1d5db; /* Lighter border for inputs */
+}
+
+.light ::placeholder {
+    color: #9ca3af; /* Lighter placeholder text */
+}
+
+.light .unit-details-row {
+    background-color: #f9fafb; /* Lighter background for detail row */
+    border-color: #e5e7eb; /* Lighter border */
+}
+
+.light .unit-details-row .bg-gray-100 {
+    background-color: #f3f4f6; /* Lighter gray for base stats box */
+}
+
+.light .unit-details-row .bg-blue-50 {
+    background-color: #e0f2fe; /* Lighter blue for apply mods box */
+}
+
+.light .unit-details-row h3 {
+    color: #1f2937; /* Darker headings */
+}
+
+.light .unit-details-row ul li {
+    color: #374151; /* Darker list item text */
+}
+
 
 /* Dark Mode Table Styles */
 .dark body {
