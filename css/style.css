@@ -93,8 +93,8 @@ th {
     min-width: 80px;
 }
 #unitTable tbody td:nth-child(5) { /* Community Ranking */
-    width: 120px; /* Increased width to prevent header truncation */
-    min-width: 120px;
+    width: 150px; /* Increased width to prevent header truncation */
+    min-width: 150px;
     text-align: center;
 }
 /* Numerical stats (HP, Damage, Cooldown, DPS) */
@@ -129,7 +129,7 @@ th {
 #unitTable tbody td:nth-child(4) { /* Rarity */
     font-weight: 500; /* font-medium */
     font-size: 1rem; /* text-base */
-    color: #4b5563; /* gray-600 */
+    color: #1f2937; /* Dark text for light mode */
 }
 
 .dark #unitTable tbody td:nth-child(3),
@@ -140,7 +140,7 @@ th {
 /* Styling for other stats columns */
 #unitTable tbody td:nth-child(n+5) { /* All columns from Community Ranking onwards */
     font-size: 1rem; /* text-base */
-    color: #374151; /* gray-800 */
+    color: #1f2937; /* Dark text for light mode */
 }
 
 .dark #unitTable tbody td:nth-child(n+5) {
@@ -163,7 +163,7 @@ th {
     position: sticky;
     top: 0;
     z-index: 10;
-    border-bottom: 1px solid #c9d2da; /* Slightly darker gray-300 for better border visibility */
+    border-bottom: 1px solid #a0a7af; /* Darker gray for better border visibility */
     transition: background-color 0.2s ease-in-out; /* Smooth transition on hover */
 }
 .light th:hover {
@@ -180,7 +180,8 @@ th {
     transition: background-color 0.2s ease-in-out; /* Smooth transition on hover */
 }
 .light td {
-    border-bottom: 1px solid #c9d2da; /* Slightly darker gray-300 for better border visibility */
+    border-bottom: 1px solid #a0a7af; /* Darker gray for better border visibility */
+    color: #1f2937; /* Ensure all table cell text is dark in light mode */
 }
 .light .tab-button {
     background-color: #e5e7eb; /* gray-200 */
@@ -334,6 +335,11 @@ th {
     font-weight: 700; /* font-bold */
     margin-top: 0.75rem;
     margin-bottom: 0.5rem;
+    color: #1f2937; /* Dark text for light mode */
+}
+
+.dark #modCheckboxesContainer h4 {
+    color: #f9fafb; /* Even lighter for headings in dark mode */
 }
 
 /* Make the mod checkboxes container vertically scrollable */
@@ -380,7 +386,7 @@ input[type="text"], input[type="number"], select {
 
 /* Placeholder text color */
 ::placeholder {
-    color: #6b7280; /* gray-500, darker for better contrast in light mode */
+    color: #374151; /* Darker gray for better contrast in light mode */
     opacity: 1; /* Firefox fix */
 }
 
