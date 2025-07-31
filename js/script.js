@@ -2,7 +2,7 @@
 // why you looking here?
 // import { rawUnitData } from './unitsData.js';
 // import { rawModData } from './modsData.js';
-import { unitImages } from './unitImages.js';
+import { unitImages } from './unitImages.js'; // Keep this for potential fallback or if user wants to keep it
 import { gameData } from './gameData.js'; // Import gameData
 
 // IMPORTANT: Base URL for your published Google Sheet
@@ -151,6 +151,7 @@ function parseGoogleSheetCSV(csvText) {
     // Find the actual header row by looking for known column names
     for (let i = 0; i < lines.length; i++) {
         const line = lines[i].trim();
+        // Check for headers specific to each sheet type
         if (line.includes('UnitName') && line.includes('Tier') && line.includes('NumericalRank')) {
             // This is likely the Tier List header
             headers = line.split(',').map(header => header.trim());
@@ -229,6 +230,8 @@ function parseGoogleSheetCSV(csvText) {
                 case 'Chance': // For Mod data
                 case 'NumericalRank': // For Tier List data
                 case 'DPS': // Added DPS for numerical parsing
+                case 'Money': // Added Money for numerical parsing
+                case 'XP': // Added XP for numerical parsing
                     // Attempt to parse as float for numerical stats
                     rowObject[header] = parseFloat(value);
                     if (isNaN(rowObject[header])) { // If it's not a valid number, keep as original string
@@ -579,7 +582,8 @@ function renderUnitTable(dataToRender) {
         const imgCell = row.insertCell();
         imgCell.classList.add('py-2', 'px-4');
         const img = document.createElement('img');
-        img.src = unitImages[unitToDisplay.Label] || 'https://placehold.co/60x60/cccccc/333333?text=N/A'; // Placeholder if no image
+        // Prefer ImageURL from Google Sheet, fallback to unitImages.js, then generic placeholder
+        img.src = unitToDisplay.ImageURL || unitImages[unitToDisplay.Label] || 'https://placehold.co/60x60/cccccc/333333?text=N/A';
         img.alt = unitToDisplay.Label;
         img.classList.add('w-12', 'h-12', 'rounded-full', 'object-cover', 'shadow-sm');
         imgCell.appendChild(img);
@@ -1063,7 +1067,7 @@ function filterAndRenderUnits() {
         const matchesSearch = Object.values(unit).some(value =>
             String(value).toLowerCase().includes(searchTerm)
         );
-        const matchesRarity = selectedRarity === '' || unit.Rarity === selectedRity;
+        const matchesRarity = selectedRarity === '' || unit.Rarity === selectedRarity;
         const matchesClass = selectedClass === '' || unit.Class === selectedClass;
 
         return matchesSearch && matchesRarity && matchesClass;
