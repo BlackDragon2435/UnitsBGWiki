@@ -57,7 +57,7 @@ const rarityOrder = ["Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythic"
 
 // Define the order of columns for unit table display (simplified for main view)
 const unitColumnOrder = [
-    'Image', 'Label', 'Class', 'Rarity', 'CommunityRanking', 'HP', 'Damage', 'Cooldown'
+    'Image', 'Label', 'Class', 'Rarity', 'CommunityRanking', 'HP', 'Damage', 'Cooldown', 'DPS' // Added DPS
 ];
 
 // Define ALL possible unit stats for the detailed dropdown view
@@ -228,6 +228,7 @@ function parseGoogleSheetCSV(csvText) {
                 case 'Amount': // For Mod data
                 case 'Chance': // For Mod data
                 case 'NumericalRank': // For Tier List data
+                case 'DPS': // Added DPS for numerical parsing
                     // Attempt to parse as float for numerical stats
                     rowObject[header] = parseFloat(value);
                     if (isNaN(rowObject[header])) { // If it's not a valid number, keep as original string
@@ -571,8 +572,8 @@ function renderUnitTable(dataToRender) {
                 displayValue = tierInfo ? tierInfo.Tier : 'N/A'; // Corrected key to 'TIER'
                 cell.classList.add('font-semibold', 'text-center'); // Center align tier
             }
-            // Custom formatting for specific keys (only HP, Damage, Cooldown remain here)
-            else if (key === 'Cooldown' || key === 'HP' || key === 'Damage') {
+            // Custom formatting for specific keys (only HP, Damage, Cooldown, DPS remain here)
+            else if (['Cooldown', 'HP', 'Damage', 'DPS'].includes(key)) { // Added DPS here
                 displayValue = typeof displayValue === 'number' ? displayValue.toFixed(2) : displayValue;
             }
 
@@ -739,7 +740,7 @@ function toggleUnitDetails(unit, clickedRow, index) {
         const li = document.createElement('li');
         let displayValue = unit[key];
         // Apply specific formatting for percentages and numbers
-        if (['Cooldown', 'HP', 'Damage', 'Distance', 'CritChance', 'CritDamage', 'AttackEffectLifesteal', 'Knockback', 'Accuracy', 'EvadeChance'].includes(key)) {
+        if (['Cooldown', 'HP', 'Damage', 'Distance', 'CritChance', 'CritDamage', 'AttackEffectLifesteal', 'Knockback', 'Accuracy', 'EvadeChance', 'DPS'].includes(key)) { // Added DPS here
             displayValue = typeof displayValue === 'number' ? displayValue.toFixed(2) : displayValue;
         }
         // Special formatting for percentage values
@@ -905,7 +906,7 @@ function updateAppliedStats(baseUnit, selectedMods, listElement, showMaxStats, s
         const li = document.createElement('li');
         let displayValue = unitToDisplay[key];
         // Apply specific formatting for percentages and numbers
-        if (['Cooldown', 'HP', 'Damage', 'Distance', 'CritChance', 'CritDamage', 'AttackEffectLifesteal', 'Knockback', 'Accuracy', 'EvadeChance'].includes(key)) {
+        if (['Cooldown', 'HP', 'Damage', 'Distance', 'CritChance', 'CritDamage', 'AttackEffectLifesteal', 'Knockback', 'Accuracy', 'EvadeChance', 'DPS'].includes(key)) { // Added DPS here
             displayValue = typeof displayValue === 'number' ? displayValue.toFixed(2) : displayValue;
         }
         // Special formatting for percentage values

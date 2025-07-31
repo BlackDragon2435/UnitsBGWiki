@@ -6,6 +6,12 @@ body {
     line-height: 1.6; /* Improved line height for readability */
 }
 
+/* New class for centering main page titles */
+.main-page-title {
+    text-align: center;
+    width: 100%; /* Ensure it takes full width to center effectively */
+}
+
 /* Table styles */
 table {
     width: 100%;
