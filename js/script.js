@@ -3,7 +3,7 @@
 // import { rawUnitData } from './unitsData.js';
 // import { rawModData } from './modsData.js';
 import { unitImages } from './unitImages.js';
-import { gameData } = require('./gameData.js'); // Import gameData
+import { gameData } from './gameData.js'; // Import gameData
 
 // IMPORTANT: Base URL for your published Google Sheet
 // This URL should point to your Google Sheet published to web as CSV.
