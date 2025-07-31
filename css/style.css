@@ -90,9 +90,11 @@ th {
     padding: 0.5rem;
 }
 #unitTable tbody td:nth-child(2) { /* Label - allow text wrapping */
-    width: 250px; /* Increased width to give more room for wrapping */
-    min-width: 220px; /* Ensure a minimum width for wrapping */
+    width: 350px; /* Increased width significantly for better wrapping */
+    min-width: 320px; /* Ensure a minimum width for wrapping */
     white-space: normal; /* Allow text to wrap */
+    word-break: break-word; /* Ensure long words break if necessary */
+    padding-right: 1rem; /* Added more right padding for extra space */
 }
 #unitTable tbody td:nth-child(3), /* Class */
 #unitTable tbody td:nth-child(4) { /* Rarity */
