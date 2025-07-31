@@ -195,6 +195,11 @@ th {
     background-color: #d1d5db; /* gray-300 */
 }
 
+/* Ensure all headings are dark in light mode */
+.light h1, .light h2, .light h3, .light h4, .light h5, .light h6 {
+    color: #1f2937; /* Dark text for headings in light mode */
+}
+
 
 /* Dark Mode Table Styles */
 .dark body {
@@ -376,6 +381,11 @@ input[type="text"], input[type="number"], select {
     border: 1px solid #6b7280; /* gray-500, darker for better visibility in light mode */
     color: #1f2937; /* Dark text for inputs in light mode */
     background-color: #ffffff; /* White background for inputs in light mode */
+}
+
+.light select option {
+    color: #1f2937; /* Dark text for options in light mode */
+    background-color: #ffffff; /* White background for options in light mode */
 }
 
 .dark input[type="text"], .dark input[type="number"], .dark select {
