@@ -760,8 +760,7 @@ function toggleUnitDetails(unit, clickedRow, index) {
     const detailImage = document.createElement('img');
     detailImage.src = unit.ImageURL || unitImages[unit.Label] || `https://placehold.co/100x100/cccccc/333333?text=${unit.Label.substring(0,2)}`; // Larger, dynamic placeholder
     detailImage.alt = unit.Label;
-    // Added 'unit-detail-image' class for specific CSS targeting
-    detailImage.classList.add('unit-detail-image', 'w-24', 'h-24', 'md:w-32', 'md:h-32', 'rounded-full', 'object-cover', 'shadow-md', 'mb-4', 'mx-auto'); // Larger, centered
+    detailImage.classList.add('w-24', 'h-24', 'md:w-32', 'md:h-32', 'rounded-full', 'object-cover', 'shadow-md', 'mb-4', 'mx-auto'); // Larger, centered
     baseStatsDiv.appendChild(detailImage);
 
     const baseStatsHeader = document.createElement('h3');
@@ -1281,4 +1280,3 @@ window.onload = async function() { // Made onload async
         filterAndRenderUnits();
     });
 };
-
