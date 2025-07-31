@@ -57,13 +57,13 @@ const rarityOrder = ["Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythic"
 
 // Define the order of columns for unit table display (simplified for main view)
 const unitColumnOrder = [
-    'Image', 'Label', 'Class', 'Rarity', 'CommunityRanking', 'HP', 'Damage', 'Cooldown'
+    'Image', 'Label', 'Class', 'Rarity', 'CommunityRanking', 'HP', 'Damage', 'Cooldown', 'DPS' // Added DPS
 ];
 
 // Define ALL possible unit stats for the detailed dropdown view
 const allUnitStatsForDropdown = [
-    'Label', 'Class', 'Rarity', 'HP', 'Damage', 'Cooldown', 'Distance',
-    'CritChance', 'CritDamage', 'AttackEffect', 'AttackEffectType',
+    'Label', 'Class', 'Rarity', 'HP', 'Damage', 'Cooldown', 'DPS', // Added DPS
+    'Distance', 'CritChance', 'CritDamage', 'AttackEffect', 'AttackEffectType',
     'AttackEffectLifesteal', 'AttackEffectKey', 'Knockback', 'Accuracy',
     'EvadeChance', 'HPOffset', 'ShadowStepDistance', 'ShadowStepCooldown'
 ];
@@ -185,6 +185,7 @@ function parseGoogleSheetCSV(csvText) {
                 case 'Amount': // For Mod data
                 case 'Chance': // For Mod data
                 case 'NumericalRank': // For Tier List data
+                case 'DPS': // NEW: Parse DPS as a number
                     // Attempt to parse as float for numerical stats
                     rowObject[header] = parseFloat(value);
                     if (isNaN(rowObject[header])) { // If it's not a valid number, keep as original string
@@ -405,6 +406,35 @@ function applyModsToUnit(baseUnit, modsToApply) {
 }
 
 /**
+ * Calculates the DPS for a unit based on its current stats.
+ * Formula: Damage / Cooldown * (1 + CritChance * (CritDamage - 1))
+ * Rounds the result to the nearest whole number.
+ * @param {Object} unit - The unit object with HP, Damage, Cooldown, CritChance, CritDamage.
+ * @returns {number|string} The calculated DPS rounded to the nearest whole number, or 'N/A' if inputs are invalid.
+ */
+function calculateDPS(unit) {
+    const damage = typeof unit.Damage === 'number' ? unit.Damage : 0;
+    // Ensure cooldown is a number and greater than 0 to avoid division by zero
+    const cooldown = typeof unit.Cooldown === 'number' && unit.Cooldown > 0 ? unit.Cooldown : Infinity;
+    const critChance = typeof unit.CritChance === 'number' ? unit.CritChance : 0;
+    const critDamage = typeof unit.CritDamage === 'number' ? unit.CritDamage : 0; // Assuming this is the multiplier (e.g., 2 for 200%)
+
+    if (cooldown === Infinity || damage === 0) {
+        return 'N/A';
+    }
+
+    // Basic DPS calculation: Damage per hit / Cooldown between hits
+    let dps = damage / cooldown;
+
+    // Factor in critical hits: (1 + CritChance * CritDamageBonus)
+    // If CritDamage is N/A, assume 1 (no bonus). CritDamageBonus is (CritDamage - 1).
+    const effectiveCritDamage = critDamage === 'N/A' ? 1 : critDamage;
+    dps = dps * (1 + critChance * (effectiveCritDamage - 1));
+
+    return Math.round(dps); // Round to the nearest whole number
+}
+
+/**
  * Calculates a unit's stats at a specific level, applying class/rarity modifiers and then mods.
  * @param {Object} baseUnit - The original unit object (level 1 stats).
  * @param {number} level - The target level for the unit.
@@ -443,6 +473,9 @@ function getUnitStatsAtLevel(baseUnit, level, selectedMods) {
 
     // Apply selected mods on top of the class/rarity modified stats
     calculatedUnit = applyModsToUnit(calculatedUnit, selectedMods);
+
+    // Calculate DPS after all other stats are modified
+    calculatedUnit.DPS = calculateDPS(calculatedUnit); // NEW: Calculate DPS here
 
     return calculatedUnit;
 }
@@ -495,11 +528,14 @@ function renderUnitTable(dataToRender) {
         const levelForDisplay = maxLevelGlobalEnabled ? 25 : 1;
 
         // Calculate unit stats at the determined level (level 1 or max level)
+        // DPS will be calculated within getUnitStatsAtLevel
         let unitToDisplay = getUnitStatsAtLevel(unit, levelForDisplay, []); // No mods applied yet for this base calculation
 
         // Apply global mod effects if enabled, on top of the leveled stats
         if (modEffectsEnabled) {
             unitToDisplay = applyModsToUnit(unitToDisplay, mods);
+            // Recalculate DPS after global mods are applied
+            unitToDisplay.DPS = calculateDPS(unitToDisplay);
         }
 
         const row = unitTableBody.insertRow();
@@ -528,9 +564,11 @@ function renderUnitTable(dataToRender) {
                 displayValue = tierInfo ? tierInfo.Tier : 'N/A'; // Corrected key to 'TIER'
                 cell.classList.add('font-semibold', 'text-center'); // Center align tier
             }
-            // Custom formatting for specific keys (only HP, Damage, Cooldown remain here)
+            // Custom formatting for specific keys (HP, Damage, Cooldown, DPS)
             else if (key === 'Cooldown' || key === 'HP' || key === 'Damage') {
                 displayValue = typeof displayValue === 'number' ? displayValue.toFixed(2) : displayValue;
+            } else if (key === 'DPS') { // NEW: Specific formatting for DPS
+                displayValue = typeof displayValue === 'number' ? Math.round(displayValue) : displayValue; // Ensure it's rounded
             }
 
             // Apply specific styling for the 'Label' column
@@ -703,6 +741,10 @@ function toggleUnitDetails(unit, clickedRow, index) {
         if (['CritChance', 'EvadeChance', 'Accuracy'].includes(key) && typeof displayValue === 'number') {
             displayValue = (displayValue * 100).toFixed(2) + '%';
         }
+        // NEW: Specific formatting for DPS in base stats
+        if (key === 'DPS') {
+            displayValue = typeof displayValue === 'number' ? Math.round(displayValue) : displayValue;
+        }
         li.textContent = `${key}: ${displayValue !== undefined ? displayValue : 'N/A'}`;
         baseStatsList.appendChild(li);
     });
@@ -849,37 +891,45 @@ function updateAppliedStats(baseUnit, selectedMods, listElement, showMaxStats, s
     listElement.innerHTML = ''; // Clear previous stats
     activeModEffectsListElement.innerHTML = ''; // Clear previous mod effects
 
-    let unitToDisplay = { ...baseUnit };
-
-    // Determine the level for calculation
     const levelForCalculation = showMaxLevel ? 25 : currentLevel;
 
-    // Calculate stats at the determined level, then apply mods
-    unitToDisplay = getUnitStatsAtLevel(baseUnit, levelForCalculation, selectedMods);
+    // Unit stats WITH selected mods, at the determined level
+    let unitWithMods = getUnitStatsAtLevel(baseUnit, levelForCalculation, selectedMods);
 
-    // Render allUnitStatsForDropdown in the dropdown's "Stats with Mods" section
+    // Unit stats WITHOUT mods, but at the SAME determined level
+    let unitWithoutMods = getUnitStatsAtLevel(baseUnit, levelForCalculation, []); // Pass empty array for mods
+
     allUnitStatsForDropdown.forEach(key => {
         const li = document.createElement('li');
-        let displayValue = unitToDisplay[key];
+        let displayValue = unitWithMods[key]; // This is the value to display
+
         // Apply specific formatting for percentages and numbers
         if (['Cooldown', 'HP', 'Damage', 'Distance', 'CritChance', 'CritDamage', 'AttackEffectLifesteal', 'Knockback', 'Accuracy', 'EvadeChance'].includes(key)) {
             displayValue = typeof displayValue === 'number' ? displayValue.toFixed(2) : displayValue;
         }
-        // Special formatting for percentage values
         if (['CritChance', 'EvadeChance', 'Accuracy'].includes(key) && typeof displayValue === 'number') {
             displayValue = (displayValue * 100).toFixed(2) + '%';
         }
+        // NEW: Specific formatting for DPS
+        if (key === 'DPS') {
+            displayValue = typeof displayValue === 'number' ? Math.round(displayValue) : displayValue;
+        }
+
         li.textContent = `${key}: ${displayValue !== undefined ? displayValue : 'N/A'}`;
 
-        // Highlight changes from base stats (considering the level calculation)
-        const baseValueAtLevel1 = baseUnit[key]; // Compare against base level 1 stats
-        const currentDisplayedValue = unitToDisplay[key];
+        // Highlight changes due to mods: Compare unitWithMods vs unitWithoutMods
+        const valueWithMods = unitWithMods[key];
+        const valueWithoutMods = unitWithoutMods[key];
 
-        // Only highlight if the base value at level 1 is a number and different from current
-        if (typeof baseValueAtLevel1 === 'number' && typeof currentDisplayedValue === 'number' && baseValueAtLevel1 !== currentDisplayedValue) {
-            li.classList.add('font-bold', 'text-blue-600', 'dark:text-blue-300');
-        } else if (typeof baseValueAtLevel1 === 'string' && typeof currentDisplayedValue === 'string' && baseValueAtLevel1 !== currentDisplayedValue) {
-            // For string changes (like AttackEffect becoming 'Fire, Frost')
+        if (typeof valueWithMods === 'number' && typeof valueWithoutMods === 'number') {
+            // For numbers, compare after rounding for DPS, or directly for others
+            if (key === 'DPS' && Math.round(valueWithMods) !== Math.round(valueWithoutMods)) {
+                li.classList.add('font-bold', 'text-blue-600', 'dark:text-blue-300');
+            } else if (key !== 'DPS' && valueWithMods !== valueWithoutMods) {
+                li.classList.add('font-bold', 'text-blue-600', 'dark:text-blue-300');
+            }
+        } else if (typeof valueWithMods === 'string' && typeof valueWithoutMods === 'string' && valueWithMods !== valueWithoutMods) {
+            // For strings (like AttackEffect)
             li.classList.add('font-bold', 'text-blue-600', 'dark:text-blue-300');
         }
         listElement.appendChild(li);
@@ -965,8 +1015,14 @@ function sortData(column) {
         if (valA === 'N/A') return currentSortDirection === 'asc' ? 1 : -1;
         if (valB === 'N/A') return currentSortDirection === 'asc' ? -1 : 1;
 
-        // Numeric comparison
+        // Numeric comparison (including DPS)
         if (typeof valA === 'number' && typeof valB === 'number') {
+            // Special handling for DPS rounding during sort comparison
+            if (column === 'DPS') {
+                const roundedValA = Math.round(valA);
+                const roundedValB = Math.round(valB);
+                return currentSortDirection === 'asc' ? roundedValA - roundedValB : roundedValB - roundedValA;
+            }
             return currentSortDirection === 'asc' ? valA - valB : valB - valA;
         }
         // String comparison

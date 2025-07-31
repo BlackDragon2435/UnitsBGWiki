@@ -38,8 +38,8 @@ th {
 }
 
 /* Hide all other columns by default */
-#unitTable th:nth-child(n+3), /* Class, Rarity, Community Ranking, HP, Damage, Cooldown */
-#unitTable td:nth-child(n+3) { /* Class, Rarity, Community Ranking, HP, Damage, Cooldown */
+#unitTable th:nth-child(n+3), /* Class, Rarity, Community Ranking, HP, Damage, Cooldown, DPS */
+#unitTable td:nth-child(n+3) { /* Class, Rarity, Community Ranking, HP, Damage, Cooldown, DPS */
     display: none;
 }
 
@@ -61,14 +61,16 @@ th {
     }
 }
 
-/* Large screens (lg): Show HP, Damage, Cooldown */
+/* Large screens (lg): Show HP, Damage, Cooldown, DPS */
 @media (min-width: 1024px) {
     #unitTable th:nth-child(6), /* HP */
     #unitTable td:nth-child(6), /* HP */
     #unitTable th:nth-child(7), /* Damage */
     #unitTable td:nth-child(7), /* Damage */
     #unitTable th:nth-child(8), /* Cooldown */
-    #unitTable td:nth-child(8) { /* Cooldown */
+    #unitTable td:nth-child(8), /* Cooldown */
+    #unitTable th:nth-child(9), /* DPS - NEW */
+    #unitTable td:nth-child(9) { /* DPS - NEW */
         display: table-cell;
     }
 }
@@ -95,8 +97,8 @@ th {
     min-width: 120px;
     text-align: center;
 }
-/* Numerical stats (HP, Damage, Cooldown) */
-#unitTable tbody td:nth-child(n+6):nth-child(-n+8) { /* HP to Cooldown */
+/* Numerical stats (HP, Damage, Cooldown, DPS) */
+#unitTable tbody td:nth-child(n+6):nth-child(-n+9) { /* HP to DPS - UPDATED */
     width: 80px; /* Increased width to prevent header truncation */
     min-width: 80px;
     text-align: center;
@@ -374,7 +376,7 @@ input[type="text"], input[type="number"], select {
     opacity: 1; /* Firefox fix */
 }
 
-.dark::placeholder {
+.dark ::placeholder {
     color: #6b7280; /* gray-500 */
 }
 

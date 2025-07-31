@@ -27,69 +27,79 @@ th {
     white-space: nowrap;
 }
 
-/* Columns that should NOT wrap (Image, Label, Class, Rarity, all numerical stats) */
-#unitTable tbody td:nth-child(1), /* Image */
-#unitTable tbody td:nth-child(2), /* Label */
-#unitTable tbody td:nth-child(3), /* Class */
-#unitTable tbody td:nth-child(4), /* Rarity */
-#unitTable tbody td:nth-child(5), /* HP */
-#unitTable tbody td:nth-child(6), /* Damage */
-#unitTable tbody td:nth-child(7), /* Cooldown */
-#unitTable tbody td:nth-child(8), /* Distance */
-#unitTable tbody td:nth-child(9), /* CritChance */
-#unitTable tbody td:nth-child(10), /* CritDamage */
-#unitTable tbody td:nth-child(15), /* Knockback */
-#unitTable tbody td:nth-child(16), /* Accuracy */
-#unitTable tbody td:nth-child(17), /* EvadeChance */
-#unitTable tbody td:nth-child(18), /* HPOffset */
-#unitTable tbody td:nth-child(19), /* ShadowStepDistance */
-#unitTable tbody td:nth-child(20) { /* ShadowStepCooldown */
-    white-space: nowrap;
+/* --- Responsive Table Column Hiding --- */
+
+/* Default (mobile-first): Only Image and Label are visible */
+#unitTable th:nth-child(1), /* Image */
+#unitTable td:nth-child(1), /* Image */
+#unitTable th:nth-child(2), /* Label */
+#unitTable td:nth-child(2) { /* Label */
+    display: table-cell; /* Ensure these are always visible */
 }
 
-/* Columns that CAN wrap (AttackEffect, AttackEffectType, AttackEffectLifesteal, AttackEffectKey) */
-#unitTable tbody td:nth-child(11), /* AttackEffect */
-#unitTable tbody td:nth-child(12), /* AttackEffectType */
-#unitTable tbody td:nth-child(13), /* AttackEffectLifesteal */
-#unitTable tbody td:nth-child(14) { /* AttackEffectKey */
-    white-space: normal; /* Allow text to wrap */
-    word-break: break-word; /* Break long words if necessary */
+/* Hide all other columns by default */
+#unitTable th:nth-child(n+3), /* Class, Rarity, Community Ranking, HP, Damage, Cooldown */
+#unitTable td:nth-child(n+3) { /* Class, Rarity, Community Ranking, HP, Damage, Cooldown */
+    display: none;
 }
 
-/* Adjust widths for specific columns to make them fit better */
+/* Small screens (sm): Show Class and Rarity */
+@media (min-width: 640px) {
+    #unitTable th:nth-child(3), /* Class */
+    #unitTable td:nth-child(3), /* Class */
+    #unitTable th:nth-child(4), /* Rarity */
+    #unitTable td:nth-child(4) { /* Rarity */
+        display: table-cell;
+    }
+}
+
+/* Medium screens (md): Show Community Ranking */
+@media (min-width: 768px) {
+    #unitTable th:nth-child(5), /* Community Ranking */
+    #unitTable td:nth-child(5) { /* Community Ranking */
+        display: table-cell;
+    }
+}
+
+/* Large screens (lg): Show HP, Damage, Cooldown */
+@media (min-width: 1024px) {
+    #unitTable th:nth-child(6), /* HP */
+    #unitTable td:nth-child(6), /* HP */
+    #unitTable th:nth-child(7), /* Damage */
+    #unitTable td:nth-child(7), /* Damage */
+    #unitTable th:nth-child(8), /* Cooldown */
+    #unitTable td:nth-child(8) { /* Cooldown */
+        display: table-cell;
+    }
+}
+
+/* --- Column Widths (Adjusted for visible columns) --- */
+/* These widths will apply when the columns are visible */
 #unitTable tbody td:nth-child(1) { /* Image */
     width: 60px;
     min-width: 60px;
     padding: 0.5rem;
 }
-#unitTable tbody td:nth-child(2) { /* Label */
-    width: 120px;
-    min-width: 120px;
+#unitTable tbody td:nth-child(2) { /* Label - allow text wrapping */
+    width: 200px; /* Increased width to give more room for wrapping */
+    min-width: 180px; /* Ensure a minimum width for wrapping */
+    white-space: normal; /* Allow text to wrap */
 }
 #unitTable tbody td:nth-child(3), /* Class */
 #unitTable tbody td:nth-child(4) { /* Rarity */
     width: 80px;
     min-width: 80px;
 }
-/* Numerical stats - give them a smaller, consistent width */
-#unitTable tbody td:nth-child(n+5):nth-child(-n+10), /* HP to CritDamage */
-#unitTable tbody td:nth-child(15), /* Knockback */
-#unitTable tbody td:nth-child(16), /* Accuracy */
-#unitTable tbody td:nth-child(17), /* EvadeChance */
-#unitTable tbody td:nth-child(18), /* HPOffset */
-#unitTable tbody td:nth-child(19), /* ShadowStepDistance */
-#unitTable tbody td:nth-child(20) { /* ShadowStepCooldown */
-    width: 65px; /* Adjust as needed */
-    min-width: 65px;
+#unitTable tbody td:nth-child(5) { /* Community Ranking */
+    width: 120px; /* Increased width to prevent header truncation */
+    min-width: 120px;
     text-align: center;
 }
-/* Effect columns - give them a bit more space, but allow wrapping */
-#unitTable tbody td:nth-child(11), /* AttackEffect */
-#unitTable tbody td:nth-child(12), /* AttackEffectType */
-#unitTable tbody td:nth-child(13), /* AttackEffectLifesteal */
-#unitTable tbody td:nth-child(14) { /* AttackEffectKey */
-    width: 100px; /* Example width */
-    min-width: 100px;
+/* Numerical stats (HP, Damage, Cooldown) */
+#unitTable tbody td:nth-child(n+6):nth-child(-n+8) { /* HP to Cooldown */
+    width: 80px; /* Increased width to prevent header truncation */
+    min-width: 80px;
+    text-align: center;
 }
 
 
@@ -102,14 +112,14 @@ th {
 
 /* Rarity-specific background and text colors for Unit Labels */
 /* These classes are applied directly to the <td> element for the Label */
-.rarity-Common { background-color: #c0c0c0; color: #1f2937; } /* Silver/Light Gray, Dark text */
-.rarity-Uncommon { background-color: #90ee90; color: #1f2937; } /* Light Green, Dark text */
-.rarity-Rare { background-color: #add8e6; color: #1f2937; } /* Light Blue, Dark text */
-.rarity-Epic { background-color: #dda0dd; color: #1f2937; } /* Plum/Light Purple, Dark text */
-.rarity-Legendary { background-color: #ffd700; color: #1f2937; } /* Gold, Dark text */
-.rarity-Mythic { background-color: #ff6347; color: #1f2937; } /* Tomato/Orange-Red, Dark text */
-.rarity-Demonic { background-color: #8b0000; color: #ffffff; } /* Dark Red, White text */
-.rarity-Ancient { background-color: #4682b4; color: #ffffff; } /* Steel Blue, White text */
+.rarity-Common { background-color: #e0e0e0; color: #1f2937; } /* Lighter Silver/Light Gray, Dark text */
+.rarity-Uncommon { background-color: #a7f3d0; color: #1f2937; } /* Lighter Light Green, Dark text */
+.rarity-Rare { background-color: #bfdbfe; color: #1f2937; } /* Lighter Light Blue, Dark text */
+.rarity-Epic { background-color: #e9d5ff; color: #1f2937; } /* Lighter Plum/Light Purple, Dark text */
+.rarity-Legendary { background-color: #fcd34d; color: #1f2937; } /* Lighter Gold, Dark text */
+.rarity-Mythic { background-color: #fca5a5; color: #1f2937; } /* Lighter Tomato/Orange-Red, Dark text */
+.rarity-Demonic { background-color: #ef4444; color: #ffffff; } /* Brighter Red, White text */
+.rarity-Ancient { background-color: #60a5fa; color: #ffffff; } /* Brighter Steel Blue, White text */
 
 
 /* Styling for Class and Rarity columns */
@@ -126,7 +136,7 @@ th {
 }
 
 /* Styling for other stats columns */
-#unitTable tbody td:nth-child(n+5) { /* All columns from HP onwards */
+#unitTable tbody td:nth-child(n+5) { /* All columns from Community Ranking onwards */
     font-size: 1rem; /* text-base */
     color: #374151; /* gray-800 */
 }
@@ -244,14 +254,14 @@ th {
 
 /* Rarity colors for backgrounds - these are used by the rarity-X classes on the <td> */
 /* These are the same as before, but now applied to the cell background */
-.rarity-Common { background-color: #c0c0c0; } /* Silver/Light Gray */
-.rarity-Uncommon { background-color: #90ee90; } /* Light Green */
-.rarity-Rare { background-color: #add8e6; } /* Light Blue */
-.rarity-Epic { background-color: #dda0dd; } /* Plum/Light Purple */
-.rarity-Legendary { background-color: #ffd700; } /* Gold */
-.rarity-Mythic { background-color: #ff6347; } /* Tomato/Orange-Red */
-.rarity-Demonic { background-color: #8b0000; } /* Dark Red */
-.rarity-Ancient { background-color: #4682b4; } /* Steel Blue */
+.rarity-Common { background-color: #e0e0e0; } /* Lighter Silver/Light Gray */
+.rarity-Uncommon { background-color: #a7f3d0; } /* Lighter Light Green */
+.rarity-Rare { background-color: #bfdbfe; } /* Lighter Light Blue */
+.rarity-Epic { background-color: #e9d5ff; } /* Lighter Plum/Light Purple */
+.rarity-Legendary { background-color: #fcd34d; } /* Lighter Gold */
+.rarity-Mythic { background-color: #fca5a5; } /* Lighter Tomato/Orange-Red */
+.rarity-Demonic { background-color: #ef4444; } /* Brighter Red */
+.rarity-Ancient { background-color: #60a5fa; } /* Brighter Steel Blue */
 
 /* Ensure text color is readable on rarity backgrounds - these are the text colors */
 /* These are now applied directly to the td.rarity-X classes */
@@ -302,17 +312,17 @@ th {
 }
 
 /* Style for mod checkboxes and max stats checkbox in detailed view */
-#modCheckboxesContainer label, #toggleMaxStats + label, #toggleMaxLevelUnit + label {
+#modCheckboxesContainer label, #toggleMaxLevelUnit + label { /* Removed #toggleMaxStats + label */
     margin-right: 1rem;
     font-size: 0.95rem; /* text-base for labels */
     color: #374151; /* Default text color for labels */
 }
 
-.dark #modCheckboxesContainer label, .dark #toggleMaxStats + label, .dark #toggleMaxLevelUnit + label {
+.dark #modCheckboxesContainer label, .dark #toggleMaxLevelUnit + label { /* Removed .dark #toggleMaxStats + label */
     color: #e5e7eb; /* Light text color for labels in dark mode */
 }
 
-#modCheckboxesContainer input[type="checkbox"], #toggleMaxStats, #toggleMaxLevelUnit {
+#modCheckboxesContainer input[type="checkbox"], #toggleMaxLevelUnit { /* Removed #toggleMaxStats */
     cursor: pointer;
 }
 
@@ -354,14 +364,49 @@ th {
 /* Input and Select elements styling */
 input[type="text"], input[type="number"], select {
     font-size: 0.95rem; /* Consistent font size for inputs */
+    /* Ensure borders are clearly visible in light mode */
+    border-color: #9ca3af; /* gray-400, slightly darker for better visibility */
 }
 
 /* Placeholder text color */
 ::placeholder {
-    color: #9ca3af; /* gray-400 */
+    color: #6b7280; /* gray-500, darker for better contrast */
     opacity: 1; /* Firefox fix */
 }
 
 .dark::placeholder {
     color: #6b7280; /* gray-500 */
+}
+
+/* New styles for the header image */
+.header-image {
+    width: 80px; /* Adjust size as needed */
+    height: 80px; /* Keep aspect ratio */
+    object-fit: cover; /* Cover the area, crop if necessary */
+    border: 2px solid #3b82f6; /* Blue border */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+.dark .header-image {
+    border-color: #60a5fa; /* Lighter blue border in dark mode */
+}
+
+/* Adjust header layout for better alignment */
+header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+    gap: 1rem; /* Space between items */
+}
+
+header h1 {
+    margin-bottom: 0; /* Remove default margin */
+}
+
+/* Adjust navigation tabs for better spacing */
+nav ul {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem; /* Space between tabs */
 }
