@@ -3,7 +3,7 @@
 // import { rawUnitData } from './unitsData.js';
 // import { rawModData } from './modsData.js';
 import { unitImages } from './unitImages.js';
-import { gameData } from './gameData.js'; // Import gameData
+import { gameData } = require('./gameData.js'); // Import gameData
 
 // IMPORTANT: Base URL for your published Google Sheet
 // This URL should point to your Google Sheet published to web as CSV.
@@ -185,7 +185,7 @@ function parseGoogleSheetCSV(csvText) {
                 case 'Amount': // For Mod data
                 case 'Chance': // For Mod data
                 case 'NumericalRank': // For Tier List data
-                case 'DPS': // NEW: Parse DPS as a number
+                case 'DPS': // Parse DPS as a number from the sheet if it exists
                     // Attempt to parse as float for numerical stats
                     rowObject[header] = parseFloat(value);
                     if (isNaN(rowObject[header])) { // If it's not a valid number, keep as original string
@@ -417,18 +417,22 @@ function calculateDPS(unit) {
     // Ensure cooldown is a number and greater than 0 to avoid division by zero
     const cooldown = typeof unit.Cooldown === 'number' && unit.Cooldown > 0 ? unit.Cooldown : Infinity;
     const critChance = typeof unit.CritChance === 'number' ? unit.CritChance : 0;
-    const critDamage = typeof unit.CritDamage === 'number' ? unit.CritDamage : 0; // Assuming this is the multiplier (e.g., 2 for 200%)
+
+    // Correctly handle CritDamage when it's 'N/A' or 0.
+    // If CritDamage is 'N/A' (string) or not a number, treat its multiplier as 1 (no bonus/penalty).
+    // Otherwise, use the parsed numerical value.
+    let effectiveCritDamage = 1; // Default to 1 (no crit damage bonus/penalty)
+    if (typeof unit.CritDamage === 'number') {
+        effectiveCritDamage = unit.CritDamage;
+    }
 
     if (cooldown === Infinity || damage === 0) {
         return 'N/A';
     }
 
-    // Basic DPS calculation: Damage per hit / Cooldown between hits
     let dps = damage / cooldown;
 
-    // Factor in critical hits: (1 + CritChance * CritDamageBonus)
-    // If CritDamage is N/A, assume 1 (no bonus). CritDamageBonus is (CritDamage - 1).
-    const effectiveCritDamage = critDamage === 'N/A' ? 1 : critDamage;
+    // Apply critical hit factor
     dps = dps * (1 + critChance * (effectiveCritDamage - 1));
 
     return Math.round(dps); // Round to the nearest whole number
@@ -700,7 +704,7 @@ function toggleUnitDetails(unit, clickedRow, index) {
         // Collapse the previously expanded row
         const prevExpandedUnitRow = unitTableBody.querySelector(`[data-unit-index="${currentlyExpandedUnitIndex}"]`);
         if (prevExpandedUnitRow) {
-            prevExpandedUnitRow.classList.remove('expanded');
+            prevExpandedRow.classList.remove('expanded');
         }
         existingDetailRow.remove();
     }
