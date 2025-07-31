@@ -38,8 +38,8 @@ th {
 }
 
 /* Hide all other columns by default */
-#unitTable th:nth-child(n+3), /* Class, Rarity, Community Ranking, HP, Damage, Cooldown, DPS */
-#unitTable td:nth-child(n+3) { /* Class, Rarity, Community Ranking, HP, Damage, Cooldown, DPS */
+#unitTable th:nth-child(n+3), /* Class, Rarity, Community Ranking, HP, Damage, Cooldown */
+#unitTable td:nth-child(n+3) { /* Class, Rarity, Community Ranking, HP, Damage, Cooldown */
     display: none;
 }
 
@@ -61,16 +61,14 @@ th {
     }
 }
 
-/* Large screens (lg): Show HP, Damage, Cooldown, DPS */
+/* Large screens (lg): Show HP, Damage, Cooldown */
 @media (min-width: 1024px) {
     #unitTable th:nth-child(6), /* HP */
     #unitTable td:nth-child(6), /* HP */
     #unitTable th:nth-child(7), /* Damage */
     #unitTable td:nth-child(7), /* Damage */
     #unitTable th:nth-child(8), /* Cooldown */
-    #unitTable td:nth-child(8), /* Cooldown */
-    #unitTable th:nth-child(9), /* DPS - NEW */
-    #unitTable td:nth-child(9) { /* DPS - NEW */
+    #unitTable td:nth-child(8) { /* Cooldown */
         display: table-cell;
     }
 }
@@ -83,11 +81,9 @@ th {
     padding: 0.5rem;
 }
 #unitTable tbody td:nth-child(2) { /* Label - allow text wrapping */
-    width: 250px; /* Increased width to give more room for wrapping */
-    min-width: 200px; /* Ensure a minimum width for wrapping */
+    width: 200px; /* Increased width to give more room for wrapping */
+    min-width: 180px; /* Ensure a minimum width for wrapping */
     white-space: normal; /* Allow text to wrap */
-    word-wrap: break-word; /* Break long words if necessary */
-    overflow-wrap: break-word; /* Modern equivalent */
 }
 #unitTable tbody td:nth-child(3), /* Class */
 #unitTable tbody td:nth-child(4) { /* Rarity */
@@ -99,8 +95,8 @@ th {
     min-width: 120px;
     text-align: center;
 }
-/* Numerical stats (HP, Damage, Cooldown, DPS) */
-#unitTable tbody td:nth-child(n+6):nth-child(-n+9) { /* HP to DPS - UPDATED */
+/* Numerical stats (HP, Damage, Cooldown) */
+#unitTable tbody td:nth-child(n+6):nth-child(-n+8) { /* HP to Cooldown */
     width: 80px; /* Increased width to prevent header truncation */
     min-width: 80px;
     text-align: center;
@@ -194,41 +190,6 @@ th {
 }
 .light .tab-button:hover:not(.active) {
     background-color: #d1d5db; /* gray-300 */
-}
-
-/* Light mode specific adjustments for better contrast and usability */
-.light #searchInput,
-.light #rarityFilter,
-.light #classFilter,
-.light #levelInput {
-    background-color: #ffffff; /* White background for inputs in light mode */
-    color: #1f2937; /* Dark text for inputs */
-    border-color: #d1d5db; /* Lighter border for inputs */
-}
-
-.light ::placeholder {
-    color: #9ca3af; /* Lighter placeholder text */
-}
-
-.light .unit-details-row {
-    background-color: #f9fafb; /* Lighter background for detail row */
-    border-color: #e5e7eb; /* Lighter border */
-}
-
-.light .unit-details-row .bg-gray-100 {
-    background-color: #f3f4f6; /* Lighter gray for base stats box */
-}
-
-.light .unit-details-row .bg-blue-50 {
-    background-color: #e0f2fe; /* Lighter blue for apply mods box */
-}
-
-.light .unit-details-row h3 {
-    color: #1f2937; /* Darker headings */
-}
-
-.light .unit-details-row ul li {
-    color: #374151; /* Darker list item text */
 }
 
 
@@ -404,17 +365,25 @@ th {
 input[type="text"], input[type="number"], select {
     font-size: 0.95rem; /* Consistent font size for inputs */
     /* Ensure borders are clearly visible in light mode */
-    border-color: #9ca3af; /* gray-400, slightly darker for better visibility */
+    border: 1px solid #6b7280; /* gray-500, darker for better visibility in light mode */
+    color: #1f2937; /* Dark text for inputs in light mode */
+    background-color: #ffffff; /* White background for inputs in light mode */
+}
+
+.dark input[type="text"], .dark input[type="number"], .dark select {
+    border-color: #6b7280; /* gray-500 for dark mode, visible */
+    color: #e5e7eb; /* Light text for inputs in dark mode */
+    background-color: #374151; /* gray-700 background for inputs in dark mode */
 }
 
 /* Placeholder text color */
 ::placeholder {
-    color: #6b7280; /* gray-500, darker for better contrast */
+    color: #6b7280; /* gray-500, darker for better contrast in light mode */
     opacity: 1; /* Firefox fix */
 }
 
-.dark ::placeholder {
-    color: #6b7280; /* gray-500 */
+.dark::placeholder {
+    color: #9ca3af; /* gray-400, lighter for better contrast in dark mode */
 }
 
 /* New styles for the header image */
