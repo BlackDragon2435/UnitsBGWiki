@@ -383,9 +383,15 @@ input[type="text"], input[type="number"], select {
     background-color: #ffffff; /* White background for inputs in light mode */
 }
 
+.light select {
+    color: #1f2937; /* Dark text for select in light mode */
+    font-weight: 600; /* Thicker font for select in light mode */
+}
+
 .light select option {
     color: #1f2937; /* Dark text for options in light mode */
     background-color: #ffffff; /* White background for options in light mode */
+    font-weight: 600; /* Thicker font for options in light mode */
 }
 
 .dark input[type="text"], .dark input[type="number"], .dark select {
