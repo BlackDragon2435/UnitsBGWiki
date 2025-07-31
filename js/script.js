@@ -1,5 +1,5 @@
 // js/script.js
-// Why are you looking here. There isnt a arg.. yet
+// why you looking here?
 // import { rawUnitData } from './unitsData.js';
 // import { rawModData } from './modsData.js';
 import { unitImages } from './unitImages.js';
@@ -11,10 +11,9 @@ import { gameData } from './gameData.js'; // Import gameData
 const GOOGLE_SHEET_BASE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQO78VJA7y_g5zHpzw1gTaJhLV2mjNdRxA33zcj1WPFj-QYxQS09nInTQXg6kXNJcjm4f7Gk7lPVZuV/pub?output=csv';
 
 // Specific URLs for each sheet using their GIDs
-const NEW_GOOGLE_SHEET_BASE_URL = 'https://docs.google.com/spreadsheets/d/1CG1QQI8OyvNVglxqlqPT9fqRo7FNy3SJfpLGvZcMxvQ/pub?output=csv';
-const GOOGLE_SHEET_UNIT_DATA_CSV_URL = NEW_GOOGLE_SHEET_BASE_URL + '&gid=201310748&single=true'; // Unit Info (Sheet 1)
-const GOOGLE_SHEET_TIER_LIST_CSV_URL = NEW_GOOGLE_SHEET_BASE_URL + '&gid=0&single=true'; // Tier List (Sheet 2) - Assuming gid=0 is still Tier List
-const GOOGLE_SHEET_MOD_DATA_CSV_URL = NEW_GOOGLE_SHEET_BASE_URL + '&gid=331730679&single=true'; // Mod List (Sheet 3) - Assuming gid=331730679 is still Mod List
+const GOOGLE_SHEET_UNIT_DATA_CSV_URL = GOOGLE_SHEET_BASE_URL + '&gid=201310748&single=true'; // Unit Info (Sheet 1)
+const GOOGLE_SHEET_TIER_LIST_CSV_URL = GOOGLE_SHEET_BASE_URL + '&gid=0&single=true'; // Tier List (Sheet 2)
+const GOOGLE_SHEET_MOD_DATA_CSV_URL = GOOGLE_SHEET_BASE_URL + '&gid=331730679&single=true'; // Mod List (Sheet 3)
 
 
 let units = []; // Stores parsed unit data
@@ -57,11 +56,8 @@ let expandedUnitRowId = null; // To keep track of the currently expanded row
 const rarityOrder = ["Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythic", "Demonic", "Ancient"];
 
 // Define the order of columns for unit table display (simplified for main view)
-// Moved 'DPS' to be between 'Accuracy' and 'Rarity'
 const unitColumnOrder = [
-    'Image', 'Label', 'Class', 'CommunityRanking', 'HP', 'Damage', 'Cooldown', 'Distance',
-    'CritChance', 'CritDamage', 'AttackEffect', 'AttackEffectType',
-    'AttackEffectLifesteal', 'Knockback', 'Accuracy', 'DPS', 'Rarity' // DPS inserted here
+    'Image', 'Label', 'Class', 'Rarity', 'CommunityRanking', 'HP', 'Damage', 'Cooldown'
 ];
 
 // Define ALL possible unit stats for the detailed dropdown view
@@ -69,8 +65,7 @@ const allUnitStatsForDropdown = [
     'Label', 'Class', 'Rarity', 'HP', 'Damage', 'Cooldown', 'Distance',
     'CritChance', 'CritDamage', 'AttackEffect', 'AttackEffectType',
     'AttackEffectLifesteal', 'AttackEffectKey', 'Knockback', 'Accuracy',
-    'EvadeChance', 'HPOffset', 'ShadowStepDistance', 'ShadowStepCooldown',
-    'DPS' // DPS is already here, no change needed for dropdown
+    'EvadeChance', 'HPOffset', 'ShadowStepDistance', 'ShadowStepCooldown'
 ];
 
 
@@ -411,11 +406,10 @@ function applyModsToUnit(baseUnit, modsToApply) {
 
 /**
  * Calculates a unit's stats at a specific level, applying class/rarity modifiers and then mods.
- * Also calculates DPS.
  * @param {Object} baseUnit - The original unit object (level 1 stats).
  * @param {number} level - The target level for the unit.
  * @param {Array<Object>} selectedMods - An array of mod objects to apply.
- * @returns {Object} A new unit object with calculated stats, including DPS.
+ * @returns {Object} A new unit object with calculated stats.
  */
 function getUnitStatsAtLevel(baseUnit, level, selectedMods) {
     let calculatedUnit = { ...baseUnit }; // Start with base stats
@@ -450,14 +444,6 @@ function getUnitStatsAtLevel(baseUnit, level, selectedMods) {
     // Apply selected mods on top of the class/rarity modified stats
     calculatedUnit = applyModsToUnit(calculatedUnit, selectedMods);
 
-    // --- Calculate DPS after all other stats (Damage, Cooldown) are finalized ---
-    if (typeof calculatedUnit.Damage === 'number' && typeof calculatedUnit.Cooldown === 'number' && calculatedUnit.Cooldown > 0) {
-        calculatedUnit.DPS = calculatedUnit.Damage / calculatedUnit.Cooldown;
-    } else {
-        calculatedUnit.DPS = 'N/A'; // Handle cases where Damage or Cooldown are not numbers or Cooldown is zero
-    }
-
-
     return calculatedUnit;
 }
 
@@ -474,8 +460,8 @@ function formatDisplayValue(value) {
         if (['CritChance', 'EvadeChance', 'Accuracy'].includes(currentSortColumn)) { // This check is not ideal for general formatting
             return (value * 100).toFixed(2) + '%';
         }
-        // Format Cooldown and DPS to 2 decimal places
-        if (['Cooldown', 'DPS'].includes(currentSortColumn)) { // Added DPS
+        // Format Cooldown to 2 decimal places
+        if (['Cooldown'].includes(currentSortColumn)) {
             return value.toFixed(2);
         }
         // General number formatting
@@ -509,18 +495,11 @@ function renderUnitTable(dataToRender) {
         const levelForDisplay = maxLevelGlobalEnabled ? 25 : 1;
 
         // Calculate unit stats at the determined level (level 1 or max level)
-        // This unitToDisplay will now include the calculated DPS
         let unitToDisplay = getUnitStatsAtLevel(unit, levelForDisplay, []); // No mods applied yet for this base calculation
 
         // Apply global mod effects if enabled, on top of the leveled stats
         if (modEffectsEnabled) {
             unitToDisplay = applyModsToUnit(unitToDisplay, mods);
-            // Recalculate DPS after global mods are applied
-            if (typeof unitToDisplay.Damage === 'number' && typeof unitToDisplay.Cooldown === 'number' && unitToDisplay.Cooldown > 0) {
-                unitToDisplay.DPS = unitToDisplay.Damage / unitToDisplay.Cooldown;
-            } else {
-                unitToDisplay.DPS = 'N/A';
-            }
         }
 
         const row = unitTableBody.insertRow();
@@ -549,8 +528,8 @@ function renderUnitTable(dataToRender) {
                 displayValue = tierInfo ? tierInfo.Tier : 'N/A'; // Corrected key to 'TIER'
                 cell.classList.add('font-semibold', 'text-center'); // Center align tier
             }
-            // Custom formatting for specific keys (only HP, Damage, Cooldown, DPS remain here)
-            else if (key === 'Cooldown' || key === 'HP' || key === 'Damage' || key === 'DPS') { // Added DPS
+            // Custom formatting for specific keys (only HP, Damage, Cooldown remain here)
+            else if (key === 'Cooldown' || key === 'HP' || key === 'Damage') {
                 displayValue = typeof displayValue === 'number' ? displayValue.toFixed(2) : displayValue;
             }
 
@@ -717,7 +696,7 @@ function toggleUnitDetails(unit, clickedRow, index) {
         const li = document.createElement('li');
         let displayValue = unit[key];
         // Apply specific formatting for percentages and numbers
-        if (['Cooldown', 'HP', 'Damage', 'Distance', 'CritChance', 'CritDamage', 'AttackEffectLifesteal', 'Knockback', 'Accuracy', 'EvadeChance', 'DPS'].includes(key)) { // Added DPS
+        if (['Cooldown', 'HP', 'Damage', 'Distance', 'CritChance', 'CritDamage', 'AttackEffectLifesteal', 'Knockback', 'Accuracy', 'EvadeChance'].includes(key)) {
             displayValue = typeof displayValue === 'number' ? displayValue.toFixed(2) : displayValue;
         }
         // Special formatting for percentage values
@@ -883,7 +862,7 @@ function updateAppliedStats(baseUnit, selectedMods, listElement, showMaxStats, s
         const li = document.createElement('li');
         let displayValue = unitToDisplay[key];
         // Apply specific formatting for percentages and numbers
-        if (['Cooldown', 'HP', 'Damage', 'Distance', 'CritChance', 'CritDamage', 'AttackEffectLifesteal', 'Knockback', 'Accuracy', 'EvadeChance', 'DPS'].includes(key)) { // Added DPS
+        if (['Cooldown', 'HP', 'Damage', 'Distance', 'CritChance', 'CritDamage', 'AttackEffectLifesteal', 'Knockback', 'Accuracy', 'EvadeChance'].includes(key)) {
             displayValue = typeof displayValue === 'number' ? displayValue.toFixed(2) : displayValue;
         }
         // Special formatting for percentage values
@@ -986,7 +965,7 @@ function sortData(column) {
         if (valA === 'N/A') return currentSortDirection === 'asc' ? 1 : -1;
         if (valB === 'N/A') return currentSortDirection === 'asc' ? -1 : 1;
 
-        // Numeric comparison (this will now also apply to DPS)
+        // Numeric comparison
         if (typeof valA === 'number' && typeof valB === 'number') {
             return currentSortDirection === 'asc' ? valA - valB : valB - valA;
         }
