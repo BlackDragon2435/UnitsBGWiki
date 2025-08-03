@@ -6,33 +6,6 @@ body {
     line-height: 1.6; /* Improved line height for readability */
 }
 
-/* Rainbow text animation for the title */
-@keyframes rainbow {
-    0% { color: #ff0000; }
-    14% { color: #ff7f00; }
-    28% { color: #ffff00; }
-    42% { color: #00ff00; }
-    57% { color: #0000ff; }
-    71% { color: #4b0082; }
-    85% { color: #9400d3; }
-    100% { color: #ff0000; }
-}
-
-#mainTitle {
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-image: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
-    background-size: 200% 100%;
-    animation: rainbow 5s linear infinite, moveGradient 5s linear infinite;
-}
-
-@keyframes moveGradient {
-    to {
-        background-position: 200% center;
-    }
-}
-
 /* New class for centering main page titles */
 .main-page-title {
     text-align: center;
@@ -105,93 +78,50 @@ th {
     #unitTable td:nth-child(8) { /* DPS */
         display: table-cell;
     }
-    #modsTable th:nth-child(2), /* Rarity */
-    #modsTable td:nth-child(2) { /* Rarity */
-        display: table-cell;
-    }
 }
 
-/* Dark mode specific styles */
-.dark body {
-    background-color: #1a202c; /* A slightly darker gray for the background */
-    color: #e2e8f0; /* Lighter text color */
+/* Tab button styles */
+.tab-button {
+    padding: 0.75rem 1.5rem;
+    font-weight: 500;
+    border-bottom: 2px solid transparent;
+    transition: all 0.2s ease-in-out;
+    color: #9ca3af; /* gray-400 */
 }
 
-.dark .tab-content {
-    background-color: #2d3748; /* Darker gray for content backgrounds */
+.tab-button:hover {
+    color: #3b82f6; /* blue-500 */
+    border-color: #93c5fd; /* blue-300 */
 }
 
-.dark table {
-    background-color: #2d3748;
-}
-
-.dark th {
-    background-color: #4a5568; /* Darker header background */
-    color: #e2e8f0; /* Lighter header text */
-}
-
-.dark td {
-    border-color: #4a5568; /* Darker border color */
-}
-
-.dark input[type="text"], .dark select {
-    background-color: #4a5568;
-    color: #e2e8f0;
-    border-color: #4a5568;
-}
-
-.dark input[type="checkbox"] {
-    background-color: #4a5568;
-    border-color: #4a5568;
-}
-
-.dark .expanded-details-row {
-    background-color: #252d3a;
-}
-.dark .expanded-details-content {
-    background-color: #1a202c;
-}
-
-/* Main content styling */
-.tab-content {
-    background-color: #ffffff;
-    padding: 1.5rem;
-    border-radius: 1rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.expanded-details-row {
-    background-color: #f7fafc;
-    border-bottom: 2px solid #e2e8f0;
-}
-
-.expanded-details-content {
-    background-color: #f1f5f9;
-    padding: 1.5rem;
-    border-radius: 0.75rem;
-    margin-top: 1rem;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
-}
-
-.expanded-details-content p {
-    margin-bottom: 0.5rem;
-}
-
-.expanded-details-content p:last-child {
-    margin-bottom: 0;
-}
-
-.expanded-details-content strong {
+.tab-button.active-tab {
+    color: #2563eb; /* blue-600 */
+    border-color: #2563eb; /* blue-600 */
     font-weight: 600;
 }
 
+.dark .tab-button {
+    color: #9ca3af; /* gray-400 */
+}
 
-/* Styling for filter options */
-input[type="text"], select {
-    border-color: #cbd5e0; /* gray-300 for light mode */
-    color: #1f2937; /* gray-800 text for light mode */
-    background-color: #ffffff;
-    font-weight: 500; /* Medium font for options in light mode */
+.dark .tab-button:hover {
+    color: #60a5fa; /* blue-400 */
+    border-color: #3b82f6; /* blue-500 */
+}
+
+.dark .tab-button.active-tab {
+    color: #60a5fa; /* blue-400 */
+    border-color: #60a5fa; /* blue-400 */
+}
+
+/* Input & Select styles */
+input[type="text"], input[type="number"], select {
+    border-radius: 9999px; /* rounded-full */
+    padding: 0.5rem 1rem;
+    border: 1px solid #d1d5db; /* gray-300 */
+    background-color: #ffffff; /* White background */
+    color: #111827; /* gray-900 */
+    font-weight: 500; /* Thicker font for options in light mode */
 }
 
 .dark input[type="text"], .dark input[type="number"], .dark select {
@@ -225,24 +155,55 @@ input[type="text"], select {
 
 /* Adjust header layout for better alignment */
 header {
-    text-align: center;
-}
-
-/* Ensure the loading spinner is centered correctly */
-#loadingSpinner {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 200px; /* Or a fixed height, depending on layout */
+    position: relative;
+}
+.header-content {
+    display: flex;
+    align-items: center;
 }
 
-/* Ensure tab content is hidden correctly */
+/* New Checkbox/Toggle Styles */
+/* This styling creates a custom, visually pleasing toggle switch */
+.custom-toggle-bg {
+    transition: background-color 0.2s ease-in-out;
+}
+
+.custom-toggle-dot {
+    transition: transform 0.2s ease-in-out;
+}
+
+#toggleMaxLevel:checked ~ .custom-toggle-bg,
+#toggleModEffects:checked ~ .custom-toggle-bg {
+    background-color: #3b82f6; /* blue-500 */
+}
+
+#toggleMaxLevel:checked ~ .custom-toggle-bg .custom-toggle-dot,
+#toggleModEffects:checked ~ .custom-toggle-bg .custom-toggle-dot {
+    transform: translateX(1.25rem); /* Move dot to the right */
+}
+
+.dark #toggleMaxLevel:checked ~ .custom-toggle-bg,
+.dark #toggleModEffects:checked ~ .custom-toggle-bg {
+    background-color: #60a5fa; /* Lighter blue in dark mode */
+}
+
+.dark #toggleMaxLevel ~ .custom-toggle-bg,
+.dark #toggleModEffects ~ .custom-toggle-bg {
+    background-color: #4a5568; /* gray-700 in dark mode */
+}
+
 .tab-content {
-    display: none;
+    background-color: #ffffff;
+    padding: 1.5rem;
+    border-radius: 1rem;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.tab-content.active {
-    display: block;
+.dark .tab-content {
+    background-color: #2d3748;
 }
 
 /* Active tab styling */
@@ -250,4 +211,44 @@ header {
     color: #3b82f6; /* A clear color for the active tab */
     border-color: #3b82f6;
     font-weight: 600; /* Make the active tab's font a bit bolder */
+}
+
+/* Row hover effect */
+.unit-row:hover {
+    background-color: #f3f4f6;
+}
+
+.dark .unit-row:hover {
+    background-color: #4a5568;
+}
+
+/* Mod detail row styles */
+.mod-details-row {
+    background-color: #e2e8f0;
+}
+
+.dark .mod-details-row {
+    background-color: #1f2937;
+}
+
+/* Stats container styling inside mod details */
+.stats-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-top: 0.5rem;
+    padding: 1rem;
+    background-color: #ffffff;
+    border-radius: 0.5rem;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.dark .stats-container {
+    background-color: #374151;
+}
+
+.stat-item {
+    padding: 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.875rem;
 }
