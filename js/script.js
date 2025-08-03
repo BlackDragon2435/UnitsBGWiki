@@ -1,24 +1,18 @@
 // js/script.js
-// This file has been updated to be more robust, handling data loading,
-// DOM readiness, and preventing errors more gracefully.
+// This file has been updated to remove the Cooldown column from the main unit table.
 
-// import { rawUnitData } from './unitsData.js';
-// import { rawModData } from './modsData.js';
-import { unitImages } from './unitImages.js'; // Keep this for potential fallback or if user wants to keep it
-import { gameData } from './gameData.js'; // Import gameData
+// Import necessary game data.
+import { unitImages } from './unitImages.js'; 
+import { gameData } from './gameData.js'; 
 
 // IMPORTANT: Base URL for your published Google Sheet
-// This URL should point to your Google Sheet published to web as CSV.
-// To get this URL, go to File > Share > Publish to web > Publish to web > Link.
-// Choose the sheet and format as "Comma-separated values (.csv)", then copy the URL.
-// The URL should not contain "docs.googleusercontent.com/pub" - it must be a direct
-// publish link.
-const GOOGLE_SHEET_BASE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQO78VJA7y_g5zHpzw1gTaJhLV2mjNdRxA33zcj1WPFj-QYxQS09nInTQXg6kXNJcjm4f7Gk7lPVZuV/pub?output=csv';
+const GOOGLE_SHEET_BASE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQO78VJA7y_g5zHpzw1gTaJhLV2mjNdRxA33zcj1WPFj-QyXQS09nInTQXg6kXNJcjm4f7Gk7lPVZuV/pub?output=csv';
 
 // Specific URLs for each sheet using their GIDs
 const GOOGLE_SHEET_UNIT_DATA_CSV_URL = GOOGLE_SHEET_BASE_URL + '&gid=201310748&single=true'; // Unit Info (Sheet 1)
 const GOOGLE_SHEET_TIER_LIST_CSV_URL = GOOGLE_SHEET_BASE_URL + '&gid=0&single=true'; // Tier List (Sheet 2)
 const GOOGLE_SHEET_MOD_DATA_CSV_URL = GOOGLE_SHEET_BASE_URL + '&gid=331730679&single=true'; // Mod List (Sheet 3)
+
 
 let units = []; // Stores parsed unit data
 let mods = [];  // Stores parsed mod data
@@ -48,7 +42,6 @@ const toggleModEffects = document.getElementById('toggleModEffects');
 const toggleMaxLevel = document.getElementById('toggleMaxLevel');
 const maxLevelInputContainer = document.getElementById('maxLevelInputContainer');
 const maxLevelInput = document.getElementById('maxLevelInput');
-const dataLoadErrorMessage = document.getElementById('dataLoadErrorMessage');
 
 
 /**
@@ -103,7 +96,7 @@ async function fetchDataFromGoogleSheet(url) {
     return parseCSV(csvText);
   } catch (error) {
     console.error(`Could not fetch data from Google Sheet URL: ${url}`, error);
-    return null;
+    return [];
   }
 }
 
@@ -112,24 +105,17 @@ async function fetchDataFromGoogleSheet(url) {
  */
 async function loadGameData() {
   showLoadingSpinner();
-  dataLoadErrorMessage.classList.add('hidden');
-
+  // We use Promise.all to fetch all data concurrently for better performance.
   const [unitData, modData, tierListData] = await Promise.all([
     fetchDataFromGoogleSheet(GOOGLE_SHEET_UNIT_DATA_CSV_URL),
     fetchDataFromGoogleSheet(GOOGLE_SHEET_MOD_DATA_CSV_URL),
     fetchDataFromGoogleSheet(GOOGLE_SHEET_TIER_LIST_CSV_URL)
   ]);
 
-  if (!unitData) {
-      hideLoadingSpinner();
-      dataLoadErrorMessage.classList.remove('hidden');
-      return;
-  }
-
   // Clean and prepare the data for use.
   units = unitData.map(unit => cleanAndParseUnitData(unit));
-  mods = modData ? modData.map(mod => cleanAndParseModData(mod)) : [];
-  tierList = tierListData || [];
+  mods = modData.map(mod => cleanAndParseModData(mod));
+  tierList = tierListData; // Tier list data is ready to use directly.
 
   hideLoadingSpinner();
   
@@ -264,24 +250,13 @@ function filterAndRenderUnits() {
     // Sort units if a column is selected
     if (currentSortColumn) {
         filteredUnits.sort((a, b) => {
-            let valA, valB;
+            const valA = a[currentSortColumn];
+            const valB = b[currentSortColumn];
             
-            // Special handling for DPS, since it's a calculated value
-            if (currentSortColumn === 'DPS') {
-                valA = parseFloat(calculateDPS(a, currentLevel));
-                valB = parseFloat(calculateDPS(b, currentLevel));
-            } else {
-                valA = a[currentSortColumn];
-                valB = b[currentSortColumn];
-            }
-
             if (typeof valA === 'string' && typeof valB === 'string') {
                 return currentSortDirection === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
             } else {
-                // Ensure values are numbers for comparison
-                const numA = parseFloat(valA);
-                const numB = parseFloat(valB);
-                return currentSortDirection === 'asc' ? numA - numB : numB - numA;
+                return currentSortDirection === 'asc' ? valA - valB : valB - valA;
             }
         });
     }
@@ -471,7 +446,6 @@ function showLoadingSpinner() {
     if (loadingSpinner) {
         loadingSpinner.classList.remove('hidden');
         unitTableContainer.classList.add('hidden');
-        noResultsMessage.classList.add('hidden');
     }
 }
 
@@ -495,52 +469,45 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Use a debounced function for the search input to improve performance
     const debouncedFilterAndRenderUnits = debounce(filterAndRenderUnits, 300);
-    if (searchInput) searchInput.addEventListener('input', debouncedFilterAndRenderUnits);
-    if (rarityFilter) rarityFilter.addEventListener('change', filterAndRenderUnits);
-    if (classFilter) classFilter.addEventListener('change', filterAndRenderUnits);
-    
+    searchInput.addEventListener('input', debouncedFilterAndRenderUnits);
+    rarityFilter.addEventListener('change', filterAndRenderUnits);
+    classFilter.addEventListener('change', filterAndRenderUnits);
+
     // Table Header Sorting Events
-    if (tableHeaders) {
-        tableHeaders.forEach(header => {
-            header.addEventListener('click', () => {
-                const sortColumn = header.dataset.sort;
-                if (sortColumn) {
-                    sortData(sortColumn);
-                }
-            });
+    tableHeaders.forEach(header => {
+        header.addEventListener('click', () => {
+            const sortColumn = header.dataset.sort;
+            if (sortColumn) {
+                sortData(sortColumn);
+            }
         });
-    }
+    });
 
     // Dark Mode Toggle Event
-    if (darkModeToggle) darkModeToggle.addEventListener('click', toggleDarkMode);
+    darkModeToggle.addEventListener('click', toggleDarkMode);
 
     // Tab Switching Events
-    if (unitsTab) unitsTab.addEventListener('click', () => switchTab('unitsTab'));
-    if (modsTab) modsTab.addEventListener('click', () => switchTab('modsTab'));
-    if (tierListTab) tierListTab.addEventListener('click', () => switchTab('tierListTab')); // Tier List Tab event
+    unitsTab.addEventListener('click', () => switchTab('unitsTab'));
+    modsTab.addEventListener('click', () => switchTab('modsTab'));
+    tierListTab.addEventListener('click', () => switchTab('tierListTab')); // Tier List Tab event
 
     // Mod Effects Toggle Event (global)
-    if (toggleModEffects) {
-      toggleModEffects.addEventListener('change', () => {
+    toggleModEffects.addEventListener('change', () => {
         modEffectsEnabled = toggleModEffects.checked;
         filterAndRenderUnits(); // Re-render units to apply/remove global mod effects
-      });
-    }
+    });
 
     // Global Max Level Toggle Event
-    if (toggleMaxLevel) {
-      toggleMaxLevel.addEventListener('change', () => {
+    toggleMaxLevel.addEventListener('change', () => {
         maxLevelGlobalEnabled = toggleMaxLevel.checked;
-        if (maxLevelInputContainer) {
-            maxLevelInputContainer.classList.toggle('hidden', !maxLevelGlobalEnabled);
-        }
+        maxLevelInputContainer.classList.toggle('hidden', !maxLevelGlobalEnabled);
         filterAndRenderUnits();
-      });
-    }
+    });
     
     // Max Level Input Event
-    if (maxLevelInput) maxLevelInput.addEventListener('input', debounce(filterAndRenderUnits, 300));
+    maxLevelInput.addEventListener('input', debounce(filterAndRenderUnits, 300));
 
     // Set default tab
     switchTab('unitsTab');
 });
+
