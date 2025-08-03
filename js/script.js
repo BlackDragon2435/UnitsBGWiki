@@ -1,5 +1,5 @@
 // js/script.js
-// why you looking here?
+// This script handles data fetching, filtering, sorting, and rendering for the Unit & Mod Compendium.
 
 // Define game data with colors directly in this file
 const gameData = {
@@ -32,529 +32,447 @@ const GOOGLE_SHEET_BASE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1v
 // Specific URLs for each sheet using their GIDs
 const GOOGLE_SHEET_UNIT_DATA_CSV_URL = GOOGLE_SHEET_BASE_URL + '&gid=201310748&single=true'; // Unit Info (Sheet 1)
 const GOOGLE_SHEET_TIER_LIST_CSV_URL = GOOGLE_SHEET_BASE_URL + '&gid=0&single=true'; // Tier List (Sheet 2)
-const GOOGLE_SHEET_MOD_DATA_CSV_URL = GOOGLE_SHEET_BASE_URL + '&gid=1626017094&single=true'; // Mod Data (Sheet 3)
+const GOOGLE_SHEET_MOD_DATA_CSV_URL = GOOGLE_SHEET_BASE_URL + '&gid=1626019565&single=true'; // Mod Info (Sheet 3)
 
+// Global state variables
 let units = [];
 let mods = [];
 let tierList = [];
-let sortOrder = {};
-let expandedUnitRowId = null;
+let modEffectsEnabled = false;
 let maxLevelGlobalEnabled = false;
+let expandedUnitRowId = null;
+let currentSort = { column: 'UnitName', order: 'asc' };
+let currentActiveTab = 'unitsTab';
 
-// Caching fetched data to avoid multiple API calls on tab switches
-const dataCache = {
-    units: null,
-    mods: null,
-    tierList: null
+// DOM Elements
+const unitsTab = document.getElementById('unitsTab');
+const modsTab = document.getElementById('modsTab');
+const tierListTab = document.getElementById('tierListTab');
+const unitsSection = document.getElementById('unitsSection');
+const modsSection = document.getElementById('modsSection');
+const tierListSection = document.getElementById('tierListSection');
+const searchInput = document.getElementById('searchInput');
+const rarityFilter = document.getElementById('rarityFilter');
+const classFilter = document.getElementById('classFilter');
+const unitTableBody = document.getElementById('unitTableBody');
+const loadingSpinner = document.getElementById('loadingSpinner');
+const unitTableContainer = document.getElementById('unitTableContainer');
+const modTableContainer = document.getElementById('modTableContainer');
+const tierListTableContainer = document.getElementById('tierListTableContainer');
+const noModsMessage = document.getElementById('noModsMessage');
+const noTierListMessage = document.getElementById('noTierListMessage');
+const modTableBody = document.getElementById('modTableBody');
+const tierListTableBody = document.getElementById('tierListTableBody');
+const tableHeaders = document.querySelectorAll('#unitTable thead th');
+const darkModeToggle = document.getElementById('darkModeToggle');
+const darkModeIcon = document.getElementById('darkModeIcon');
+const toggleModEffects = document.getElementById('toggleModEffects');
+const toggleMaxLevel = document.getElementById('toggleMaxLevel');
+
+// Utility function to parse CSV text into a JSON array
+const parseCSV = (csvText) => {
+    const lines = csvText.trim().split('\n');
+    const headers = lines[0].split(',').map(header => header.trim());
+    const data = lines.slice(1).map(line => {
+        const values = line.split(',').map(value => value.trim());
+        const row = {};
+        headers.forEach((header, i) => {
+            row[header] = values[i];
+        });
+        return row;
+    });
+    return data;
 };
 
-// Map of unit image names to URLs
-const unitImages = {
-    "Unit 1": "https://tr.rbxcdn.com/180DAY-03e365f1fea92684ef841ae041d4677e/150/150/Image/Webp/noFilter",
-    "Unit 2": "https://tr.rbxcdn.com/180DAY-03e365f1fea92684ef841ae041d4677e/150/150/Image/Webp/noFilter",
+// Utility function to debounce a function call for performance
+const debounce = (func, delay) => {
+    let timeout;
+    return function(...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), delay);
+    };
 };
 
-// Helper function to show/hide loading spinner
-const showLoadingSpinner = () => {
-    document.getElementById('loadingSpinner').classList.remove('hidden');
-    document.getElementById('unitTableContainer').classList.add('hidden');
-    document.getElementById('modsSection').classList.add('hidden');
-    document.getElementById('tierListSection').classList.add('hidden');
-};
-
-const hideLoadingSpinner = () => {
-    document.getElementById('loadingSpinner').classList.add('hidden');
-};
-
-// Helper function to fetch CSV data from Google Sheets
-const fetchCsvData = async (url) => {
+// Function to fetch data from a Google Sheets URL
+const fetchData = async (url) => {
     try {
         const response = await fetch(url);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        const text = await response.text();
-        return parseCsv(text);
+        const csvText = await response.text();
+        return parseCSV(csvText);
     } catch (error) {
-        console.error("Could not fetch CSV data: ", error);
+        console.error('Failed to fetch data:', error);
         return null;
     }
 };
 
-// Helper function to parse CSV text into an array of objects
-const parseCsv = (csvText) => {
-    const lines = csvText.trim().split('\n');
-    const headers = lines[0].split(',').map(header => header.trim());
-    const data = lines.slice(1).map(line => {
-        const values = line.split(',').map(value => value.trim());
-        return headers.reduce((obj, header, index) => {
-            obj[header] = values[index];
-            return obj;
-        }, {});
+// Function to load all data from Google Sheets
+const loadAllData = async () => {
+    showLoading();
+    try {
+        // Fetch unit, mod, and tier list data
+        units = await fetchData(GOOGLE_SHEET_UNIT_DATA_CSV_URL) || [];
+        mods = await fetchData(GOOGLE_SHEET_MOD_DATA_CSV_URL) || [];
+        tierList = await fetchData(GOOGLE_SHEET_TIER_LIST_CSV_URL) || [];
+
+        // Pre-process data
+        processUnitData();
+        populateFilters();
+        
+        // Initial render for the active tab
+        if (currentActiveTab === 'unitsTab') {
+            filterAndRenderUnits();
+        } else if (currentActiveTab === 'modsTab') {
+            renderMods();
+        } else if (currentActiveTab === 'tierListTab') {
+            renderTierList();
+        }
+
+    } finally {
+        hideLoading();
+    }
+};
+
+const processUnitData = () => {
+    units = units.map(unit => {
+        // Ensure numerical stats are parsed correctly
+        unit.Damage = parseFloat(unit.Damage);
+        unit.HP = parseFloat(unit.HP);
+        unit.AttackSpeed = parseFloat(unit.AttackSpeed);
+        unit.Range = parseFloat(unit.Range);
+        unit.DPS = unit.Damage / unit.AttackSpeed; // Calculate DPS
+        // Map UnitName to an image URL if one exists
+        const unitName = unit.UnitName.trim();
+        unit.ImageUrl = unit.Image.trim(); // The URL is already in the sheet
+        unit.id = unitName.replace(/\s+/g, '-'); // Create a slug for the ID
+        return unit;
     });
-    return data;
 };
 
-// Function to fetch all game data
-const fetchAllData = async () => {
-    showLoadingSpinner();
-
-    // Fetch units, mods, and tier list data concurrently
-    const [unitsData, modsData, tierListData] = await Promise.all([
-        fetchCsvData(GOOGLE_SHEET_UNIT_DATA_CSV_URL),
-        fetchCsvData(GOOGLE_SHEET_MOD_DATA_CSV_URL),
-        fetchCsvData(GOOGLE_SHEET_TIER_LIST_CSV_URL)
-    ]);
-
-    // Store data in cache
-    dataCache.units = unitsData;
-    dataCache.mods = modsData;
-    dataCache.tierList = tierListData;
-
-    hideLoadingSpinner();
-};
-
-// Function to initialize the filters
-const initializeFilters = () => {
-    if (!dataCache.units) return;
-
-    const rarityFilter = document.getElementById('rarityFilter');
-    const classFilter = document.getElementById('classFilter');
-
-    const rarities = [...new Set(dataCache.units.map(unit => unit.Rarity))];
-    rarities.sort().forEach(rarity => {
+// Function to populate rarity and class filters from the fetched data
+const populateFilters = () => {
+    const rarities = [...new Set(units.map(unit => unit.Rarity))];
+    rarityFilter.innerHTML = '<option value="All">All Rarity</option>';
+    rarities.forEach(rarity => {
         if (rarity) {
-            const option = document.createElement('option');
-            option.value = rarity;
-            option.textContent = rarity;
-            rarityFilter.appendChild(option);
+            rarityFilter.innerHTML += `<option value="${rarity}">${rarity}</option>`;
         }
     });
 
-    const classes = [...new Set(dataCache.units.map(unit => unit.Class))];
-    classes.sort().forEach(unitClass => {
-        if (unitClass) {
-            const option = document.createElement('option');
-            option.value = unitClass;
-            option.textContent = unitClass;
-            classFilter.appendChild(option);
+    const classes = [...new Set(units.map(unit => unit.Class))];
+    classFilter.innerHTML = '<option value="All">All Class</option>';
+    classes.forEach(cls => {
+        if (cls) {
+            classFilter.innerHTML += `<option value="${cls}">${cls}</option>`;
         }
     });
 };
 
-// Function to parse a mod effect string into a number
-const parseModEffect = (effect) => {
-    if (effect.endsWith('%')) {
-        return parseFloat(effect) / 100;
-    }
-    return parseFloat(effect);
-};
-
-// Function to apply mod effects to a unit's stats
-const applyModEffects = (unit, modsToApply) => {
-    let tempUnit = { ...unit }; // Create a copy to avoid modifying original data
-
-    if (modsToApply && modsToApply.length > 0) {
-        modsToApply.forEach(modName => {
-            const mod = dataCache.mods.find(m => m.ModName === modName);
-            if (mod) {
-                // Apply the mod effect based on its stat type
-                const effectValue = parseModEffect(mod.Effect);
-                switch (mod.Stat) {
-                    case 'Damage':
-                        tempUnit.Damage = parseFloat(tempUnit.Damage) * (1 + effectValue);
-                        break;
-                    case 'HP':
-                        tempUnit.HP = parseFloat(tempUnit.HP) * (1 + effectValue);
-                        break;
-                    case 'DPS':
-                        tempUnit.DPS = parseFloat(tempUnit.DPS) * (1 + effectValue);
-                        break;
-                    case 'Range':
-                        tempUnit.Range = parseFloat(tempUnit.Range) * (1 + effectValue);
-                        break;
-                    case 'Speed':
-                        tempUnit.Speed = parseFloat(tempUnit.Speed) * (1 + effectValue);
-                        break;
-                    // Add more cases for other stats as needed
-                }
-            }
-        });
-    }
-
-    return tempUnit;
-};
-
-// Function to calculate DPS
-const calculateDPS = (damage, attackSpeed) => {
-    return parseFloat(damage) * (1 / parseFloat(attackSpeed));
-};
-
-// Function to filter and render the units table
+// Render units based on current filters and sort order
 const filterAndRenderUnits = () => {
-    if (!dataCache.units) {
-        document.getElementById('unitTableContainer').classList.add('hidden');
-        document.getElementById('noUnitsMessage').classList.remove('hidden');
-        return;
-    }
+    const searchTerm = searchInput.value.toLowerCase();
+    const selectedRarity = rarityFilter.value;
+    const selectedClass = classFilter.value;
 
-    const searchValue = document.getElementById('searchInput').value.toLowerCase();
-    const rarityValue = document.getElementById('rarityFilter').value;
-    const classValue = document.getElementById('classFilter').value;
-
-    let filteredUnits = dataCache.units.filter(unit => {
-        const matchesSearch = unit.UnitName.toLowerCase().includes(searchValue);
-        const matchesRarity = rarityValue === 'All' || unit.Rarity === rarityValue;
-        const matchesClass = classValue === 'All' || unit.Class === classValue;
+    const filteredUnits = units.filter(unit => {
+        const matchesSearch = unit.UnitName.toLowerCase().includes(searchTerm);
+        const matchesRarity = selectedRarity === 'All' || unit.Rarity === selectedRarity;
+        const matchesClass = selectedClass === 'All' || unit.Class === selectedClass;
         return matchesSearch && matchesRarity && matchesClass;
     });
 
-    // Apply global max level toggle if enabled
-    if (maxLevelGlobalEnabled) {
-        filteredUnits = filteredUnits.map(unit => {
-            const maxLevelUnit = { ...unit };
-            maxLevelUnit.Damage = parseFloat(maxLevelUnit.Damage) + (parseFloat(maxLevelUnit.LevelDamageGain) * 99);
-            maxLevelUnit.HP = parseFloat(maxLevelUnit.HP) + (parseFloat(maxLevelUnit.LevelHPGain) * 99);
-            maxLevelUnit.DPS = calculateDPS(maxLevelUnit.Damage, maxLevelUnit.AttackSpeed);
-            return maxLevelUnit;
-        });
-    }
+    // Apply sorting
+    const sortedUnits = sortData(filteredUnits, currentSort.column, currentSort.order);
 
-
-    units = filteredUnits; // Update the global units array
-
-    const unitTableBody = document.getElementById('unitTableBody');
     unitTableBody.innerHTML = '';
-    if (units.length === 0) {
-        document.getElementById('noUnitsMessage').classList.remove('hidden');
-        document.getElementById('unitTableContainer').classList.add('hidden');
-    } else {
-        document.getElementById('noUnitsMessage').classList.add('hidden');
-        document.getElementById('unitTableContainer').classList.remove('hidden');
-        units.forEach(unit => {
+    if (sortedUnits.length > 0) {
+        sortedUnits.forEach(unit => {
             const row = document.createElement('tr');
-            row.dataset.id = unit.UnitName;
-            row.classList.add('hover:bg-gray-100', 'dark:hover:bg-gray-600', 'cursor-pointer', 'transition-colors', 'duration-200', 'border-b', 'border-gray-200', 'dark:border-gray-600');
+            row.dataset.id = unit.id;
+            row.classList.add('cursor-pointer');
+            
+            // Get rarity and class colors
+            const rarityColor = gameData.RarityColors[unit.Rarity]?.color || '#FFFFFF';
+            const classColor = gameData.ClassesColors[unit.Class]?.color || '#FFFFFF';
+
+            // Use the unit's image URL if available, otherwise a placeholder
+            // The ImageUrl is expected to be a full URL now based on your feedback
+            const unitImage = unit.ImageUrl || `https://placehold.co/50x50/${rarityColor.substring(1)}/000000?text=${unit.UnitName.charAt(0)}`;
+            
             row.innerHTML = `
-                <td class="unit-name py-4 px-6 font-medium whitespace-nowrap flex items-center space-x-2 text-center sm:text-left">
-                    <img src="${unitImages[unit.UnitName] || 'https://placehold.co/40x40/png'}" alt="${unit.UnitName}" class="w-10 h-10 rounded-full object-cover responsive-hide-sm">
-                    <span>${unit.UnitName}</span>
+                <td class="flex items-center space-x-3 unit-name">
+                    <img src="${unitImage}" alt="${unit.UnitName}" class="w-10 h-10 rounded-full border-2" style="border-color: ${rarityColor};">
+                    <div>
+                        <div class="font-semibold text-gray-900 dark:text-gray-100">${unit.UnitName}</div>
+                        <div class="text-sm text-gray-500 dark:text-gray-400 responsive-hide">${unit.UnitNameShort}</div>
+                    </div>
                 </td>
-                <td class="responsive-hide">${unit.Rarity}</td>
-                <td class="responsive-hide-sm">${unit.Class}</td>
-                <td>${parseFloat(unit.Damage).toFixed(2)}</td>
-                <td>${parseFloat(unit.HP).toFixed(2)}</td>
-                <td class="responsive-hide">${parseFloat(unit.DPS).toFixed(2)}</td>
-                <td class="responsive-hide">${unit.Range}</td>
-                <td>${unit.AttackSpeed}</td>
+                <td class="responsive-hide">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" style="background-color: ${rarityColor}; color: ${isLight(rarityColor) ? '#000' : '#FFF'};">${unit.Rarity}</span>
+                </td>
+                <td class="responsive-hide-sm">
+                    <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full" style="background-color: ${classColor}; color: ${isLight(classColor) ? '#000' : '#FFF'};">${unit.Class}</span>
+                </td>
+                <td>${formatNumber(unit.Damage)}</td>
+                <td>${formatNumber(unit.HP)}</td>
+                <td class="responsive-hide">${formatNumber(unit.DPS)}</td>
+                <td class="responsive-hide">${formatNumber(unit.Range)}</td>
+                <td>${formatNumber(unit.AttackSpeed)}</td>
             `;
             unitTableBody.appendChild(row);
         });
+        unitTableContainer.classList.remove('hidden');
+    } else {
+        unitTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-4 text-gray-500 dark:text-gray-400">No units found.</td></tr>';
     }
 };
 
-// Function to render the mods table
-const renderModsTable = () => {
-    if (!dataCache.mods) {
-        document.getElementById('modsSection').classList.remove('hidden');
-        document.getElementById('modTableContainer').classList.add('hidden');
-        document.getElementById('noModsMessage').classList.remove('hidden');
+const renderMods = () => {
+    modTableBody.innerHTML = '';
+    modTableContainer.classList.add('hidden');
+    noModsMessage.classList.add('hidden');
+
+    if (!mods || mods.length === 0) {
+        noModsMessage.classList.remove('hidden');
         return;
     }
 
-    const modTableBody = document.getElementById('modTableBody');
-    modTableBody.innerHTML = '';
-
-    // Filter mods based on search input
-    const modSearchInput = document.getElementById('modSearchInput').value.toLowerCase();
-    const filteredMods = dataCache.mods.filter(mod => {
-        return mod.ModName.toLowerCase().includes(modSearchInput) ||
-               mod.Description.toLowerCase().includes(modSearchInput) ||
-               mod.Effect.toLowerCase().includes(modSearchInput);
+    const searchTerm = document.getElementById('modSearchInput').value.toLowerCase();
+    const filteredMods = mods.filter(mod => {
+        const matchesSearch = mod.ModName.toLowerCase().includes(searchTerm) || mod.Effect.toLowerCase().includes(searchTerm) || mod.Description.toLowerCase().includes(searchTerm);
+        return matchesSearch;
     });
 
-    if (filteredMods.length === 0) {
-        document.getElementById('modTableContainer').classList.add('hidden');
-        document.getElementById('noModsMessage').classList.remove('hidden');
-    } else {
-        document.getElementById('modTableContainer').classList.remove('hidden');
-        document.getElementById('noModsMessage').classList.add('hidden');
+    if (filteredMods.length > 0) {
         filteredMods.forEach(mod => {
             const row = document.createElement('tr');
-            row.classList.add('hover:bg-gray-100', 'dark:hover:bg-gray-600', 'transition-colors', 'duration-200', 'border-b', 'border-gray-200', 'dark:border-gray-600');
             row.innerHTML = `
-                <td class="py-4 px-6 font-medium whitespace-nowrap">${mod.ModName}</td>
-                <td class="py-4 px-6">${mod.Effect}</td>
-                <td class="py-4 px-6">${mod.Description}</td>
+                <td class="font-semibold text-gray-900 dark:text-gray-100">${mod.ModName}</td>
+                <td>${mod.Effect}</td>
+                <td>${mod.Description}</td>
             `;
             modTableBody.appendChild(row);
         });
+        modTableContainer.classList.remove('hidden');
+    } else {
+        modTableBody.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-gray-500 dark:text-gray-400">No mods found.</td></tr>';
+        modTableContainer.classList.remove('hidden');
     }
 };
 
-// Function to render the tier list table
-const renderTierListTable = () => {
-    if (!dataCache.tierList) {
-        document.getElementById('tierListTableContainer').classList.add('hidden');
-        document.getElementById('noTierListMessage').classList.remove('hidden');
+const renderTierList = () => {
+    tierListTableBody.innerHTML = '';
+    tierListTableContainer.classList.add('hidden');
+    noTierListMessage.classList.add('hidden');
+
+    if (!tierList || tierList.length === 0) {
+        noTierListMessage.classList.remove('hidden');
         return;
     }
 
-    const tierListTableBody = document.getElementById('tierListTableBody');
-    tierListTableBody.innerHTML = '';
+    // Sort by NumericalRank
+    const sortedTierList = tierList.sort((a, b) => parseFloat(a.NumericalRank) - parseFloat(b.NumericalRank));
 
-    if (dataCache.tierList.length === 0) {
-        document.getElementById('tierListTableContainer').classList.add('hidden');
-        document.getElementById('noTierListMessage').classList.remove('hidden');
-    } else {
-        document.getElementById('tierListTableContainer').classList.remove('hidden');
-        document.getElementById('noTierListMessage').classList.add('hidden');
-        dataCache.tierList.forEach(item => {
+    if (sortedTierList.length > 0) {
+        sortedTierList.forEach(item => {
             const row = document.createElement('tr');
-            row.classList.add('hover:bg-gray-100', 'dark:hover:bg-gray-600', 'transition-colors', 'duration-200', 'border-b', 'border-gray-200', 'dark:border-gray-600');
             row.innerHTML = `
-                <td class="py-4 px-6 font-medium whitespace-nowrap">${item.UnitName}</td>
-                <td class="py-4 px-6">${item.Tier}</td>
-                <td class="py-4 px-6">${item.NumericalRank}</td>
-                <td class="py-4 px-6">${item.Notes}</td>
+                <td class="font-semibold text-gray-900 dark:text-gray-100">${item.UnitName}</td>
+                <td>${item.Tier}</td>
+                <td>${item.NumericalRank}</td>
+                <td>${item.Notes}</td>
             `;
             tierListTableBody.appendChild(row);
         });
+        tierListTableContainer.classList.remove('hidden');
+    } else {
+        tierListTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4 text-gray-500 dark:text-gray-400">No tier list data available.</td></tr>';
+        tierListTableContainer.classList.remove('hidden');
     }
 };
 
-// Function to render the expanded unit details
-const renderUnitDetails = (unit, row) => {
-    const detailsRow = document.createElement('tr');
-    detailsRow.id = `details-${unit.UnitName}`;
-    detailsRow.classList.add('expanded-details-row', 'bg-gray-50', 'dark:bg-gray-800');
-    detailsRow.innerHTML = `
-        <td colspan="8" class="p-6">
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <!-- Left Column: Mod and Max Level Toggles -->
-                <div class="flex flex-col space-y-4">
-                    <div class="flex items-center space-x-2 p-2 rounded-lg bg-gray-200 dark:bg-gray-700">
-                        <label for="toggleModEffects-${unit.UnitName}" class="text-sm font-medium text-gray-900 dark:text-gray-100">Simulate Mod Effects</label>
-                        <input type="checkbox" id="toggleModEffects-${unit.UnitName}" class="toggle-switch">
-                    </div>
-                    <div class="flex items-center space-x-2 p-2 rounded-lg bg-gray-200 dark:bg-gray-700">
-                        <label for="toggleMaxLevel-${unit.UnitName}" class="text-sm font-medium text-gray-900 dark:text-gray-100">Simulate Max Level</label>
-                        <input type="checkbox" id="toggleMaxLevel-${unit.UnitName}" class="toggle-switch">
-                    </div>
-                    <!-- Dropdown for Mods -->
-                    <div class="mod-dropdown-container">
-                        <label for="mod-select-${unit.UnitName}" class="block text-sm font-medium text-gray-700 dark:text-gray-200">Select a Mod:</label>
-                        <select id="mod-select-${unit.UnitName}" class="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-600 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm rounded-md dark:bg-gray-700 dark:text-white">
-                            <option value="">-- No Mod --</option>
-                            ${dataCache.mods.map(mod => `<option value="${mod.ModName}">${mod.ModName}</option>`).join('')}
-                        </select>
-                    </div>
-                </div>
 
-                <!-- Right Column: Stats and Info -->
-                <div id="unit-stats-${unit.UnitName}" class="bg-gray-100 dark:bg-gray-700 p-4 rounded-lg shadow-inner">
-                    <h4 class="text-lg font-bold mb-2">Detailed Stats:</h4>
-                    <p><strong>Rarity:</strong> <span class="rarity-badge">${unit.Rarity}</span></p>
-                    <p><strong>Class:</strong> <span class="class-badge">${unit.Class}</span></p>
-                    <p><strong>Damage:</strong> ${unit.Damage}</p>
-                    <p><strong>HP:</strong> ${unit.HP}</p>
-                    <p><strong>DPS:</strong> ${unit.DPS}</p>
-                    <p><strong>Range:</strong> ${unit.Range}</p>
-                    <p><strong>Attack Speed:</strong> ${unit.AttackSpeed}</p>
+const renderUnitDetails = (unit, row) => {
+    const detailRow = document.createElement('tr');
+    detailRow.id = `details-${unit.id}`;
+    detailRow.classList.add('expanded-details-row', 'bg-gray-50', 'dark:bg-gray-800');
+    
+    // Check if mod effects are enabled globally
+    const modEffectsEnabled = document.getElementById('toggleModEffects')?.checked;
+
+    // Build the details content
+    let detailsHtml = `
+        <td colspan="8" class="px-6 py-4">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-700 dark:text-gray-300">
+                <div class="space-y-2">
+                    <p><strong>Description:</strong> ${unit.Description}</p>
                     <p><strong>Cost:</strong> ${unit.Cost}</p>
                     <p><strong>Ability:</strong> ${unit.Ability}</p>
-                    <p><strong>Level Damage Gain:</strong> ${unit.LevelDamageGain}</p>
-                    <p><strong>Level HP Gain:</strong> ${unit.LevelHPGain}</p>
+                    <p><strong>Ability Description:</strong> ${unit.AbilityDescription}</p>
+                    <p><strong>Level 1 Stats:</strong> Damage: ${unit.Damage}, HP: ${unit.HP}</p>
+                    <p><strong>Max Level Stats:</strong> Damage: ${unit.DamageMax}, HP: ${unit.HPMax}</p>
+                </div>
+                <div class="space-y-2">
+                    <p><strong>Mod Effects:</strong></p>
+                    <ul class="list-disc list-inside">
+    `;
+
+    // Filter and display mods relevant to the unit's class
+    const unitMods = mods.filter(mod => mod.Class === unit.Class);
+    if (unitMods.length > 0) {
+        unitMods.forEach(mod => {
+            detailsHtml += `<li><strong>${mod.ModName}:</strong> ${mod.Description}</li>`;
+        });
+    } else {
+        detailsHtml += `<li>No specific mods found for this class.</li>`;
+    }
+
+    detailsHtml += `
+                    </ul>
                 </div>
             </div>
         </td>
     `;
-    row.parentNode.insertBefore(detailsRow, row.nextSibling);
-
-    // Event listener for the mod select dropdown
-    const modSelect = document.getElementById(`mod-select-${unit.UnitName}`);
-    modSelect.addEventListener('change', () => {
-        updateUnitStats(unit, unit.UnitName);
-    });
-
-    // Event listener for the individual max level toggle
-    const toggleMaxLevelUnit = document.getElementById(`toggleMaxLevel-${unit.UnitName}`);
-    toggleMaxLevelUnit.addEventListener('change', () => {
-        updateUnitStats(unit, unit.UnitName);
-    });
+    detailRow.innerHTML = detailsHtml;
+    row.after(detailRow);
 };
 
-// Function to update unit stats in the expanded view
-const updateUnitStats = (originalUnit, unitId) => {
-    let currentUnit = { ...originalUnit };
-    const modSelect = document.getElementById(`mod-select-${unitId}`);
-    const toggleMaxLevelUnit = document.getElementById(`toggleMaxLevel-${unitId}`);
-    const statsContainer = document.getElementById(`unit-stats-${unitId}`);
-
-    // Apply max level effect if toggled
-    if (toggleMaxLevelUnit.checked) {
-        currentUnit.Damage = parseFloat(currentUnit.Damage) + (parseFloat(currentUnit.LevelDamageGain) * 99);
-        currentUnit.HP = parseFloat(currentUnit.HP) + (parseFloat(currentUnit.LevelHPGain) * 99);
-        currentUnit.DPS = calculateDPS(currentUnit.Damage, currentUnit.AttackSpeed);
-    }
-
-    // Apply mod effect if a mod is selected
-    const selectedModName = modSelect.value;
-    if (selectedModName) {
-        const mod = dataCache.mods.find(m => m.ModName === selectedModName);
-        if (mod) {
-            const effectValue = parseModEffect(mod.Effect);
-            switch (mod.Stat) {
-                case 'Damage':
-                    currentUnit.Damage = parseFloat(currentUnit.Damage) + (parseFloat(currentUnit.Damage) * effectValue);
-                    break;
-                case 'HP':
-                    currentUnit.HP = parseFloat(currentUnit.HP) + (parseFloat(currentUnit.HP) * effectValue);
-                    break;
-                case 'DPS':
-                    currentUnit.DPS = parseFloat(currentUnit.DPS) + (parseFloat(currentUnit.DPS) * effectValue);
-                    break;
-                case 'Range':
-                    currentUnit.Range = parseFloat(currentUnit.Range) + (parseFloat(currentUnit.Range) * effectValue);
-                    break;
-                case 'Speed':
-                    currentUnit.AttackSpeed = parseFloat(currentUnit.AttackSpeed) - (parseFloat(currentUnit.AttackSpeed) * effectValue);
-                    break;
-            }
-        }
-    }
-
-    statsContainer.innerHTML = `
-        <h4 class="text-lg font-bold mb-2">Detailed Stats:</h4>
-        <p><strong>Rarity:</strong> <span class="rarity-badge">${currentUnit.Rarity}</span></p>
-        <p><strong>Class:</strong> <span class="class-badge">${currentUnit.Class}</span></p>
-        <p><strong>Damage:</strong> ${parseFloat(currentUnit.Damage).toFixed(2)}</p>
-        <p><strong>HP:</strong> ${parseFloat(currentUnit.HP).toFixed(2)}</p>
-        <p><strong>DPS:</strong> ${parseFloat(currentUnit.DPS).toFixed(2)}</p>
-        <p><strong>Range:</strong> ${parseFloat(currentUnit.Range).toFixed(2)}</p>
-        <p><strong>Attack Speed:</strong> ${parseFloat(currentUnit.AttackSpeed).toFixed(2)}</p>
-        <p><strong>Cost:</strong> ${currentUnit.Cost}</p>
-        <p><strong>Ability:</strong> ${currentUnit.Ability}</p>
-        <p><strong>Level Damage Gain:</strong> ${currentUnit.LevelDamageGain}</p>
-        <p><strong>Level HP Gain:</strong> ${currentUnit.LevelHPGain}</p>
-    `;
-};
-
-
-// Function to render the unit's rarity color in the table
-const renderUnitRarity = (rarity) => {
-    const rarityColor = gameData.RarityColors[rarity] ? gameData.RarityColors[rarity].color : '#000000';
-    return `<td style="color: ${rarityColor};">${rarity}</td>`;
-};
-
-// Function to render the unit's class color in the table
-const renderUnitClass = (unitClass) => {
-    const classColor = gameData.ClassesColors[unitClass] ? gameData.ClassesColors[unitClass].color : '#000000';
-    return `<td style="color: ${classColor};">${unitClass}</td>`;
-};
-
-// Function to sort the data
-const sortData = (column) => {
-    const isAsc = sortOrder[column] === 'asc';
-    sortOrder[column] = isAsc ? 'desc' : 'asc';
-
-    units.sort((a, b) => {
-        const aValue = a[column];
-        const bValue = b[column];
-
-        // Handle numeric and string sorting
-        if (!isNaN(aValue) && !isNaN(bValue)) {
-            return isAsc ? aValue - bValue : bValue - aValue;
+// Function to handle sorting
+const sortData = (data, column, order) => {
+    const sortedData = [...data].sort((a, b) => {
+        const valA = a[column];
+        const valB = b[column];
+        
+        // Handle number and string sorting
+        const isNumber = !isNaN(parseFloat(valA)) && isFinite(valA);
+        if (isNumber) {
+            return order === 'asc' ? parseFloat(valA) - parseFloat(valB) : parseFloat(valB) - parseFloat(valA);
         } else {
-            return isAsc ? aValue.localeCompare(bValue) : bValue.localeCompare(aValue);
+            return order === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
         }
     });
 
-    filterAndRenderUnits(); // Re-render the table with sorted data
+    // Update sort icons
+    const allIcons = document.querySelectorAll('#unitTable thead th i');
+    allIcons.forEach(icon => icon.classList.remove('fa-sort-up', 'fa-sort-down'));
+    const activeHeader = document.querySelector(`th[data-sort="${column}"] i`);
+    if (activeHeader) {
+        activeHeader.classList.add(order === 'asc' ? 'fa-sort-up' : 'fa-sort-down');
+    }
+
+    return sortedData;
+};
+
+// Function to format numbers with commas
+const formatNumber = (num) => {
+    if (num === null || num === undefined) return '';
+    return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+};
+
+// Function to check if a color is light or dark (for text contrast)
+const isLight = (hexColor) => {
+    const r = parseInt(hexColor.substring(1, 3), 16);
+    const g = parseInt(hexColor.substring(3, 5), 16);
+    const b = parseInt(hexColor.substring(5, 7), 16);
+    const luma = (0.2126 * r + 0.7152 * g + 0.0722 * b);
+    return luma > 128;
+};
+
+// Function to show/hide loading spinner
+const showLoading = () => {
+    unitsTab.disabled = true;
+    modsTab.disabled = true;
+    tierListTab.disabled = true;
+    loadingSpinner.classList.remove('hidden');
+    unitTableContainer.classList.add('hidden');
+    modTableContainer.classList.add('hidden');
+    tierListTableContainer.classList.add('hidden');
+};
+
+const hideLoading = () => {
+    unitsTab.disabled = false;
+    modsTab.disabled = false;
+    tierListTab.disabled = false;
+    loadingSpinner.classList.add('hidden');
 };
 
 // Function to toggle dark mode
 const toggleDarkMode = () => {
-    const body = document.body;
-    const darkModeIcon = document.getElementById('darkModeIcon');
-    if (body.classList.contains('dark')) {
-        body.classList.remove('dark');
-        darkModeIcon.classList.replace('fa-sun', 'fa-moon');
-    } else {
-        body.classList.add('dark');
-        darkModeIcon.classList.replace('fa-moon', 'fa-sun');
-    }
+    document.body.classList.toggle('dark');
+    const isDark = document.body.classList.contains('dark');
+    localStorage.setItem('darkMode', isDark);
+    darkModeIcon.classList.toggle('fa-moon', !isDark);
+    darkModeIcon.classList.toggle('fa-sun', isDark);
 };
 
-// Function to handle tab switching
+// Function to switch between tabs
 const switchTab = (tabId) => {
-    // Hide all tab contents and remove active class from all tabs
-    document.querySelectorAll('.tab-content').forEach(tab => tab.classList.add('hidden'));
-    document.querySelectorAll('.tab-button').forEach(button => button.classList.remove('active'));
+    // Hide all sections
+    unitsSection.classList.add('hidden');
+    modsSection.classList.add('hidden');
+    tierListSection.classList.add('hidden');
 
-    // Show the selected tab content and add active class to the selected tab
-    const selectedSection = document.getElementById(tabId.replace('Tab', 'Section'));
-    if (selectedSection) {
-        selectedSection.classList.remove('hidden');
-    }
-    document.getElementById(tabId).classList.add('active');
-
-    // Trigger rendering for the selected tab
+    // Deactivate all buttons
+    unitsTab.classList.remove('active');
+    modsTab.classList.remove('active');
+    tierListTab.classList.remove('active');
+    
+    // Show the selected section and activate its button
     if (tabId === 'unitsTab') {
+        unitsSection.classList.remove('hidden');
+        unitsTab.classList.add('active');
         filterAndRenderUnits();
     } else if (tabId === 'modsTab') {
-        renderModsTable();
+        modsSection.classList.remove('hidden');
+        modsTab.classList.add('active');
+        renderMods();
     } else if (tabId === 'tierListTab') {
-        renderTierListTable();
+        tierListSection.classList.remove('hidden');
+        tierListTab.classList.add('active');
+        renderTierList();
     }
+    currentActiveTab = tabId;
 };
 
-// Debounce function to limit function calls
-const debounce = (func, delay) => {
-    let timeoutId;
-    return (...args) => {
-        clearTimeout(timeoutId);
-        timeoutId = setTimeout(() => {
-            func.apply(this, args);
-        }, delay);
-    };
-};
+// Main initialization function
+window.onload = () => {
+    // Check for dark mode preference
+    if (localStorage.getItem('darkMode') === 'true') {
+        document.body.classList.add('dark');
+        darkModeIcon.classList.remove('fa-moon');
+        darkModeIcon.classList.add('fa-sun');
+    }
 
-window.onload = async () => {
-    await fetchAllData();
-    initializeFilters();
-    filterAndRenderUnits();
-    renderModsTable(); // Initial render for mods section
-    renderTierListTable(); // Initial render for tier list section
+    // Load data from Google Sheets
+    loadAllData();
 
-    // Element selectors
-    const searchInput = document.getElementById('searchInput');
-    const rarityFilter = document.getElementById('rarityFilter');
-    const classFilter = document.getElementById('classFilter');
-    const tableHeaders = document.querySelectorAll('#unitTable thead th');
-    const darkModeToggle = document.getElementById('darkModeToggle');
-    const unitsTab = document.getElementById('unitsTab');
-    const modsTab = document.getElementById('modsTab');
-    const tierListTab = document.getElementById('tierListTab');
-    const unitTableBody = document.getElementById('unitTableBody');
-    const modSearchInput = document.getElementById('modSearchInput');
-    const toggleMaxLevel = document.getElementById('toggleMaxLevel');
-
-    // Debounce the search input to improve performance
+    // Event listeners for units tab
     const debouncedFilterAndRenderUnits = debounce(filterAndRenderUnits, 300);
     searchInput.addEventListener('input', debouncedFilterAndRenderUnits);
-    rarityFilter.addEventListener('change', filterAndRenderUnits);
-    classFilter.addEventListener('change', filterAndRenderUnits);
+    rarityFilter.addEventListener('change', debouncedFilterAndRenderUnits);
+    classFilter.addEventListener('change', debouncedFilterAndRenderUnits);
 
-    // Debounce the mod search input
-    modSearchInput.addEventListener('input', debounce(renderModsTable, 300));
+    // Event listener for mods tab search
+    const modSearchInput = document.getElementById('modSearchInput');
+    if (modSearchInput) {
+        modSearchInput.addEventListener('input', debounce(renderMods, 300));
+    }
 
     // Table Header Sorting Events
     tableHeaders.forEach(header => {
         header.addEventListener('click', () => {
             const sortColumn = header.dataset.sort;
             if (sortColumn) {
-                sortData(sortColumn);
+                // Toggle sort order
+                if (currentSort.column === sortColumn) {
+                    currentSort.order = currentSort.order === 'asc' ? 'desc' : 'asc';
+                } else {
+                    currentSort.column = sortColumn;
+                    currentSort.order = 'asc';
+                }
+                filterAndRenderUnits();
             }
         });
     });
@@ -565,13 +483,23 @@ window.onload = async () => {
     // Tab Switching Events
     unitsTab.addEventListener('click', () => switchTab('unitsTab'));
     modsTab.addEventListener('click', () => switchTab('modsTab'));
-    tierListTab.addEventListener('click', () => switchTab('tierListTab')); // Tier List Tab event
+    tierListTab.addEventListener('click', () => switchTab('tierListTab'));
+
+    // Mod Effects Toggle Event (global)
+    if (toggleModEffects) {
+        toggleModEffects.addEventListener('change', () => {
+            modEffectsEnabled = toggleModEffects.checked;
+            filterAndRenderUnits(); // Re-render units to apply/remove global mod effects
+        });
+    }
 
     // Global Max Level Toggle Event
-    toggleMaxLevel.addEventListener('change', () => {
-        maxLevelGlobalEnabled = toggleMaxLevel.checked;
-        filterAndRenderUnits(); // Re-render units to apply/remove global max level effects
-    });
+    if (toggleMaxLevel) {
+        toggleMaxLevel.addEventListener('change', () => {
+            maxLevelGlobalEnabled = toggleMaxLevel.checked;
+            filterAndRenderUnits(); // Re-render units to apply/remove global max level effects
+        });
+    }
 
     // Event Delegation for expanding/collapsing table rows
     unitTableBody.addEventListener('click', (event) => {
@@ -592,7 +520,7 @@ window.onload = async () => {
             existingDetailsRow.remove();
             expandedUnitRowId = null;
         } else {
-            const unit = units.find(u => u.UnitName === unitId);
+            const unit = units.find(u => u.id === unitId);
             if (unit) {
                 renderUnitDetails(unit, row);
                 expandedUnitRowId = unitId;
