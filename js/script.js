@@ -2,6 +2,7 @@
 // why you looking here?
 // import { rawUnitData } from './unitsData.js';
 // import { rawModData } from './modsData.js';
+// import { unitImages } from './unitImages.js'; // REMOVED: This file doesn't exist.
 import { gameData } from './gameData.js'; // Import gameData
 
 // IMPORTANT: Base URL for your published Google Sheet
@@ -17,9 +18,9 @@ const GOOGLE_SHEET_MOD_DATA_CSV_URL = GOOGLE_SHEET_BASE_URL + '&gid=331730679'; 
 let units = []; // Stores parsed unit data
 let mods = [];  // Stores parsed mod data
 let tierList = []; // Stores parsed tier list data
-const selectedMods = new Map(); // Stores the selected mod for each unit using its Label as key
 let currentSortColumn = null;
 let currentSortDirection = 'asc'; // 'asc' or 'desc'
+let modEffectsEnabled = false; // State for global mod effects toggle
 let maxLevelGlobalEnabled = false; // Global state for max level toggle
 
 // DOM Elements
@@ -40,6 +41,7 @@ const tierListTab = document.getElementById('tierListTab'); // New Tier List Tab
 const unitsContent = document.getElementById('unitsContent');
 const modsContent = document.getElementById('modsContent');
 const tierListContent = document.getElementById('tierListContent'); // New Tier List Content
+const toggleModEffects = document.getElementById('toggleModEffects');
 const toggleMaxLevel = document.getElementById('toggleMaxLevel'); // Global Max Level toggle
 const modsTableBody = document.getElementById('modsTableBody');
 const tierListTableBody = document.getElementById('tierListTableBody');
@@ -80,47 +82,38 @@ const parseCSV = (csvText) => {
 };
 
 // Function to calculate final stats based on mods and level
-const calculateFinalStats = (unit, isMaxLevel, selectedModTitle) => {
+const calculateFinalStats = (unit, modsData, isMaxLevel = false) => {
     const finalStats = { ...unit };
-    
+    const level = isMaxLevel ? 3 : 1; // Assuming max level is 3, min is 1
+    const levelModifier = gameData.Leveling[level];
+
     // Apply level modifiers
-    if (isMaxLevel) {
-        const levelModifier = gameData.Leveling[3]; // Assuming max level is 3
-        if (levelModifier) {
-            if (finalStats.HP && levelModifier.HP) {
-                finalStats.HP += finalStats.HP * levelModifier.HP._value;
-            }
-            if (finalStats.Damage && levelModifier.Damage) {
-                finalStats.Damage += finalStats.Damage * levelModifier.Damage._value;
-            }
+    if (levelModifier) {
+        if (finalStats.HP && levelModifier.HP) {
+            finalStats.HP += finalStats.HP * levelModifier.HP;
+        }
+        if (finalStats.Damage && levelModifier.Damage) {
+            finalStats.Damage += finalStats.Damage * levelModifier.Damage;
         }
     }
 
-    // Apply selected mod effect
-    if (selectedModTitle && selectedModTitle !== 'None') {
-        const selectedMod = mods.find(mod => mod.Title === selectedModTitle);
-        if (selectedMod && selectedMod.Stat && selectedMod.Amount) {
-            if (finalStats[selectedMod.Stat] !== null && finalStats[selectedMod.Stat] !== undefined) {
-                // Apply the mod effect to the relevant stat
-                finalStats[selectedMod.Stat] += finalStats[selectedMod.Stat] * selectedMod.Amount;
+    // Apply mod effects
+    if (modsData) {
+        const matchingMod = modsData.find(mod => mod.Label === unit.Label);
+        if (matchingMod && matchingMod.Stat && matchingMod.Amount) {
+            // Apply the mod effect based on the stat
+            if (finalStats[matchingMod.Stat] !== undefined) {
+                finalStats[matchingMod.Stat] += finalStats[matchingMod.Stat] * matchingMod.Amount;
             }
         }
     }
     
-    // Calculate DPS
-    if (finalStats.Damage !== null && finalStats.Cooldown !== null && finalStats.Cooldown > 0) {
-        finalStats.DPS = finalStats.Damage / finalStats.Cooldown;
-    } else {
-        finalStats.DPS = null;
-    }
-
     // Round numerical values for display
     for (const key in finalStats) {
         if (typeof finalStats[key] === 'number') {
             finalStats[key] = parseFloat(finalStats[key].toFixed(2));
         }
     }
-
     return finalStats;
 };
 
@@ -152,55 +145,29 @@ const renderUnitsTable = (unitsToRender) => {
     unitTableContainer.classList.remove('hidden');
 
     unitsToRender.forEach(unit => {
-        const selectedModTitle = selectedMods.get(unit.Label) || 'None';
-        const finalStats = calculateFinalStats(unit, maxLevelGlobalEnabled, selectedModTitle);
         const row = document.createElement('tr');
         row.classList.add('hover:bg-gray-100', 'dark:hover:bg-gray-700', 'transition-colors', 'duration-200');
-        
-        // Handle "Community Rank" display
-        const communityRank = unit.Tier && unit.NumericalRank ? `${unit.Tier} (${unit.NumericalRank})` : 'N/A';
-
-        // Create the mod dropdown
-        const modDropdown = document.createElement('select');
-        modDropdown.classList.add('bg-gray-200', 'dark:bg-gray-700', 'px-2', 'py-1', 'rounded-md', 'text-sm', 'cursor-pointer');
-        modDropdown.innerHTML = `<option value="None">None</option>` + mods.map(mod => `<option value="${mod.Title}" ${selectedModTitle === mod.Title ? 'selected' : ''}>${mod.Title}</option>`).join('');
-
-        // Add event listener to update stats when a new mod is selected
-        modDropdown.addEventListener('change', (e) => {
-            const newModTitle = e.target.value;
-            selectedMods.set(unit.Label, newModTitle);
-            updateUnitRow(row, unit, newModTitle);
-        });
-
-        // Set up the row content
         row.innerHTML = `
             <td class="px-6 py-4 whitespace-nowrap text-center">
+                <!-- NEW: Added image from the spreadsheet data -->
                 ${unit.ImageURL ? `<img src="${unit.ImageURL}" alt="${unit.Label}" class="w-10 h-10 rounded-full mx-auto object-cover">` : `<div class="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 mx-auto flex items-center justify-center text-xs text-gray-500">No Img</div>`}
             </td>
             <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-gray-100">${unit.Label}</td>
             <td class="px-6 py-4 whitespace-nowrap text-center">${unit.Rarity}</td>
             <td class="px-6 py-4 whitespace-nowrap text-center">${unit.Class}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-center">${finalStats.HP}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-center">${finalStats.Damage}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-center">${finalStats.DPS !== null ? finalStats.DPS : 'N/A'}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-center" id="mod-dropdown-${unit.Label.replace(/\s+/g, '-')}"></td>
-            <td class="px-6 py-4 whitespace-nowrap text-center">${communityRank}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-center">${unit.HP}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-center">${unit.Damage}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-center">${unit.Cooldown}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-center">${unit.Distance}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-center">${unit.Knockback}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-center">${unit.CritChance}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-center">${unit.CritDamage}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-center">${unit.Accuracy}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-center">${unit.EvadeChance}</td>
+            <td class="px-6 py-4 whitespace-nowrap text-center">${unit.AttackEffect}</td>
         `;
-
         unitTableBody.appendChild(row);
-        document.getElementById(`mod-dropdown-${unit.Label.replace(/\s+/g, '-')}`).appendChild(modDropdown);
     });
-};
-
-// Function to update a single unit row with new stats
-const updateUnitRow = (row, unit, selectedModTitle) => {
-    const finalStats = calculateFinalStats(unit, maxLevelGlobalEnabled, selectedModTitle);
-    
-    // Find the correct cells and update their content
-    const cells = row.querySelectorAll('td');
-    cells[4].textContent = finalStats.HP;
-    cells[5].textContent = finalStats.Damage;
-    cells[6].textContent = finalStats.DPS !== null ? finalStats.DPS : 'N/A';
 };
 
 // Function to render the mods table
@@ -299,19 +266,25 @@ const filterAndRenderUnits = () => {
         filteredUnits = filteredUnits.filter(unit => unit.Class === selectedClass);
     }
 
+    // Apply global max level and mod effects if toggled
+    const unitsToDisplay = filteredUnits.map(unit => {
+        let finalStats = { ...unit };
+        if (maxLevelGlobalEnabled) {
+            finalStats = calculateFinalStats(finalStats, mods, true);
+        }
+        if (modEffectsEnabled) {
+            finalStats = calculateFinalStats(finalStats, mods);
+        }
+        return finalStats;
+    });
+
     // Apply sorting
     if (currentSortColumn) {
-        // Create a copy to sort and apply calculated stats for sorting
-        const unitsWithStats = filteredUnits.map(unit => {
-            const selectedModTitle = selectedMods.get(unit.Label) || 'None';
-            return { ...unit, ...calculateFinalStats(unit, maxLevelGlobalEnabled, selectedModTitle) };
-        });
-
-        unitsWithStats.sort((a, b) => {
+        unitsToDisplay.sort((a, b) => {
             const aValue = a[currentSortColumn];
             const bValue = b[currentSortColumn];
 
-            // Handle "N/A" and null as a low value for sorting
+            // Handle "N/A" as a low value for sorting
             const valA = aValue === "N/A" || aValue === null ? (currentSortDirection === 'asc' ? -Infinity : Infinity) : aValue;
             const valB = bValue === "N/A" || bValue === null ? (currentSortDirection === 'asc' ? -Infinity : Infinity) : bValue;
 
@@ -319,12 +292,9 @@ const filterAndRenderUnits = () => {
             if (valA > valB) return currentSortDirection === 'asc' ? 1 : -1;
             return 0;
         });
-
-        // Re-order the original filtered units array to match the sort
-        filteredUnits = unitsWithStats.map(sortedUnit => units.find(unit => unit.Label === sortedUnit.Label));
     }
     
-    renderUnitsTable(filteredUnits);
+    renderUnitsTable(unitsToDisplay);
 };
 
 // Sorting function
@@ -397,15 +367,6 @@ window.onload = async () => {
 
     if (unitData) {
         units = unitData;
-        
-        // Merge tier list data into units
-        if (tierListData) {
-            units = units.map(unit => {
-                const matchingTier = tierListData.find(tierItem => tierItem.UnitName === unit.Label);
-                return { ...unit, Tier: matchingTier?.Tier || 'N/A', NumericalRank: matchingTier?.NumericalRank || 'N/A' };
-            });
-        }
-        
         populateFilters();
         filterAndRenderUnits(); // Initial render of units
     }
@@ -444,6 +405,12 @@ window.onload = async () => {
     unitsTab.addEventListener('click', () => switchTab('unitsTab'));
     modsTab.addEventListener('click', () => switchTab('modsTab'));
     tierListTab.addEventListener('click', () => switchTab('tierListTab')); // Tier List Tab event
+
+    // Mod Effects Toggle Event (global)
+    toggleModEffects.addEventListener('change', () => {
+        modEffectsEnabled = toggleModEffects.checked;
+        filterAndRenderUnits(); // Re-render units to apply/remove global mod effects
+    });
 
     // Global Max Level Toggle Event
     toggleMaxLevel.addEventListener('change', () => {

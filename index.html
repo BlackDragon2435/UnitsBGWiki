@@ -60,6 +60,14 @@
                 <!-- Global Toggles for Units -->
                 <div class="flex items-center justify-center space-x-6 my-4">
                     <label class="flex items-center cursor-pointer">
+                        <span class="mr-2 text-sm font-medium">Apply Mod Effects</span>
+                        <div class="relative">
+                            <input type="checkbox" id="toggleModEffects" class="sr-only">
+                            <div class="block bg-gray-600 w-10 h-6 rounded-full transition-colors duration-300"></div>
+                            <div class="dot absolute left-1 top-1 bg-white w-4 h-4 rounded-full transition-transform duration-300"></div>
+                        </div>
+                    </label>
+                    <label class="flex items-center cursor-pointer">
                         <span class="mr-2 text-sm font-medium">Max Level</span>
                         <div class="relative">
                             <input type="checkbox" id="toggleMaxLevel" class="sr-only">
@@ -79,15 +87,21 @@
                     <table id="unitTable" class="min-w-full">
                         <thead>
                             <tr>
+                                <!-- NEW: Added a new header for the image -->
                                 <th class="cursor-pointer py-3 px-6 text-center text-xs font-medium text-gray-50 uppercase tracking-wider">Image</th>
                                 <th class="cursor-pointer py-3 px-6 text-left text-xs font-medium text-gray-50 uppercase tracking-wider" data-sort="Label">UnitName</th>
                                 <th class="cursor-pointer py-3 px-6 text-center text-xs font-medium text-gray-50 uppercase tracking-wider" data-sort="Rarity">Rarity</th>
                                 <th class="cursor-pointer py-3 px-6 text-center text-xs font-medium text-gray-50 uppercase tracking-wider" data-sort="Class">Class</th>
                                 <th class="cursor-pointer py-3 px-6 text-center text-xs font-medium text-gray-50 uppercase tracking-wider" data-sort="HP">HP</th>
                                 <th class="cursor-pointer py-3 px-6 text-center text-xs font-medium text-gray-50 uppercase tracking-wider" data-sort="Damage">Damage</th>
-                                <th class="cursor-pointer py-3 px-6 text-center text-xs font-medium text-gray-50 uppercase tracking-wider" data-sort="DPS">DPS</th>
-                                <th class="cursor-pointer py-3 px-6 text-center text-xs font-medium text-gray-50 uppercase tracking-wider">Mod</th>
-                                <th class="cursor-pointer py-3 px-6 text-center text-xs font-medium text-gray-50 uppercase tracking-wider" data-sort="Tier">Community Rank</th>
+                                <th class="cursor-pointer py-3 px-6 text-center text-xs font-medium text-gray-50 uppercase tracking-wider" data-sort="Cooldown">Cooldown</th>
+                                <th class="cursor-pointer py-3 px-6 text-center text-xs font-medium text-gray-50 uppercase tracking-wider" data-sort="Distance">Distance</th>
+                                <th class="cursor-pointer py-3 px-6 text-center text-xs font-medium text-gray-50 uppercase tracking-wider" data-sort="Knockback">Knockback</th>
+                                <th class="cursor-pointer py-3 px-6 text-center text-xs font-medium text-gray-50 uppercase tracking-wider" data-sort="CritChance">CritChance</th>
+                                <th class="cursor-pointer py-3 px-6 text-center text-xs font-medium text-gray-50 uppercase tracking-wider" data-sort="CritDamage">CritDamage</th>
+                                <th class="cursor-pointer py-3 px-6 text-center text-xs font-medium text-gray-50 uppercase tracking-wider" data-sort="Accuracy">Accuracy</th>
+                                <th class="cursor-pointer py-3 px-6 text-center text-xs font-medium text-gray-50 uppercase tracking-wider" data-sort="EvadeChance">EvadeChance</th>
+                                <th class="cursor-pointer py-3 px-6 text-center text-xs font-medium text-gray-50 uppercase tracking-wider" data-sort="AttackEffect">AttackEffect</th>
                             </tr>
                         </thead>
                         <tbody id="unitTableBody" class="bg-white divide-y divide-gray-200 dark:bg-gray-800 dark:divide-gray-700">
