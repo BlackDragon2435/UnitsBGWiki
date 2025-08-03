@@ -108,6 +108,8 @@ input[type="text"], input[type="number"], select {
     border-color: #d1d5db; /* gray-300 */
     color: #374151; /* gray-800 */
     font-weight: 500; /* Thicker font for options in light mode */
+    /* Add this to ensure select dropdowns are not hidden */
+    z-index: 10;
 }
 
 .dark input[type="text"], .dark input[type="number"], .dark select {
