@@ -1,28 +1,9 @@
 // js/script.js
 // why you looking here?
-
-// Define game data with colors directly in this file
-const gameData = {
-    RarityColors: {
-        'Common': { color: '#4CAF50' }, // Green
-        'Uncommon': { color: '#A5D6A7' }, // Light Green
-        'Rare': { color: '#2196F3' }, // Blue
-        'Legendary': { color: '#FFEB3B' }, // Yellow
-        'Mythic': { color: '#F44336' }, // Red
-        'Demonic': { color: '#9C27B0' }, // Purple
-        'Ancient': { color: '#FFFFFF' } // White
-    },
-    ClassesColors: {
-        'Tank': { color: '#FF7043' },
-        'Melee DPS': { color: '#FBC02D' },
-        'Ranged DPS': { color: '#03A9F4' },
-        'Healer': { color: '#4CAF50' },
-        'Support': { color: '#9575CD' },
-        'Ranged Dps': { color: '#03A9F4' }, // Account for potential spelling variations
-        'Mage': { color: '#5C6BC0' },
-        'Fighter': { color: '#FFB74D' },
-    }
-};
+// import { rawUnitData } from './unitsData.js';
+// import { rawModData } from './modsData.js';
+import { unitImages } from './unitImages.js'; // Keep this for potential fallback or if user wants to keep it
+import { gameData } from './gameData.js'; // Import gameData
 
 // IMPORTANT: Base URL for your published Google Sheet
 // This URL should point to your Google Sheet published to web as CSV.
@@ -171,19 +152,19 @@ function parseGoogleSheetCSV(csvText) {
         // Check for headers specific to each sheet type
         if (line.includes('UnitName') && line.includes('Tier') && line.includes('NumericalRank')) {
             // This is likely the Tier List header
-            headers = parseCSVLine(line).map(header => header.trim());
+            headers = line.split(',').map(header => header.trim());
             headerFound = true;
             dataStartIndex = i + 1;
             break;
         } else if (line.includes('ModName') && line.includes('Title') && line.includes('Rarity')) {
             // This is likely the Mod List header
-            headers = parseCSVLine(line).map(header => header.trim());
+            headers = line.split(',').map(header => header.trim());
             headerFound = true;
             dataStartIndex = i + 1;
             break;
         } else if (line.includes('Label') && line.includes('Class') && line.includes('Rarity') && line.includes('HP')) {
             // This is likely the Unit Info header
-            headers = parseCSVLine(line).map(header => header.trim());
+            headers = line.split(',').map(header => header.trim());
             headerFound = true;
             dataStartIndex = i + 1;
             break;
@@ -351,12 +332,12 @@ function renderUnits(filteredUnits) {
 
             if (column === 'Image') {
                 const img = document.createElement('img');
-                const imageUrl = unit.Image || 'https://placehold.co/50x50/e2e8f0/1a202c?text=IMG';
+                const imageUrl = unit.Image || unitImages[unit.Label] || 'https://placehold.co/50x50/e2e8f0/1a202c?text=IMG';
                 img.src = imageUrl;
                 img.alt = unit.Label;
                 img.classList.add('w-12', 'h-12', 'object-contain', 'mx-auto', 'rounded-full', 'p-1', 'shadow-md', 'bg-white', 'dark:bg-gray-800');
-                // Set a simple rarity border based on the unit's rarity, with a check for gameData
-                const rarityColor = gameData?.RarityColors?.[unit.Rarity]?.color || '#FFFFFF';
+                // Set a simple rarity border based on the unit's rarity
+                const rarityColor = gameData.RarityColors[unit.Rarity]?.color || '#FFFFFF';
                 img.style.borderColor = rarityColor;
                 img.style.borderWidth = '2px';
                 img.style.borderStyle = 'solid';
@@ -365,16 +346,14 @@ function renderUnits(filteredUnits) {
                 const rarityText = document.createElement('span');
                 rarityText.textContent = unit.Rarity;
                 rarityText.classList.add('font-medium');
-                // Use optional chaining for safer access to gameData
-                const rarityColor = gameData?.RarityColors?.[unit.Rarity]?.color || '#FFFFFF';
+                const rarityColor = gameData.RarityColors[unit.Rarity]?.color || '#FFFFFF';
                 rarityText.style.color = rarityColor;
                 cell.appendChild(rarityText);
             } else if (column === 'Class') {
                 const classText = document.createElement('span');
                 classText.textContent = unit.Class;
                 classText.classList.add('font-medium');
-                // Use optional chaining for safer access to gameData
-                const classColor = gameData?.ClassesColors?.[unit.Class]?.color || '#FFFFFF';
+                const classColor = gameData.ClassesColors[unit.Class]?.color || '#FFFFFF';
                 classText.style.color = classColor;
                 cell.appendChild(classText);
             } else if (column === 'HP' || column === 'Damage' || column === 'DPS') {
@@ -515,7 +494,7 @@ function renderMods() {
         const rarityText = document.createElement('span');
         rarityText.textContent = mod.Rarity;
         rarityText.classList.add('font-medium');
-        const rarityColor = gameData?.RarityColors?.[mod.Rarity]?.color || '#FFFFFF';
+        const rarityColor = gameData.RarityColors[mod.Rarity]?.color || '#FFFFFF';
         rarityText.style.color = rarityColor;
         rarityCell.appendChild(rarityText);
         row.appendChild(rarityCell);
