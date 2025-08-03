@@ -3,13 +3,21 @@ body {
     font-family: 'Inter', sans-serif;
     color: #374151; /* gray-800 for light mode */
     line-height: 1.6;
-    background-color: #f3f4f6; /* A lighter gray for light mode */
+    background-color: #1f2937;
+    background-image: linear-gradient(to bottom right, #374151, #1f2937);
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .dark body {
     color: #e5e7eb; /* Light text for dark mode */
-    background-color: #111827; /* A darker, more standard gray for dark mode */
+    background-color: #0d0d14;
+    background-image: linear-gradient(to bottom right, #1f2937, #0d0d14);
+}
+
+/* New class for centering main page titles */
+.main-page-title {
+    text-align: center;
+    width: 100%;
 }
 
 /* Rainbow text animation for the title */
@@ -47,7 +55,7 @@ thead {
 }
 
 .dark thead {
-    background-color: #2563eb; /* A darker blue for dark mode */
+    background-color: #1e3a8a; /* blue-800 */
 }
 
 th, td {
@@ -70,7 +78,7 @@ th:hover {
 }
 
 .dark th:hover {
-    background-color: #1e40af; /* darker blue */
+    background-color: #1c326d; /* darker blue */
 }
 
 tbody tr:nth-child(even) {
@@ -78,7 +86,7 @@ tbody tr:nth-child(even) {
 }
 
 .dark tbody tr:nth-child(even) {
-    background-color: #1f2937; /* A darker gray for dark mode even rows */
+    background-color: #374151; /* dark mode even row */
 }
 
 tbody tr:hover {
@@ -86,7 +94,7 @@ tbody tr:hover {
 }
 
 .dark tbody tr:hover {
-    background-color: #374151; /* gray-700 */
+    background-color: #4b5563; /* gray-600 */
 }
 
 
@@ -102,7 +110,7 @@ input[type="text"], input[type="number"], select {
 .dark input[type="text"], .dark input[type="number"], .dark select {
     border-color: #4b5563; /* gray-600 for dark mode, visible */
     color: #e5e7eb;
-    background-color: #1f2937; /* Darker input background */
+    background-color: #1f2937;
 }
 
 ::placeholder {
