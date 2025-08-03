@@ -1,421 +1,453 @@
-// js/script.js
-// why you looking here?
-// import { rawUnitData } from './unitsData.js';
-// import { rawModData } from './modsData.js';
-// import { unitImages } from './unitImages.js'; // REMOVED: This file doesn't exist.
-import { gameData } from './gameData.js'; // Import gameData
+/* Base styles for dark mode compatibility */
+body {
+    font-family: 'Inter', sans-serif;
+    /* Ensure a default text color that works well on both light and dark backgrounds */
+    color: #374151; /* gray-800 for light mode */
+    line-height: 1.6; /* Improved line height for readability */
+}
 
-// IMPORTANT: Base URL for your published Google Sheet
-// This URL should point to your Google Sheet published to web as CSV.
-// The specific sheets are then targeted using '&gid={sheet_id}'
-const GOOGLE_SHEET_BASE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQO78VJA7y_g5zHpzw1gTaJhLV2mjNdRxA33zcj1WPFj-QYxQS09nInTQXg6kXNJcjm4f7Gk7lPVZuV/pub?output=csv';
+/* New class for centering main page titles */
+.main-page-title {
+    text-align: center;
+    width: 100%; /* Ensure it takes full width to center effectively */
+}
 
-// Specific URLs for each sheet using their GIDs
-const GOOGLE_SHEET_UNIT_DATA_CSV_URL = GOOGLE_SHEET_BASE_URL + '&gid=201310748'; // Unit Info (Sheet 1)
-const GOOGLE_SHEET_TIER_LIST_CSV_URL = GOOGLE_SHEET_BASE_URL + '&gid=0'; // Tier List (Sheet 2)
-const GOOGLE_SHEET_MOD_DATA_CSV_URL = GOOGLE_SHEET_BASE_URL + '&gid=331730679'; // Mod List (Sheet 3)
+/* Table styles */
+table {
+    width: 100%;
+    border-collapse: collapse;
+    border-radius: 0.75rem; /* rounded-xl */
+    overflow: hidden; /* Ensures rounded corners apply to children */
+    table-layout: fixed; /* Added to control column widths more precisely */
+}
 
-let units = []; // Stores parsed unit data
-let mods = [];  // Stores parsed mod data
-let tierList = []; // Stores parsed tier list data
-let currentSortColumn = null;
-let currentSortDirection = 'asc'; // 'asc' or 'desc'
-let modEffectsEnabled = false; // State for global mod effects toggle
-let maxLevelGlobalEnabled = false; // Global state for max level toggle
+/* General table cell styling */
+th, td {
+    padding: 0.75rem 0.75rem; /* Reduced padding for more space */
+    text-align: left;
+    font-size: 0.875rem; /* text-sm, slightly smaller for more columns */
+}
 
-// DOM Elements
-const unitTableBody = document.getElementById('unitTableBody');
-const searchInput = document.getElementById('searchInput');
-const rarityFilter = document.getElementById('rarityFilter');
-const classFilter = document.getElementById('classFilter');
-const tableHeaders = document.querySelectorAll('#unitTable th');
-const loadingSpinner = document.getElementById('loadingSpinner'); // Spinner for units
-const unitTableContainer = document.getElementById('unitTableContainer');
-const noResultsMessage = document.getElementById('noResultsMessage');
-const darkModeToggle = document.getElementById('darkModeToggle');
-const sunIcon = document.getElementById('sunIcon');
-const moonIcon = document.getElementById('moonIcon');
-const unitsTab = document.getElementById('unitsTab');
-const modsTab = document.getElementById('modsTab');
-const tierListTab = document.getElementById('tierListTab'); // New Tier List Tab
-const unitsContent = document.getElementById('unitsContent');
-const modsContent = document.getElementById('modsContent');
-const tierListContent = document.getElementById('tierListContent'); // New Tier List Content
-const toggleModEffects = document.getElementById('toggleModEffects');
-const toggleMaxLevel = document.getElementById('toggleMaxLevel'); // Global Max Level toggle
-const modsTableBody = document.getElementById('modsTableBody');
-const tierListTableBody = document.getElementById('tierListTableBody');
-const tierListTableContainer = document.getElementById('tierListTableContainer');
-const noTierListMessage = document.getElementById('noTierListMessage');
-const modsTableContainer = document.getElementById('modsTableContainer');
-const noModsMessage = document.getElementById('noModsMessage');
+/* Table headers - ensure nowrap for clarity and sorting icons */
+th {
+    white-space: nowrap;
+    text-align: center; /* Centering headers as requested */
+}
 
-// Helper function to debounce an event listener
-const debounce = (func, delay) => {
-    let timeout;
-    return function(...args) {
-        const context = this;
-        clearTimeout(timeout);
-        timeout = setTimeout(() => func.apply(context, args), delay);
-    };
-};
+/* --- Responsive Table Column Hiding --- */
 
-// Helper function to parse CSV text into an array of objects
-const parseCSV = (csvText) => {
-    // Split the text into lines and handle potential carriage returns
-    const lines = csvText.split(/\r?\n/).filter(line => line.trim() !== '');
-    if (lines.length < 2) return [];
+/* Default (mobile-first): Only Image and Label are visible */
+#unitTable th:nth-child(1), /* Image */
+#unitTable td:nth-child(1), /* Image */
+#unitTable th:nth-child(2), /* Label */
+#unitTable td:nth-child(2) { /* Label */
+    display: table-cell; /* Ensure these are always visible */
+}
 
-    // Split the first line to get headers, trimming whitespace and removing quotes
-    const headers = lines[0].split(',').map(header => header.trim().replace(/"/g, ''));
+/* Hide all other columns by default */
+#unitTable th:nth-child(n+3), /* Class, Rarity, Community Ranking, HP, Damage, Cooldown, DPS */
+#unitTable td:nth-child(n+3) { /* Class, Rarity, Community Ranking, HP, Damage, Cooldown, DPS */
+    display: none;
+}
 
-    // Map the remaining lines to an array of objects
-    return lines.slice(1).map(line => {
-        const values = line.split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(value => value.trim().replace(/"/g, ''));
-        return headers.reduce((obj, header, index) => {
-            const value = values[index];
-            // Convert numerical strings to numbers, and "N/A" to null
-            obj[header] = !isNaN(value) && value !== '' ? Number(value) : (value === 'N/A' ? null : value);
-            return obj;
-        }, {});
-    });
-};
-
-// Function to calculate final stats based on mods and level
-const calculateFinalStats = (unit, modsData, isMaxLevel = false) => {
-    const finalStats = { ...unit };
-    const level = isMaxLevel ? 3 : 1; // Assuming max level is 3, min is 1
-    const levelModifier = gameData.Leveling[level];
-
-    // Apply level modifiers
-    if (levelModifier) {
-        if (finalStats.HP && levelModifier.HP) {
-            finalStats.HP += finalStats.HP * levelModifier.HP;
-        }
-        if (finalStats.Damage && levelModifier.Damage) {
-            finalStats.Damage += finalStats.Damage * levelModifier.Damage;
-        }
+/* Small screens (sm): Show Class and Rarity */
+@media (min-width: 640px) {
+    #unitTable th:nth-child(3), /* Class */
+    #unitTable td:nth-child(3), /* Class */
+    #unitTable th:nth-child(4), /* Rarity */
+    #unitTable td:nth-child(4) { /* Rarity */
+        display: table-cell;
     }
+}
 
-    // Apply mod effects
-    if (modsData) {
-        const matchingMod = modsData.find(mod => mod.Label === unit.Label);
-        if (matchingMod && matchingMod.Stat && matchingMod.Amount) {
-            // Apply the mod effect based on the stat
-            if (finalStats[matchingMod.Stat] !== undefined) {
-                finalStats[matchingMod.Stat] += finalStats[matchingMod.Stat] * matchingMod.Amount;
-            }
-        }
+/* Medium screens (md): Show Community Ranking */
+@media (min-width: 768px) {
+    #unitTable th:nth-child(5), /* Community Ranking */
+    #unitTable td:nth-child(5) { /* Community Ranking */
+        display: table-cell;
     }
-    
-    // Round numerical values for display
-    for (const key in finalStats) {
-        if (typeof finalStats[key] === 'number') {
-            finalStats[key] = parseFloat(finalStats[key].toFixed(2));
-        }
+}
+
+/* Large screens (lg): Show HP, Damage, Cooldown, DPS */
+@media (min-width: 1024px) {
+    #unitTable th:nth-child(6), /* HP */
+    #unitTable td:nth-child(6), /* HP */
+    #unitTable th:nth-child(7), /* Damage */
+    #unitTable td:nth-child(7), /* Damage */
+    #unitTable th:nth-child(8), /* Cooldown */
+    #unitTable td:nth-child(8), /* Cooldown */
+    #unitTable th:nth-child(9), /* DPS */
+    #unitTable td:nth-child(9) { /* DPS */
+        display: table-cell;
     }
-    return finalStats;
-};
+}
+
+/* --- Column Widths (Adjusted for visible columns) --- */
+/* These widths will apply when the columns are visible */
+#unitTable tbody td:nth-child(1) { /* Image */
+    width: 60px;
+    min-width: 60px;
+    padding: 0.5rem;
+}
+#unitTable tbody td:nth-child(2) { /* Label - allow text wrapping */
+    width: 350px; /* Increased width significantly for better wrapping */
+    min-width: 320px; /* Ensure a minimum width for wrapping */
+    white-space: normal; /* Allow text to wrap */
+    word-break: break-word; /* Ensure long words break if necessary */
+    padding-right: 1rem; /* Added more right padding for extra space */
+}
+#unitTable tbody td:nth-child(3), /* Class */
+#unitTable tbody td:nth-child(4) { /* Rarity */
+    width: 80px;
+    min-width: 80px;
+}
+#unitTable tbody td:nth-child(5) { /* Community Ranking */
+    width: 150px; /* Increased width to prevent header truncation */
+    min-width: 150px;
+    text-align: center;
+}
+/* Numerical stats (HP, Damage, Cooldown, DPS) */
+#unitTable tbody td:nth-child(n+6):nth-child(-n+9) { /* HP to DPS */
+    width: 80px; /* Increased width to prevent header truncation */
+    min-width: 80px;
+    text-align: center;
+}
 
 
-// Function to fetch data from a CSV URL
-const fetchData = async (url) => {
-    try {
-        const response = await fetch(url);
-        if (!response.ok) {
-            throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        const csvText = await response.text();
-        return parseCSV(csvText);
-    } catch (e) {
-        console.error(`Could not fetch data from ${url}:`, e);
-        return null;
-    }
-};
+/* Specific styling for Unit Label column */
+#unitTable tbody td:nth-child(2) { /* Targeting the second column (Label) */
+    font-size: 1.125rem; /* text-lg */
+    font-weight: 700; /* font-bold */
+    /* Background color and text color set by rarity classes below */
+}
 
-// Function to render the units table
-const renderUnitsTable = (unitsToRender) => {
-    unitTableBody.innerHTML = '';
-    if (unitsToRender.length === 0) {
-        unitTableContainer.classList.add('hidden');
-        noResultsMessage.classList.remove('hidden');
-        return;
-    }
-    noResultsMessage.classList.add('hidden');
-    unitTableContainer.classList.remove('hidden');
+/* Rarity-specific background and text colors for Unit Labels */
+/* These classes are applied directly to the <td> element for the Label */
+.rarity-Common { background-color: #e0e0e0; color: #1f2937; } /* Lighter Silver/Light Gray, Dark text */
+.rarity-Uncommon { background-color: #a7f3d0; color: #1f2937; } /* Lighter Light Green, Dark text */
+.rarity-Rare { background-color: #bfdbfe; color: #1f2937; } /* Lighter Light Blue, Dark text */
+.rarity-Epic { background-color: #e9d5ff; color: #1f2937; } /* Lighter Plum/Light Purple, Dark text */
+.rarity-Legendary { background-color: #fcd34d; color: #1f2937; } /* Lighter Gold, Dark text */
+.rarity-Mythic { background-color: #fca5a5; color: #1f2937; } /* Lighter Tomato/Orange-Red, Dark text */
+.rarity-Demonic { background-color: #ef4444; color: #ffffff; } /* Brighter Red, White text */
+.rarity-Ancient { background-color: #60a5fa; color: #ffffff; } /* Brighter Steel Blue, White text */
 
-    unitsToRender.forEach(unit => {
-        const row = document.createElement('tr');
-        row.classList.add('hover:bg-gray-100', 'dark:hover:bg-gray-700', 'transition-colors', 'duration-200');
-        row.innerHTML = `
-            <td class="px-6 py-4 whitespace-nowrap text-center">
-                <!-- NEW: Added image from the spreadsheet data -->
-                ${unit.ImageURL ? `<img src="${unit.ImageURL}" alt="${unit.Label}" class="w-10 h-10 rounded-full mx-auto object-cover">` : `<div class="w-10 h-10 rounded-full bg-gray-300 dark:bg-gray-600 mx-auto flex items-center justify-center text-xs text-gray-500">No Img</div>`}
-            </td>
-            <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-gray-100">${unit.Label}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-center">${unit.Rarity}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-center">${unit.Class}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-center">${unit.HP}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-center">${unit.Damage}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-center">${unit.Cooldown}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-center">${unit.Distance}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-center">${unit.Knockback}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-center">${unit.CritChance}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-center">${unit.CritDamage}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-center">${unit.Accuracy}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-center">${unit.EvadeChance}</td>
-            <td class="px-6 py-4 whitespace-nowrap text-center">${unit.AttackEffect}</td>
-        `;
-        unitTableBody.appendChild(row);
-    });
-};
 
-// Function to render the mods table
-const renderModsTable = (modsToRender) => {
-    modsTableBody.innerHTML = '';
-    if (!modsToRender || modsToRender.length === 0) {
-        modsTableContainer.classList.add('hidden');
-        noModsMessage.classList.remove('hidden');
-        return;
-    }
-    noModsMessage.classList.add('hidden');
-    modsTableContainer.classList.remove('hidden');
+/* Styling for Class and Rarity columns */
+#unitTable tbody td:nth-child(3), /* Class */
+#unitTable tbody td:nth-child(4) { /* Rarity */
+    font-weight: 500; /* font-medium */
+    font-size: 1rem; /* text-base */
+    color: #1f2937; /* Dark text for light mode */
+}
 
-    modsToRender.forEach(mod => {
-        const row = document.createElement('tr');
-        row.classList.add('hover:bg-gray-100', 'dark:hover:bg-gray-700', 'transition-colors', 'duration-200');
-        row.innerHTML = `
-            <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-gray-100">${mod.Title}</td>
-            <td class="px-6 py-4 whitespace-nowrap">${mod.Rarity}</td>
-            <td class="px-6 py-4 whitespace-nowrap">${mod.Effect}</td>
-            <td class="px-6 py-4 whitespace-nowrap">${mod.Stat}</td>
-            <td class="px-6 py-4 whitespace-nowrap">${mod.Amount}</td>
-            <td class="px-6 py-4 whitespace-nowrap">${mod.Chance}</td>
-        `;
-        modsTableBody.appendChild(row);
-    });
-};
+.dark #unitTable tbody td:nth-child(3),
+.dark #unitTable tbody td:nth-child(4) {
+    color: #d1d5db; /* gray-300 */
+}
 
-// Function to render the tier list table
-const renderTierListTable = (tierListToRender) => {
-    tierListTableBody.innerHTML = '';
-    if (!tierListToRender || tierListToRender.length === 0) {
-        tierListTableContainer.classList.add('hidden');
-        noTierListMessage.classList.remove('hidden');
-        return;
-    }
-    noTierListMessage.classList.add('hidden');
-    tierListTableContainer.classList.remove('hidden');
+/* Styling for other stats columns */
+#unitTable tbody td:nth-child(n+5) { /* All columns from Community Ranking onwards */
+    font-size: 1rem; /* text-base */
+    color: #1f2937; /* Dark text for light mode */
+}
 
-    tierListToRender.forEach(tierItem => {
-        const row = document.createElement('tr');
-        row.classList.add('hover:bg-gray-100', 'dark:hover:bg-gray-700', 'transition-colors', 'duration-200');
-        row.innerHTML = `
-            <td class="px-6 py-4 whitespace-nowrap font-medium text-gray-900 dark:text-gray-100">${tierItem.UnitName}</td>
-            <td class="px-6 py-4 whitespace-nowrap">${tierItem.Tier}</td>
-            <td class="px-6 py-4 whitespace-nowrap">${tierItem.NumericalRank}</td>
-            <td class="px-6 py-4">${tierItem.Notes}</td>
-        `;
-        tierListTableBody.appendChild(row);
-    });
-};
+.dark #unitTable tbody td:nth-child(n+5) {
+    color: #e5e7eb; /* gray-200 */
+}
 
-// Function to populate filter options
-const populateFilters = () => {
-    const allRarities = [...new Set(units.map(unit => unit.Rarity))].sort();
-    const allClasses = [...new Set(units.map(unit => unit.Class))].sort();
 
-    rarityFilter.innerHTML = '<option value="">All Rarities</option>';
-    allRarities.forEach(rarity => {
-        const option = document.createElement('option');
-        option.value = rarity;
-        option.textContent = rarity;
-        rarityFilter.appendChild(option);
-    });
+/* Light Mode Table Styles */
+.light body {
+    background-color: #f3f4f6; /* gray-100 */
+    color: #000000; /* Black for better contrast */
+}
+.light main {
+    background-color: #ffffff; /* white */
+}
+.light th {
+    background-color: #1f2937; /* gray-800 */
+    color: #f9fafb; /* gray-50 */
+    cursor: pointer;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-bottom: 1px solid #a0a7af; /* Darker gray for better border visibility */
+    transition: background-color 0.2s ease-in-out; /* Smooth transition on hover */
+}
+.light th:hover {
+    background-color: #374151; /* gray-700 */
+}
+.light tbody tr:nth-child(even) {
+    background-color: #f9fafb; /* gray-50 */
+}
+.light tbody tr:nth-child(odd) {
+    background-color: #ffffff; /* white */
+}
+.light tbody tr:hover {
+    background-color: #e5e7eb; /* gray-200 */
+    transition: background-color 0.2s ease-in-out; /* Smooth transition on hover */
+}
+.light td {
+    border-bottom: 1px solid #a0a7af; /* Darker gray for better border visibility */
+    color: #000000; /* Ensure all table cell text is black in light mode */
+}
+.light .tab-button {
+    background-color: #e5e7eb; /* gray-200 */
+    color: #000000; /* Black for better contrast */
+}
+.light .tab-button.active {
+    background-color: #3b82f6; /* blue-500 */
+    color: #ffffff;
+}
+.light .tab-button:hover:not(.active) {
+    background-color: #d1d5db; /* gray-300 */
+}
 
-    classFilter.innerHTML = '<option value="">All Classes</option>';
-    allClasses.forEach(unitClass => {
-        const option = document.createElement('option');
-        option.value = unitClass;
-        option.textContent = unitClass;
-        classFilter.appendChild(option);
-    });
-};
+/* Ensure all headings are black in light mode */
+.light h1, .light h2, .light h3, .light h4, .light h5, .light h6 {
+    color: #000000; /* Black text for headings in light mode */
+}
 
-// Main function to filter and render units
-const filterAndRenderUnits = () => {
-    let filteredUnits = [...units];
-    const searchValue = searchInput.value.toLowerCase();
-    const selectedRarity = rarityFilter.value;
-    const selectedClass = classFilter.value;
 
-    // Filter by search input
-    if (searchValue) {
-        filteredUnits = filteredUnits.filter(unit =>
-            unit.Label.toLowerCase().includes(searchValue)
-        );
-    }
+/* Dark Mode Table Styles */
+.dark body {
+    background-color: #111827; /* gray-900 */
+    color: #e5e7eb; /* gray-200 */
+}
+.dark main {
+    background-color: #1f2937; /* gray-800 */
+}
+.dark th {
+    background-color: #374151; /* gray-700 */
+    color: #f9fafb; /* gray-50 */
+    cursor: pointer;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    border-bottom: 1px solid #4b5563; /* border-gray-600 */
+    transition: background-color 0.2s ease-in-out; /* Smooth transition on hover */
+}
+.dark th:hover {
+    background-color: #4b5563; /* gray-600 */
+}
+.dark tbody tr:nth-child(even) {
+    background-color: #1f2937; /* gray-800 */
+}
+.dark tbody tr:nth-child(odd) {
+    background-color: #374151; /* gray-700 */
+}
+.dark tbody tr:hover {
+    background-color: #4b5563; /* gray-600 */
+    transition: background-color 0.2s ease-in-out; /* Smooth transition on hover */
+}
+.dark td {
+    border-bottom: 1px solid #4b5563; /* border-gray-600 */
+}
+.dark .tab-button {
+    background-color: #4b5563; /* gray-600 */
+    color: #e5e7eb; /* gray-200 */
+}
+.dark .tab-button.active {
+    background-color: #60a5fa; /* blue-400 */
+    color: #1f2937;
+}
+.dark .tab-button:hover:not(.active) {
+    background-color: #6b7280; /* gray-500 */
+}
 
-    // Filter by rarity
-    if (selectedRarity) {
-        filteredUnits = filteredUnits.filter(unit => unit.Rarity === selectedRarity);
-    }
 
-    // Filter by class
-    if (selectedClass) {
-        filteredUnits = filteredUnits.filter(unit => unit.Class === selectedClass);
-    }
+/* Tab Button Styles (common) */
+.tab-button {
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+    cursor: pointer;
+    border: none;
+    outline: none;
+}
 
-    // Apply global max level and mod effects if toggled
-    const unitsToDisplay = filteredUnits.map(unit => {
-        let finalStats = { ...unit };
-        if (maxLevelGlobalEnabled) {
-            finalStats = calculateFinalStats(finalStats, mods, true);
-        }
-        if (modEffectsEnabled) {
-            finalStats = calculateFinalStats(finalStats, mods);
-        }
-        return finalStats;
-    });
 
-    // Apply sorting
-    if (currentSortColumn) {
-        unitsToDisplay.sort((a, b) => {
-            const aValue = a[currentSortColumn];
-            const bValue = b[currentSortColumn];
+/* Rarity colors for backgrounds - these are used by the rarity-X classes on the <td> */
+/* These are the same as before, but now applied to the cell background */
+.rarity-Common { background-color: #e0e0e0; } /* Lighter Silver/Light Gray */
+.rarity-Uncommon { background-color: #a7f3d0; } /* Lighter Light Green */
+.rarity-Rare { background-color: #bfdbfe; } /* Lighter Light Blue */
+.rarity-Epic { background-color: #e9d5ff; } /* Lighter Plum/Light Purple */
+.rarity-Legendary { background-color: #fcd34d; } /* Lighter Gold */
+.rarity-Mythic { background-color: #fca5a5; } /* Lighter Tomato/Orange-Red */
+.rarity-Demonic { background-color: #ef4444; } /* Brighter Red */
+.rarity-Ancient { background-color: #60a5fa; } /* Brighter Steel Blue */
 
-            // Handle "N/A" as a low value for sorting
-            const valA = aValue === "N/A" || aValue === null ? (currentSortDirection === 'asc' ? -Infinity : Infinity) : aValue;
-            const valB = bValue === "N/A" || bValue === null ? (currentSortDirection === 'asc' ? -Infinity : Infinity) : bValue;
+/* Ensure text color is readable on rarity backgrounds - these are the text colors */
+/* These are now applied directly to the td.rarity-X classes */
+.rarity-Common, .rarity-Uncommon, .rarity-Rare, .rarity-Epic, .rarity-Legendary, .rarity-Mythic {
+    color: #1f2937; /* Dark text for lighter backgrounds */
+}
+/* For Demonic and Ancient, text is white as background is dark */
+.rarity-Demonic, .rarity-Ancient {
+    color: #ffffff;
+}
 
-            if (valA < valB) return currentSortDirection === 'asc' ? -1 : 1;
-            if (valA > valB) return currentSortDirection === 'asc' ? 1 : -1;
-            return 0;
-        });
-    }
-    
-    renderUnitsTable(unitsToDisplay);
-};
 
-// Sorting function
-const sortData = (column) => {
-    if (currentSortColumn === column) {
-        currentSortDirection = currentSortDirection === 'asc' ? 'desc' : 'asc';
-    } else {
-        currentSortColumn = column;
-        currentSortDirection = 'asc';
-    }
-    filterAndRenderUnits();
-};
+/* Spinner */
+.spinner {
+    border: 4px solid rgba(0, 0, 0, 0.1);
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border-left-color: #1f2937; /* gray-800 */
+    animation: spin 1s ease infinite;
+    margin: 2rem auto;
+}
+.dark .spinner {
+    border-left-color: #e5e7eb; /* gray-200 */
+}
 
-// Dark Mode Toggling
-const toggleDarkMode = () => {
-    const isDarkMode = document.body.classList.toggle('dark');
-    localStorage.setItem('darkMode', isDarkMode);
-    sunIcon.classList.toggle('hidden', !isDarkMode);
-    moonIcon.classList.toggle('hidden', isDarkMode);
-};
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
 
-// Tab Switching
-const switchTab = (tabId) => {
-    document.querySelectorAll('.tab-content').forEach(content => {
-        content.classList.add('hidden');
-    });
-    document.querySelectorAll('.tab-button').forEach(button => {
-        button.classList.remove('active');
-    });
+/* Styles for expandable unit details */
+.unit-row.expanded {
+    border-bottom: none; /* Remove border from expanded row */
+}
+.unit-details-row td {
+    border-top: none; /* Remove top border from detail row */
+    padding-top: 0.5rem; /* Adjust padding */
+    padding-bottom: 0.5rem;
+}
+.unit-details-row {
+    animation: fadeIn 0.3s ease-out;
+}
 
-    const activeTabContent = document.getElementById(tabId.replace('Tab', 'Content'));
-    const activeTabButton = document.getElementById(tabId);
-    if (activeTabContent) {
-        activeTabContent.classList.remove('hidden');
-    }
-    if (activeTabButton) {
-        activeTabButton.classList.add('active');
-    }
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
 
-    // Render tables when their tab is switched to
-    if (tabId === 'unitsTab') {
-        filterAndRenderUnits();
-    } else if (tabId === 'modsTab') {
-        renderModsTable(mods);
-    } else if (tabId === 'tierListTab') {
-        renderTierListTable(tierList);
-    }
-};
+/* Style for mod checkboxes and max stats checkbox in detailed view */
+#modCheckboxesContainer label, #toggleMaxLevelUnit + label { /* Removed #toggleMaxStats + label */
+    margin-right: 1rem;
+    font-size: 0.95rem; /* text-base for labels */
+    color: #000000; /* Black text for better readability in light mode */
+}
 
-// Initialize the app on window load
-window.onload = async () => {
-    // Check for dark mode preference
-    if (localStorage.getItem('darkMode') === 'true') {
-        document.body.classList.add('dark');
-        sunIcon.classList.remove('hidden');
-        moonIcon.classList.add('hidden');
-    } else {
-        sunIcon.classList.add('hidden');
-        moonIcon.classList.remove('hidden');
-    }
+.dark #modCheckboxesContainer label, .dark #toggleMaxLevelUnit + label { /* Removed .dark #toggleMaxStats + label */
+    color: #e5e7eb; /* Light text color for labels in dark mode */
+}
 
-    loadingSpinner.classList.remove('hidden');
+#modCheckboxesContainer input[type="checkbox"], #toggleMaxLevelUnit { /* Removed #toggleMaxStats */
+    cursor: pointer;
+}
 
-    // Fetch all data concurrently
-    const [unitData, modData, tierListData] = await Promise.all([
-        fetchData(GOOGLE_SHEET_UNIT_DATA_CSV_URL),
-        fetchData(GOOGLE_SHEET_MOD_DATA_CSV_URL),
-        fetchData(GOOGLE_SHEET_TIER_LIST_CSV_URL)
-    ]);
+/* Specific styling for rarity headers within mod checkboxes */
+#modCheckboxesContainer h4 {
+    font-size: 1rem; /* text-base for rarity headers */
+    font-weight: 700; /* font-bold */
+    margin-top: 0.75rem;
+    margin-bottom: 0.5rem;
+    color: #000000; /* Black text for light mode */
+}
 
-    if (unitData) {
-        units = unitData;
-        populateFilters();
-        filterAndRenderUnits(); // Initial render of units
-    }
+.dark #modCheckboxesContainer h4 {
+    color: #f9fafb; /* Even lighter for headings in dark mode */
+}
 
-    if (modData) {
-        mods = modData;
-    }
+/* Make the mod checkboxes container vertically scrollable */
+#modCheckboxesContainer {
+    max-height: 300px; /* Adjust as needed */
+    overflow-y: auto;
+    padding-right: 10px; /* Add some padding for the scrollbar */
+}
 
-    if (tierListData) {
-        tierList = tierListData;
-    }
+/* Improve general text contrast in the detail view */
+.unit-details-row ul li {
+    font-size: 0.95rem; /* Consistent size for list items */
+    color: #000000; /* Black text for better readability in light mode */
+}
 
-    loadingSpinner.classList.add('hidden');
+.dark .unit-details-row ul li {
+    color: #e5e7eb; /* Lighter text for better readability in dark mode */
+}
 
-    // Filter, Search, and Sort Events
-    // Debounce the search input to improve performance
-    const debouncedFilterAndRenderUnits = debounce(filterAndRenderUnits, 300);
-    searchInput.addEventListener('input', debouncedFilterAndRenderUnits);
-    rarityFilter.addEventListener('change', filterAndRenderUnits);
-    classFilter.addEventListener('change', filterAndRenderUnits);
+.unit-details-row h3 {
+    font-size: 1.125rem; /* text-lg for subheadings */
+    font-weight: 600; /* font-semibold */
+    color: #000000; /* Black for headings in light mode */
+}
 
-    // Table Header Sorting Events
-    tableHeaders.forEach(header => {
-        header.addEventListener('click', () => {
-            const sortColumn = header.dataset.sort;
-            if (sortColumn) {
-                sortData(sortColumn);
-            }
-        });
-    });
+.dark .unit-details-row h3 {
+    color: #f9fafb; /* Even lighter for headings in dark mode */
+}
 
-    // Dark Mode Toggle Event
-    darkModeToggle.addEventListener('click', toggleDarkMode);
+/* Input and Select elements styling */
+input[type="text"], input[type="number"], select {
+    font-size: 0.95rem; /* Consistent font size for inputs */
+    /* Ensure borders are clearly visible in light mode */
+    border: 1px solid #6b7280; /* gray-500, darker for better visibility in light mode */
+    color: #000000; /* Black text for inputs in light mode */
+    background-color: #ffffff; /* White background for inputs in light mode */
+}
 
-    // Tab Switching Events
-    unitsTab.addEventListener('click', () => switchTab('unitsTab'));
-    modsTab.addEventListener('click', () => switchTab('modsTab'));
-    tierListTab.addEventListener('click', () => switchTab('tierListTab')); // Tier List Tab event
+.light select {
+    color: #000000; /* Black text for select in light mode */
+    font-weight: 600; /* Thicker font for select in light mode */
+}
 
-    // Mod Effects Toggle Event (global)
-    toggleModEffects.addEventListener('change', () => {
-        modEffectsEnabled = toggleModEffects.checked;
-        filterAndRenderUnits(); // Re-render units to apply/remove global mod effects
-    });
+.light select option {
+    color: #000000; /* Black text for options in light mode */
+    background-color: #ffffff; /* White background for options in light mode */
+    font-weight: 600; /* Thicker font for options in light mode */
+}
 
-    // Global Max Level Toggle Event
-    toggleMaxLevel.addEventListener('change', () => {
-        maxLevelGlobalEnabled = toggleMaxLevel.checked;
-        // Re-render units to apply/remove global max level effects
-        filterAndRenderUnits();
-    });
-};
+.dark input[type="text"], .dark input[type="number"], .dark select {
+    border-color: #6b7280; /* gray-500 for dark mode, visible */
+    color: #e5e7eb; /* Light text for inputs in dark mode */
+    background-color: #374151; /* gray-700 background for inputs in dark mode */
+}
+
+/* Placeholder text color */
+::placeholder {
+    color: #000000; /* Black for better contrast in light mode */
+    opacity: 1; /* Firefox fix */
+}
+
+.dark::placeholder {
+    color: #9ca3af; /* gray-400, lighter for better contrast in dark mode */
+}
+
+/* New styles for the header image */
+.header-image {
+    width: 80px; /* Adjust size as needed */
+    height: 80px; /* Keep aspect ratio */
+    object-fit: cover; /* Cover the area, crop if necessary */
+    border: 2px solid #3b82f6; /* Blue border */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+}
+
+.dark .header-image {
+    border-color: #60a5fa; /* Lighter blue border in dark mode */
+}
+
+/* Adjust header layout for better alignment */
+header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap; /* Allow wrapping on smaller screens */
+    gap: 1rem; /* Space between items */
+}
+
+header h1 {
+    margin-bottom: 0; /* Remove default margin */
+}
+
+/* Adjust navigation tabs for better spacing */
+nav ul {
+    display: flex;
+    justify-content: center;
+    gap: 0.75rem; /* Space between tabs */
+}
