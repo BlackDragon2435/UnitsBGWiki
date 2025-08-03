@@ -1,12 +1,12 @@
 // js/script.js
-// This file has been updated to remove the Cooldown column from the main unit table.
+// This file has been updated to include DPS (Damage Per Second) calculation and display.
 
 // Import necessary game data.
 import { unitImages } from './unitImages.js'; 
 import { gameData } from './gameData.js'; 
 
 // IMPORTANT: Base URL for your published Google Sheet
-const GOOGLE_SHEET_BASE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQO78VJA7y_g5zHpzw1gTaJhLV2mjNdRxA33zcj1WPFj-QyXQS09nInTQXg6kXNJcjm4f7Gk7lPVZuV/pub?output=csv';
+const GOOGLE_SHEET_BASE_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQO78VJA7y_g5zHpzw1gTaJhLV2mjNdRxA33zcj1WPFj-QYxQS09nInTQXg6kXNJcjm4f7Gk7lPVZuV/pub?output=csv';
 
 // Specific URLs for each sheet using their GIDs
 const GOOGLE_SHEET_UNIT_DATA_CSV_URL = GOOGLE_SHEET_BASE_URL + '&gid=201310748&single=true'; // Unit Info (Sheet 1)
@@ -289,6 +289,7 @@ function filterAndRenderUnits() {
                 <td class="py-3 px-6 text-sm whitespace-nowrap text-center text-${getRarityColor(unit.Rarity)}-500">${unit.Rarity}</td>
                 <td class="py-3 px-6 text-sm whitespace-nowrap text-center hidden md:table-cell">${unit.Class}</td>
                 <td class="py-3 px-6 text-sm whitespace-nowrap text-center hidden sm:table-cell">${unit.Damage}</td>
+                <td class="py-3 px-6 text-sm whitespace-nowrap text-center hidden lg:table-cell">${unit.Cooldown}</td>
                 <td class="py-3 px-6 text-sm whitespace-nowrap text-center hidden sm:table-cell">${unit.HP}</td>
                 <td class="py-3 px-6 text-sm whitespace-nowrap text-center font-bold text-green-500">${dps}</td> <!-- Display DPS -->
             `;
