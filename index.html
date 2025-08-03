@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Unit & Mod Compendium</title>
+    <title>Units Battlegrounds</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Custom CSS -->
@@ -17,71 +17,68 @@
     <div class="max-w-7xl mx-auto p-4 sm:p-8">
         <header class="relative flex flex-col justify-center items-center mb-8">
             <!-- Dark Mode Toggle Button -->
-            <button id="darkModeToggle" class="absolute top-0 right-0 p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-300 z-10 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                <i id="sunIcon" class="fas fa-sun text-gray-800 dark:text-gray-100 hidden"></i>
-                <i id="moonIcon" class="fas fa-moon text-gray-800 dark:text-gray-100"></i>
+            <button id="darkModeToggle" class="absolute top-0 right-0 p-2 rounded-full bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors duration-300">
+                <i id="darkModeIcon" class="fas fa-moon text-gray-800 dark:text-white"></i>
             </button>
-            <div class="flex items-center space-x-4">
-                <!-- Header image -->
+
+            <div class="flex flex-col items-center">
+                <!-- Updated image source to the publicly hosted URL -->
                 <img src="https://tr.rbxcdn.com/180DAY-03e365f1fea92684ef841ae041d4677e/150/150/Image/Webp/noFilter"
                      alt="Units Battlegrounds Logo"
-                     class="header-image rounded-full">
-                <!-- Main Title with rainbow effect -->
-                <h1 id="mainTitle" class="main-page-title text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight">
-                    Units & Mod Compendium
-                </h1>
+                     class="header-image rounded-full shadow-md">
+                <h1 id="mainTitle" class="text-4xl font-extrabold mt-4 text-center">Units Battlegrounds</h1>
             </div>
-            <!-- Navigation Tabs -->
-            <div class="flex space-x-4 mt-6 border-b border-gray-300 dark:border-gray-700">
-                <button id="unitsTab" class="py-2 px-4 font-medium text-sm sm:text-base border-b-2 border-transparent transition-colors duration-200 hover:text-blue-500 dark:hover:text-blue-400">Units</button>
-                <button id="modsTab" class="py-2 px-4 font-medium text-sm sm:text-base border-b-2 border-transparent transition-colors duration-200 hover:text-blue-500 dark:hover:text-blue-400">Mods</button>
-                <button id="tierListTab" class="py-2 px-4 font-medium text-sm sm:text-base border-b-2 border-transparent transition-colors duration-200 hover:text-blue-500 dark:hover:text-blue-400">Tier List</button>
-            </div>
+
+            <!-- Tab Navigation -->
+            <nav class="w-full flex justify-center space-x-2 sm:space-x-4 mt-8" role="tablist">
+                <button id="unitsTab" role="tab" aria-selected="true" class="tab-button active">Units</button>
+                <button id="modsTab" role="tab" aria-selected="false" class="tab-button">Mods</button>
+                <button id="tierListTab" role="tab" aria-selected="false" class="tab-button">Tier List</button>
+            </nav>
         </header>
 
         <main class="mt-8">
-            <!-- Units Tab Content -->
-            <section id="unitsContent" class="tab-content">
-                <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 mb-6 items-center">
-                    <!-- Search Input -->
-                    <div class="relative w-full sm:w-1/2 md:w-1/3">
-                        <input type="text" id="searchInput" placeholder="Search units..."
-                               class="w-full pl-10 pr-4 py-2 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-300">
-                        <i class="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 dark:text-gray-500"></i>
+            <!-- Units Section -->
+            <section id="unitsSection" class="tab-content">
+                <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 items-center justify-between mb-6">
+                    <!-- Search and filters -->
+                    <div class="w-full sm:w-auto">
+                        <input type="text" id="searchInput" placeholder="Search for a unit..." class="w-full sm:w-64 p-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                     </div>
-                    <!-- Filters -->
-                    <div class="flex flex-col sm:flex-row w-full sm:w-auto sm:space-x-4 space-y-4 sm:space-y-0">
-                        <select id="rarityFilter" class="w-full sm:w-auto px-4 py-2 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-300">
-                            <option value="all">All Rarities</option>
+                    <div class="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-4">
+                        <select id="rarityFilter" class="p-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                            <option value="All">All Rarity</option>
                         </select>
-                        <select id="classFilter" class="w-full sm:w-auto px-4 py-2 rounded-full border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors duration-300">
-                            <option value="all">All Classes</option>
+                        <select id="classFilter" class="p-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-gray-100">
+                            <option value="All">All Class</option>
                         </select>
                     </div>
+
                     <!-- Global Max Level Toggle -->
-                    <div class="flex items-center space-x-2 w-full sm:w-auto">
-                        <input type="checkbox" id="toggleMaxLevel" class="rounded text-blue-600 focus:ring-blue-500">
-                        <label for="toggleMaxLevel" class="text-sm font-medium text-gray-700 dark:text-gray-300">Max Level Stats</label>
+                    <div class="flex items-center space-x-2 p-2 rounded-lg bg-gray-200 dark:bg-gray-800">
+                        <label for="toggleMaxLevel" class="text-sm font-medium text-gray-900 dark:text-gray-100">Max Level Stats</label>
+                        <input type="checkbox" id="toggleMaxLevel" class="toggle-switch">
                     </div>
                 </div>
 
-                <!-- Loading Spinner for Units -->
-                <div id="loadingSpinner" class="flex justify-center items-center h-48">
-                    <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
+                <!-- Loading Spinner -->
+                <div id="loadingSpinner" class="hidden flex justify-center items-center h-64">
+                    <div class="spinner"></div>
                 </div>
+
                 <!-- Unit Table -->
-                <div id="unitTableContainer" class="overflow-x-auto rounded-xl shadow-md hidden mt-6">
+                <div id="unitTableContainer" class="overflow-x-auto rounded-xl shadow-md hidden">
                     <table id="unitTable" class="min-w-full">
                         <thead class="bg-blue-600 dark:bg-blue-800 text-white">
                             <tr>
-                                <th class="p-3 uppercase tracking-wider cursor-pointer" data-sort="Image">Image</th>
-                                <th class="p-3 uppercase tracking-wider cursor-pointer" data-sort="Label">Name</th>
-                                <th class="p-3 uppercase tracking-wider cursor-pointer" data-sort="Class">Class</th>
-                                <th class="p-3 uppercase tracking-wider cursor-pointer" data-sort="Rarity">Rarity</th>
-                                <th class="p-3 uppercase tracking-wider cursor-pointer" data-sort="CommunityRanking">Rank</th>
-                                <th class="p-3 uppercase tracking-wider cursor-pointer" data-sort="HP">HP</th>
-                                <th class="p-3 uppercase tracking-wider cursor-pointer" data-sort="Damage">Damage</th>
-                                <th class="p-3 uppercase tracking-wider cursor-pointer" data-sort="DPS">DPS</th>
+                                <th class="cursor-pointer" data-sort="UnitName">Unit <i class="fas fa-sort-alpha-down-alt ml-1"></i></th>
+                                <th class="cursor-pointer responsive-hide" data-sort="Rarity">Rarity <i class="fas fa-sort-alpha-down-alt ml-1"></i></th>
+                                <th class="cursor-pointer responsive-hide-sm" data-sort="Class">Class <i class="fas fa-sort-alpha-down-alt ml-1"></i></th>
+                                <th class="cursor-pointer" data-sort="Damage">Damage <i class="fas fa-sort-alpha-down-alt ml-1"></i></th>
+                                <th class="cursor-pointer" data-sort="HP">HP <i class="fas fa-sort-alpha-down-alt ml-1"></i></th>
+                                <th class="cursor-pointer responsive-hide" data-sort="DPS">DPS <i class="fas fa-sort-alpha-down-alt ml-1"></i></th>
+                                <th class="cursor-pointer responsive-hide" data-sort="Range">Range <i class="fas fa-sort-alpha-down-alt ml-1"></i></th>
+                                <th class="cursor-pointer" data-sort="AttackSpeed">Speed <i class="fas fa-sort-alpha-down-alt ml-1"></i></th>
                             </tr>
                         </thead>
                         <tbody id="unitTableBody" class="bg-white divide-y divide-gray-200 dark:bg-gray-700 dark:divide-gray-600">
@@ -89,30 +86,25 @@
                         </tbody>
                     </table>
                 </div>
-                <!-- No Results Message -->
-                <p id="noResultsMessage" class="text-center text-gray-600 dark:text-gray-400 mt-4 hidden">No units found matching your criteria.</p>
             </section>
 
-            <!-- Mods Tab Content -->
-            <section id="modsContent" class="tab-content hidden">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-2xl font-bold">Modifications</h2>
+            <!-- Mods Section -->
+            <section id="modsSection" class="tab-content hidden">
+                <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 items-center justify-between mb-6">
+                    <div class="w-full sm:w-auto">
+                        <input type="text" id="modSearchInput" placeholder="Search for a mod..." class="w-full sm:w-64 p-2 rounded-lg border border-gray-300 dark:border-gray-600 dark:bg-gray-700 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                    </div>
                 </div>
-                <!-- Loading Spinner for Mods -->
-                <div id="modsSpinner" class="flex justify-center items-center h-48">
-                    <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
-                </div>
-                <!-- Mods Table -->
-                <div id="modsTableContainer" class="overflow-x-auto rounded-xl shadow-md hidden mt-6">
-                    <table id="modsTable" class="min-w-full">
+                <div id="modTableContainer" class="overflow-x-auto rounded-xl shadow-md hidden mt-6">
+                    <table id="modTable" class="min-w-full">
                         <thead class="bg-blue-600 dark:bg-blue-800 text-white">
                             <tr>
-                                <th class="p-3 uppercase tracking-wider cursor-pointer" data-sort="Title">Name</th>
-                                <th class="p-3 uppercase tracking-wider cursor-pointer" data-sort="Rarity">Rarity</th>
-                                <th class="p-3 uppercase tracking-wider" data-sort="Effect">Effect</th>
+                                <th class="py-3 px-6 text-left text-xs font-medium text-gray-50 uppercase tracking-wider">ModName</th>
+                                <th class="py-3 px-6 text-left text-xs font-medium text-gray-50 uppercase tracking-wider">Effect</th>
+                                <th class="py-3 px-6 text-left text-xs font-medium text-gray-50 uppercase tracking-wider">Description</th>
                             </tr>
                         </thead>
-                        <tbody id="modsTableBody" class="bg-white divide-y divide-gray-200 dark:bg-gray-700 dark:divide-gray-600">
+                        <tbody id="modTableBody" class="bg-white divide-y divide-gray-200 dark:bg-gray-700 dark:divide-gray-600">
                             <!-- Mod data will be inserted here by JavaScript -->
                         </tbody>
                     </table>
@@ -120,16 +112,8 @@
                 <p id="noModsMessage" class="text-center text-gray-600 dark:text-gray-400 mt-4 hidden">Failed to load mods data or no data available.</p>
             </section>
 
-            <!-- Tier List Tab Content -->
-            <section id="tierListContent" class="tab-content hidden">
-                <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-2xl font-bold">Tier List</h2>
-                </div>
-                <!-- Loading Spinner for Tier List -->
-                <div id="tierListSpinner" class="flex justify-center items-center h-48">
-                    <div class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500"></div>
-                </div>
-                <!-- Tier List Table -->
+            <!-- Tier List Section -->
+            <section id="tierListSection" class="tab-content hidden">
                 <div id="tierListTableContainer" class="overflow-x-auto rounded-xl shadow-md hidden mt-6">
                     <table id="tierListTable" class="min-w-full">
                         <thead class="bg-blue-600 dark:bg-blue-800 text-white">
