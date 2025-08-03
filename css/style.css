@@ -6,33 +6,6 @@ body {
     line-height: 1.6; /* Improved line height for readability */
 }
 
-/* Rainbow text animation for the title */
-@keyframes rainbow {
-    0% { color: #ff0000; }
-    14% { color: #ff7f00; }
-    28% { color: #ffff00; }
-    42% { color: #00ff00; }
-    57% { color: #0000ff; }
-    71% { color: #4b0082; }
-    85% { color: #9400d3; }
-    100% { color: #ff0000; }
-}
-
-#mainTitle {
-    background-clip: text;
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    background-image: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
-    background-size: 200% 100%;
-    animation: rainbow 5s linear infinite, moveGradient 5s linear infinite;
-}
-
-@keyframes moveGradient {
-    to {
-        background-position: 200% center;
-    }
-}
-
 /* New class for centering main page titles */
 .main-page-title {
     text-align: center;
@@ -63,135 +36,78 @@ th {
 
 /* --- Responsive Table Column Hiding --- */
 
-/* Default (mobile-first): Only Image and Label are visible */
-#unitTable th:nth-child(1), /* Image */
-#unitTable td:nth-child(1), /* Image */
-#unitTable th:nth-child(2), /* Label */
-#unitTable td:nth-child(2) { /* Label */
-    display: table-cell; /* Ensure these are always visible */
+/* Default (mobile-first): Only show essential columns */
+.show-on-mobile {
+    display: table-cell;
 }
 
-/* Hide all other columns by default */
-#unitTable th:nth-child(n+3), /* Class, Rarity, Community Ranking, HP, Damage, Cooldown, DPS */
-#unitTable td:nth-child(n+3) { /* Class, Rarity, Community Ranking, HP, Damage, Cooldown, DPS */
+.hide-on-mobile {
     display: none;
 }
 
-/* Small screens (sm): Show Class and Rarity */
-@media (min-width: 640px) {
-    #unitTable th:nth-child(3), /* Class */
-    #unitTable td:nth-child(3), /* Class */
-    #unitTable th:nth-child(4), /* Rarity */
-    #unitTable td:nth-child(4) { /* Rarity */
+@media (min-width: 640px) { /* sm breakpoint */
+    .show-on-sm {
         display: table-cell;
     }
 }
 
-/* Medium screens (md): Show Community Ranking */
-@media (min-width: 768px) {
-    #unitTable th:nth-child(5), /* Community Ranking */
-    #unitTable td:nth-child(5) { /* Community Ranking */
+@media (min-width: 768px) { /* md breakpoint */
+    .show-on-md {
+        display: table-cell;
+    }
+
+    .hide-on-md {
+        display: none;
+    }
+}
+
+@media (min-width: 1024px) { /* lg breakpoint */
+    .hide-on-lg {
+        display: none;
+    }
+
+    .show-on-lg {
         display: table-cell;
     }
 }
 
-/* Large screens (lg): Show HP, Damage, Cooldown, DPS */
-@media (min-width: 1024px) {
-    #unitTable th:nth-child(6), /* HP */
-    #unitTable td:nth-child(6), /* HP */
-    #unitTable th:nth-child(7), /* Damage */
-    #unitTable td:nth-child(7), /* Damage */
-    #unitTable th:nth-child(8), /* DPS */
-    #unitTable td:nth-child(8) { /* DPS */
-        display: table-cell;
-    }
-    #modsTable th:nth-child(2), /* Rarity */
-    #modsTable td:nth-child(2) { /* Rarity */
-        display: table-cell;
-    }
+/* Tab button styles */
+.tab-button {
+    color: #6b7280; /* gray-500 */
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s ease;
 }
 
-/* Dark mode specific styles */
-.dark body {
-    background-color: #1a202c; /* A slightly darker gray for the background */
-    color: #e2e8f0; /* Lighter text color */
+.tab-button:hover {
+    color: #3b82f6; /* blue-500 */
 }
 
-.dark .tab-content {
-    background-color: #2d3748; /* Darker gray for content backgrounds */
-}
-
-.dark table {
-    background-color: #2d3748;
-}
-
-.dark th {
-    background-color: #4a5568; /* Darker header background */
-    color: #e2e8f0; /* Lighter header text */
-}
-
-.dark td {
-    border-color: #4a5568; /* Darker border color */
-}
-
-.dark input[type="text"], .dark select {
-    background-color: #4a5568;
-    color: #e2e8f0;
-    border-color: #4a5568;
-}
-
-.dark input[type="checkbox"] {
-    background-color: #4a5568;
-    border-color: #4a5568;
-}
-
-.dark .expanded-details-row {
-    background-color: #252d3a;
-}
-.dark .expanded-details-content {
-    background-color: #1a202c;
-}
-
-/* Main content styling */
-.tab-content {
-    background-color: #ffffff;
-    padding: 1.5rem;
-    border-radius: 1rem;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-}
-
-.expanded-details-row {
-    background-color: #f7fafc;
-    border-bottom: 2px solid #e2e8f0;
-}
-
-.expanded-details-content {
-    background-color: #f1f5f9;
-    padding: 1.5rem;
-    border-radius: 0.75rem;
-    margin-top: 1rem;
-    box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
-}
-
-.expanded-details-content p {
-    margin-bottom: 0.5rem;
-}
-
-.expanded-details-content p:last-child {
-    margin-bottom: 0;
-}
-
-.expanded-details-content strong {
+.tab-button.active-tab {
+    color: #3b82f6; /* blue-600 */
+    border-bottom-color: #3b82f6; /* blue-600 */
     font-weight: 600;
 }
 
+.dark .tab-button {
+    color: #9ca3af; /* gray-400 */
+}
 
-/* Styling for filter options */
-input[type="text"], select {
-    border-color: #cbd5e0; /* gray-300 for light mode */
-    color: #1f2937; /* gray-800 text for light mode */
-    background-color: #ffffff;
-    font-weight: 500; /* Medium font for options in light mode */
+.dark .tab-button:hover {
+    color: #60a5fa; /* blue-400 */
+}
+
+.dark .tab-button.active-tab {
+    color: #60a5fa; /* blue-400 */
+    border-bottom-color: #60a5fa; /* blue-400 */
+}
+
+
+/* Form input styles for dark mode */
+input[type="text"], input[type="number"], select {
+    background-color: #fff; /* white */
+    border: 1px solid #d1d5db; /* gray-300 */
+    color: #374151; /* gray-800 */
+    font-weight: 500; /* Thicker font for options in light mode */
 }
 
 .dark input[type="text"], .dark input[type="number"], .dark select {
@@ -224,30 +140,34 @@ input[type="text"], select {
 }
 
 /* Adjust header layout for better alignment */
-header {
-    text-align: center;
+.header-image {
+    width: 80px;
+    height: 80px;
+    object-fit: cover;
+    border-radius: 9999px;
+    border: 2px solid #3b82f6;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
-/* Ensure the loading spinner is centered correctly */
-#loadingSpinner {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 200px; /* Or a fixed height, depending on layout */
+.dark .header-image {
+    border-color: #60a5fa;
 }
 
-/* Ensure tab content is hidden correctly */
-.tab-content {
-    display: none;
+.main-page-title {
+    font-weight: 800;
 }
 
-.tab-content.active {
-    display: block;
+/* Loading message styles */
+#loadingMessage {
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
 }
 
-/* Active tab styling */
-.active-tab {
-    color: #3b82f6; /* A clear color for the active tab */
-    border-color: #3b82f6;
-    font-weight: 600; /* Make the active tab's font a bit bolder */
+/* Added styles for sorting icons */
+.sort-icon {
+    display: inline-block;
+    margin-left: 0.25rem;
+    font-size: 0.75rem;
+    vertical-align: middle;
 }
