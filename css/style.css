@@ -37,75 +37,75 @@ th {
 /* --- Responsive Table Column Hiding --- */
 
 /* Default (mobile-first): Only show essential columns */
-.show-on-mobile {
-    display: table-cell;
-}
-
-.hide-on-mobile {
+.unit-table-row .unit-class-cell,
+.unit-table-row .unit-hp-cell,
+.unit-table-row .unit-damage-cell,
+.unit-table-row .unit-cooldown-cell,
+.unit-table-row .unit-crit-chance-cell,
+.unit-table-row .unit-crit-damage-cell,
+.unit-table-row .unit-accuracy-cell,
+.unit-table-row .unit-evade-cell,
+.unit-table-row .unit-distance-cell,
+.unit-table-row .unit-knockback-cell {
     display: none;
 }
 
-@media (min-width: 640px) { /* sm breakpoint */
-    .show-on-sm {
+/* Medium screens (md: breakpoint) */
+@media (min-width: 768px) {
+    .unit-table-row .unit-class-cell,
+    .unit-table-row .unit-hp-cell,
+    .unit-table-row .unit-damage-cell,
+    .unit-table-row .unit-cooldown-cell,
+    .unit-table-row .unit-crit-chance-cell {
         display: table-cell;
     }
 }
 
-@media (min-width: 768px) { /* md breakpoint */
-    .show-on-md {
+/* Large screens (lg: breakpoint) */
+@media (min-width: 1024px) {
+    .unit-table-row .unit-crit-damage-cell,
+    .unit-table-row .unit-accuracy-cell,
+    .unit-table-row .unit-evade-cell,
+    .unit-table-row .unit-distance-cell,
+    .unit-table-row .unit-knockback-cell {
         display: table-cell;
-    }
-
-    .hide-on-md {
-        display: none;
     }
 }
 
-@media (min-width: 1024px) { /* lg breakpoint */
-    .hide-on-lg {
-        display: none;
-    }
+/* Alternating row colors for better readability */
+#unitTableBody tr:nth-child(even), #modTableBody tr:nth-child(even), #tierListTableBody tr:nth-child(even) {
+    background-color: #f3f4f6; /* gray-100 */
+}
 
-    .show-on-lg {
-        display: table-cell;
-    }
+.dark #unitTableBody tr:nth-child(even), .dark #modTableBody tr:nth-child(even), .dark #tierListTableBody tr:nth-child(even) {
+    background-color: #4b5563; /* gray-600 */
 }
 
 /* Tab button styles */
-.tab-button {
-    color: #6b7280; /* gray-500 */
-    border-bottom: 2px solid transparent;
-    transition: all 0.3s ease;
+.tab-btn {
+    background-color: #e5e7eb; /* gray-200 */
+    color: #4b5563; /* gray-600 */
 }
 
-.tab-button:hover {
-    color: #3b82f6; /* blue-500 */
+.dark .tab-btn {
+    background-color: #374151; /* gray-700 */
+    color: #d1d5db; /* gray-300 */
 }
 
-.tab-button.active-tab {
-    color: #3b82f6; /* blue-600 */
-    border-bottom-color: #3b82f6; /* blue-600 */
-    font-weight: 600;
+.tab-btn-active {
+    background-color: #2563eb; /* blue-600 */
+    color: #ffffff; /* white */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
 }
 
-.dark .tab-button {
-    color: #9ca3af; /* gray-400 */
+.dark .tab-btn-active {
+    background-color: #1e40af; /* blue-800 */
+    color: #ffffff; /* white */
 }
 
-.dark .tab-button:hover {
-    color: #60a5fa; /* blue-400 */
-}
-
-.dark .tab-button.active-tab {
-    color: #60a5fa; /* blue-400 */
-    border-bottom-color: #60a5fa; /* blue-400 */
-}
-
-
-/* Form input styles for dark mode */
+/* Input and Select element styling */
 input[type="text"], input[type="number"], select {
-    background-color: #fff; /* white */
-    border: 1px solid #d1d5db; /* gray-300 */
+    border-color: #d1d5db; /* gray-300 */
     color: #374151; /* gray-800 */
     font-weight: 500; /* Thicker font for options in light mode */
 }
@@ -139,35 +139,22 @@ input[type="text"], input[type="number"], select {
     border-color: #60a5fa; /* Lighter blue border in dark mode */
 }
 
-/* Adjust header layout for better alignment */
-.header-image {
-    width: 80px;
-    height: 80px;
-    object-fit: cover;
-    border-radius: 9999px;
-    border: 2px solid #3b82f6;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-
-.dark .header-image {
-    border-color: #60a5fa;
-}
-
-.main-page-title {
-    font-weight: 800;
-}
-
-/* Loading message styles */
-#loadingMessage {
-  padding: 1.5rem;
-  border-radius: 0.75rem;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-}
-
-/* Added styles for sorting icons */
-.sort-icon {
-    display: inline-block;
-    margin-left: 0.25rem;
-    font-size: 0.75rem;
-    vertical-align: middle;
+/* Adjust header layout for better alignment on small screens */
+@media (max-width: 640px) {
+    header {
+        flex-direction: column;
+        text-align: center;
+    }
+    .header-image {
+        margin-right: 0;
+        margin-bottom: 1rem;
+    }
+    .main-page-title {
+        font-size: 2.5rem;
+    }
+    #darkModeToggle {
+        top: 0;
+        right: 0;
+        transform: none;
+    }
 }
