@@ -2,83 +2,124 @@
 body {
     font-family: 'Inter', sans-serif;
     color: #374151; /* gray-800 for light mode */
-    line-height: 1.6;
-    background-color: #f3f4f6; /* A lighter gray for light mode */
-    transition: background-color 0.3s ease, color 0.3s ease;
+    line-height: 1.6; /* Improved line height for readability */
 }
 
-.dark body {
-    color: #e5e7eb; /* Light text for dark mode */
-    background-color: #111827; /* A darker, more standard gray for dark mode */
+.dark {
+    background-color: #111827; /* dark-gray-900 */
+    color: #f3f4f6; /* gray-100 */
 }
 
 /* Rainbow text animation for the title */
 @keyframes rainbow {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
+    0% { color: #ff0000; }
+    14% { color: #ff7f00; }
+    28% { color: #ffff00; }
+    42% { color: #00ff00; }
+    57% { color: #0000ff; }
+    71% { color: #4b0082; }
+    85% { color: #9400d3; }
+    100% { color: #ff0000; }
 }
 
 #mainTitle {
-    font-size: 3rem; /* text-4xl */
-    font-weight: 800; /* font-extrabold */
-    margin-top: 1rem; /* mt-4 */
-    text-align: center;
-    background: linear-gradient(to right, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
+    animation: rainbow 5s linear infinite;
+    -webkit-text-fill-color: transparent;
+    background-image: linear-gradient(90deg, #ff0000, #ff7f00, #ffff00, #00ff00, #0000ff, #4b0082, #9400d3);
+    background-size: 200% 100%;
     -webkit-background-clip: text;
     background-clip: text;
-    color: transparent;
-    background-size: 200% 100%;
-    animation: rainbow 6s ease-in-out infinite;
+}
+
+/* New class for centering main page titles */
+.main-page-title {
+    text-align: center;
+    width: 100%; /* Ensure it takes full width to center effectively */
+}
+
+/* Tab button styles */
+.tab-button {
+    background-color: #f3f4f6; /* light gray-100 */
+    color: #4b5563; /* gray-600 */
+    border: 1px solid #e5e7eb; /* gray-200 */
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+}
+.dark .tab-button {
+    background-color: #374151; /* dark gray-700 */
+    color: #d1d5db; /* dark gray-300 */
+    border: 1px solid #4b5563; /* dark gray-600 */
+}
+.tab-button.active {
+    background-color: #2563eb; /* blue-600 */
+    color: #fff;
+    border-color: #2563eb;
+    box-shadow: 0 4px 6px rgba(37, 99, 235, 0.3);
 }
 
 /* Table styles */
 table {
     width: 100%;
-    border-collapse: separate;
-    border-spacing: 0;
+    border-collapse: collapse;
     border-radius: 0.75rem; /* rounded-xl */
-    overflow: hidden;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    overflow: hidden; /* Ensures rounded corners apply to children */
+    table-layout: fixed; /* Added to control column widths more precisely */
 }
 
-thead {
-    background-color: #3b82f6; /* blue-500 */
-}
-
-.dark thead {
-    background-color: #2563eb; /* A darker blue for dark mode */
-}
-
+/* General table cell styling */
 th, td {
-    padding: 1rem 1.5rem;
+    padding: 0.75rem 0.75rem; /* Reduced padding for more space */
     text-align: left;
-    font-size: 0.875rem;
+    font-size: 0.875rem; /* text-sm, slightly smaller for more columns */
 }
 
+/* Table headers - ensure nowrap for clarity and sorting icons */
 th {
-    text-align: center;
-    font-weight: 600;
-    color: #f9fafb; /* gray-50 */
-    border-bottom: 2px solid #2563eb; /* blue-600 */
-    cursor: pointer;
-    transition: background-color 0.2s ease;
+    white-space: nowrap;
+    text-align: center; /* Centering headers as requested */
 }
 
-th:hover {
-    background-color: #2563eb; /* blue-600 */
+/* --- Responsive Table Column Hiding --- */
+
+/* Default (mobile-first): Only show essential columns */
+.table-cell-hidden {
+    display: none;
 }
 
-.dark th:hover {
-    background-color: #1e40af; /* darker blue */
+/* Small devices (sm): Show more columns */
+@media (min-width: 640px) {
+    .sm\:table-cell {
+        display: table-cell;
+    }
 }
 
-tbody tr:nth-child(even) {
-    background-color: #f9fafb; /* light mode even row */
+/* Medium devices (md): Show even more columns */
+@media (min-width: 768px) {
+    .md\:table-cell {
+        display: table-cell;
+    }
+}
+
+/* Dark mode table body and text */
+.dark tbody tr:nth-child(odd) {
+    background-color: #4b5563; /* gray-600 */
 }
 
 .dark tbody tr:nth-child(even) {
-    background-color: #1f2937; /* A darker gray for dark mode even rows */
+    background-color: #374151; /* gray-700 */
+}
+
+/* Light mode table body and text */
+tbody tr:nth-child(odd) {
+    background-color: #f9fafb; /* gray-50 */
+}
+tbody tr:nth-child(even) {
+    background-color: #fff;
+}
+
+/* Interactive row styles */
+tbody tr {
+    cursor: pointer;
+    transition: background-color 0.2s ease-in-out;
 }
 
 tbody tr:hover {
@@ -86,46 +127,78 @@ tbody tr:hover {
 }
 
 .dark tbody tr:hover {
-    background-color: #374151; /* gray-700 */
+    background-color: #4a5568; /* dark gray-600 hover */
 }
 
+/* Expanded details row */
+.expanded-details-row {
+    cursor: default;
+    background-color: #f1f5f9 !important; /* light gray */
+}
 
-/* General input and select styles */
+.dark .expanded-details-row {
+    background-color: #2d3748 !important; /* dark gray */
+}
+
+.expanded-details-row td {
+    padding: 1rem;
+    line-height: 1.5;
+}
+
+.expanded-details-row pre {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+}
+
+/* Switch toggle styling */
+.dot {
+    left: 4px;
+    top: 4px;
+    transition: transform 0.3s ease-in-out;
+}
+
+input:checked + .block {
+    background-color: #2563eb; /* blue-600 */
+}
+
+input:checked + .block + .dot {
+    transform: translateX(20px);
+}
+
+/* Select and input styles for both themes */
 input[type="text"], input[type="number"], select {
-    border-radius: 0.5rem; /* rounded-lg */
     border-color: #d1d5db; /* gray-300 */
-    background-color: #ffffff; /* white */
     color: #1f2937; /* gray-900 */
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+    background-color: #fff;
 }
 
 .dark input[type="text"], .dark input[type="number"], .dark select {
-    border-color: #4b5563; /* gray-600 for dark mode, visible */
-    color: #e5e7eb;
-    background-color: #1f2937; /* Darker input background */
+    border-color: #6b7280; /* gray-500 for dark mode, visible */
+    color: #e5e7eb; /* Light text for inputs in dark mode */
+    background-color: #374151; /* gray-700 background for inputs in dark mode */
 }
 
+/* Placeholder text color */
 ::placeholder {
     color: #9ca3af; /* gray-400 */
-    opacity: 1;
+    opacity: 1; /* Firefox fix */
 }
 
 .dark::placeholder {
-    color: #6b7280; /* gray-500 */
+    color: #9ca3af; /* gray-400 */
 }
 
 /* New styles for the header image */
 .header-image {
-    width: 96px; /* A bit larger */
-    height: 96px;
-    object-fit: cover;
-    border: 4px solid #3b82f6;
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    transition: all 0.3s ease;
+    width: 80px; /* Adjust size as needed */
+    height: 80px; /* Keep aspect ratio */
+    object-fit: cover; /* Cover the area, crop if necessary */
+    border: 2px solid #3b82f6; /* Blue border */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
 }
 
 .dark .header-image {
-    border-color: #60a5fa;
+    border-color: #60a5fa; /* Lighter blue border in dark mode */
 }
 
 /* Adjust header layout for better alignment */
@@ -133,143 +206,25 @@ header {
     text-align: center;
 }
 
-/* Tab button styling */
-.tab-button {
-    padding: 0.75rem 1.5rem;
-    font-weight: 600;
-    color: #4b5563; /* gray-600 */
-    background-color: transparent;
-    border-radius: 0.5rem;
-    transition: all 0.3s ease;
-}
-
-.dark .tab-button {
-    color: #9ca3af; /* gray-400 */
-}
-
-.tab-button:hover, .tab-button.active {
-    color: #ffffff;
-    background-color: #3b82f6;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-
-.dark .tab-button:hover, .dark .tab-button.active {
-    background-color: #2563eb;
-}
-
-/* Loading Spinner */
+/* Ensure the loading spinner is centered correctly */
 #loadingSpinner {
     display: flex;
     justify-content: center;
     align-items: center;
-    height: 256px;
 }
 
-.spinner {
-    border: 8px solid rgba(0, 0, 0, 0.1);
-    border-left-color: #3b82f6;
-    border-radius: 50%;
-    width: 64px;
-    height: 64px;
-    animation: spin 1s linear infinite;
-}
-
-.dark .spinner {
-    border-color: rgba(255, 255, 255, 0.1);
-    border-left-color: #60a5fa;
-}
-
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-
-/* Toggle Switch Styling */
-.toggle-switch {
-    appearance: none;
-    width: 44px;
-    height: 24px;
-    background: #ccc;
-    border-radius: 12px;
-    position: relative;
-    cursor: pointer;
-    transition: background-color 0.2s;
-}
-
-.toggle-switch:checked {
-    background: #3b82f6;
-}
-
-.toggle-switch::before {
-    content: '';
-    position: absolute;
-    top: 2px;
-    left: 2px;
-    width: 20px;
-    height: 20px;
-    background: white;
-    border-radius: 50%;
-    transition: transform 0.2s;
-}
-
-.toggle-switch:checked::before {
-    transform: translateX(20px);
-}
-
-/* Styles for expanded details row */
-.expanded-details-row {
-    animation: fadeIn 0.3s ease-out;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-.unit-name {
-    text-align: left;
-}
-
-.responsive-hide {
-    display: none;
-}
-@media (min-width: 640px) { /* sm breakpoint */
-    .responsive-hide {
-        display: table-cell;
-    }
-}
-.responsive-hide-sm {
-    display: none;
-}
-@media (min-width: 768px) { /* md breakpoint */
-    .responsive-hide-sm {
-        display: table-cell;
-    }
-}
-
-.tooltip {
-    position: relative;
-    display: inline-block;
-}
-
-.tooltip .tooltiptext {
-    visibility: hidden;
-    width: 200px;
-    background-color: #333;
-    color: #fff;
-    text-align: center;
-    border-radius: 6px;
-    padding: 5px 0;
-    position: absolute;
-    z-index: 1;
-    bottom: 125%;
-    left: 50%;
-    margin-left: -100px;
-    opacity: 0;
-    transition: opacity 0.3s;
-}
-
-.tooltip:hover .tooltiptext {
-    visibility: visible;
-    opacity: 1;
-}
+/* Utility to ensure consistent column sizes */
+.col-image { width: 50px; }
+.col-name { width: 150px; }
+.col-rarity { width: 100px; }
+.col-class { width: 120px; }
+.col-hp { width: 80px; }
+.col-dmg { width: 80px; }
+.col-atk-spd { width: 100px; }
+.col-range { width: 80px; }
+.col-mod-name { width: 150px; }
+.col-mod-tier { width: 80px; }
+.col-mod-effect { width: auto; }
+.col-tier { width: 80px; }
+.col-rank { width: 80px; }
+.col-notes { width: auto; }
