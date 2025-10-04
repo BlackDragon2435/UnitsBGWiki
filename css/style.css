@@ -451,3 +451,20 @@ nav ul {
     justify-content: center;
     gap: 0.75rem; /* Space between tabs */
 }
+
+/* Modal / Onboard styles added for ui_onboard.js */
+.fixed { position: fixed; }
+.inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+.z-50 { z-index: 50; }
+.bg-opacity-50 { background-color: rgba(0,0,0,0.5); }
+.max-w-2xl { max-width: 42rem; }
+.rounded-lg { border-radius: 0.5rem; }
+.shadow-lg { box-shadow: 0 10px 25px rgba(0,0,0,0.2); }
+.dark .rounded-lg { background-color: #1f2937; }
+
+/* Slight polish for hero and quick panels */
+.hero-cta { display: inline-flex; align-items: center; gap: 0.5rem; }
+.how-panel p { margin-top: 0.25rem; }
+
+/* Improve tab button focus states */
+.tab-button:focus { outline: 3px solid rgba(59,130,246,0.25); }

@@ -1,0 +1,25 @@
+{
+    "name": "unit-bg-wiki-tools",
+    "version": "1.0.0",
+    "private": true,
+    "dependencies": {
+        "xlsx": "^0.18.5"
+    },
+    "description": "Attempt to build a database for all things unitsBG",
+    "main": "index.js",
+    "devDependencies": {},
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/BlackDragon2435/UnitsBGWiki.git"
+    },
+    "keywords": [],
+    "author": "",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/BlackDragon2435/UnitsBGWiki/issues"
+    },
+    "homepage": "https://github.com/BlackDragon2435/UnitsBGWiki#readme"
+}

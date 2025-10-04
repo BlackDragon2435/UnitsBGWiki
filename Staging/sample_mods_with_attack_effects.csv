@@ -1,0 +1,3 @@
+ModName,Title,Rarity,Stat,Amount,Chance,Effect,AttackEffectDamage,AttackEffectCount,AttackEffectRate,AttackEffectDamagePercent,AttackEffectCooldownPercent,AttackEffectLifesteal,AttackEffectSlowPercent,AttackEffectSlowAttackPercent,AttackEffectTime,AttackEffectType,AttackEffectKey,DefenseMirrorPercent,Desc
+DOT_Fire_01,Scorching Threads,Rare,AttackEffectDamage,10,0.0,Periodic fire damage,10,3,1.5,,,,,,,Damage,DOT_Fire_01,,"Deals 10 HP every 1.5s for 3 ticks"
+BARD_BOOST_01,Bardic Anthem,Legendary,AttackEffectDamagePercent,0.20,0.0,Temporarily increases damage and attack speed,, , ,0.20,0.10,,,4,UpDamage,BARD_BOOST_01,,"+20% Damage and +10% Attack Speed for 4s"

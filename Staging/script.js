@@ -80,7 +80,7 @@ const allUnitStatsForDropdown = [
  */
 function debounce(func, delay) {
     let timeout;
-    return function(...args) {
+    return function (...args) {
         const context = this;
         clearTimeout(timeout);
         timeout = setTimeout(() => func.apply(context, args), delay);
@@ -310,11 +310,11 @@ function transformFetchedModData(fetchedMods) {
                         desc += `Increases ${stat} by ${(amount * 100).toFixed(0)}%`;
                     }
                 } else if (stat === "CritDamageCoeff") {
-                     if (typeof amount === 'number') {
+                    if (typeof amount === 'number') {
                         desc += `Increases Crit Damage Multiplier by ${(amount * 100).toFixed(0)}%`;
                     }
                 } else if (stat === "Lifesteal") {
-                     if (typeof amount === 'number') {
+                    if (typeof amount === 'number') {
                         desc += `Adds ${amount}% Lifesteal`;
                     } else if (typeof chance === 'number') {
                         desc += `Adds ${(chance * 100).toFixed(0)}% Lifesteal`;
@@ -356,7 +356,7 @@ function applySingleModEffect(unit, mod) {
         // Ensure the unit property exists and is a number or N/A
         // Only apply if the stat is relevant and exists in the modifiedUnit
         if (modifiedUnit[stat] === undefined) {
-             return; // Stat does not exist on the unit, skip applying mod
+            return; // Stat does not exist on the unit, skip applying mod
         }
 
         // Initialize N/A stats if a mod applies a numerical amount to them
@@ -366,14 +366,18 @@ function applySingleModEffect(unit, mod) {
         switch (stat) {
             case "HP":
             case "Damage":
-            case "DPS": // Added DPS calculation
+                // In-game Utility.calcStat multiplies final value by (1 + Amount).
+                // Mods store Amount as decimal (e.g. 0.1 == +10%). Apply as multiplicative: value * (1 + amount)
                 if (typeof modifiedUnit[stat] === 'number' && typeof amount === 'number') {
                     modifiedUnit[stat] = modifiedUnit[stat] * (1 + amount);
                 }
                 break;
             case "Cooldown":
+                // Apply mods to Cooldown the same way Utility.calcStat does for other numeric stats:
+                // multiply by (1 + Amount). Keep a small lower bound to avoid zero/negative cooldowns.
                 if (typeof modifiedUnit[stat] === 'number' && typeof amount === 'number') {
-                    modifiedUnit[stat] = Math.max(0.1, modifiedUnit[stat] + amount); // Ensure cooldown doesn't go below 0.1
+                    const newCooldown = modifiedUnit[stat] * (1 + amount);
+                    modifiedUnit[stat] = Math.max(0.01, newCooldown);
                 }
                 break;
             case "CritChance":
@@ -383,11 +387,12 @@ function applySingleModEffect(unit, mod) {
                     modifiedUnit[stat] = Math.min(1, modifiedUnit[stat] + amount); // Cap these at 1 (or 100%)
                 }
                 break;
-            case "CritDamageCoeff": // Assuming this modifies CritDamage
+            case "CritDamageCoeff": // Game stores this as a coefficient; mods add to the coefficient
                 if (typeof modifiedUnit.CritDamage === 'number' && typeof amount === 'number') {
-                    modifiedUnit.CritDamage = modifiedUnit.CritDamage * (1 + amount);
+                    modifiedUnit.CritDamage = modifiedUnit.CritDamage + amount;
                 } else if (modifiedUnit.CritDamage === 'N/A' && typeof amount === 'number') {
-                    modifiedUnit.CritDamage = 1 + amount; // If N/A, assume base 1 and add multiplier
+                    // If unit doesn't have a CritDamage defined, assume base coefficient of 1
+                    modifiedUnit.CritDamage = 1 + amount;
                 }
                 break;
             case "Lifesteal":
@@ -408,6 +413,43 @@ function applySingleModEffect(unit, mod) {
                     modifiedUnit[stat] += amount;
                 } else if (modifiedUnit[stat] === 'N/A' && typeof amount === 'number') {
                     modifiedUnit[stat] = amount;
+                }
+                break;
+            case "AttackEffectDamage":
+                // Flat periodic damage that triggers on attack
+                if (typeof amount === 'number') {
+                    modifiedUnit.AttackEffectDamage = (typeof modifiedUnit.AttackEffectDamage === 'number' ? modifiedUnit.AttackEffectDamage : 0) + amount;
+                }
+                break;
+            case "AttackEffectCount":
+                if (typeof amount === 'number') {
+                    modifiedUnit.AttackEffectCount = (typeof modifiedUnit.AttackEffectCount === 'number' ? modifiedUnit.AttackEffectCount : 0) + amount;
+                }
+                break;
+            case "AttackEffectRate":
+                // seconds between ticks; prefer the smallest rate
+                if (typeof amount === 'number') {
+                    if (typeof modifiedUnit.AttackEffectRate !== 'number' || amount < modifiedUnit.AttackEffectRate) {
+                        modifiedUnit.AttackEffectRate = amount;
+                    }
+                }
+                break;
+            case "AttackEffectDamagePercent":
+                // Percent buff to Damage while effect active; apply as an always-on multiplier for preview
+                if (typeof modifiedUnit.Damage === 'number' && typeof amount === 'number') {
+                    modifiedUnit.Damage = modifiedUnit.Damage * (1 + amount);
+                }
+                break;
+            case "AttackEffectCooldownPercent":
+                // Percent buff to attack speed (reduces cooldown)
+                if (typeof modifiedUnit.Cooldown === 'number' && typeof amount === 'number') {
+                    const newCd = modifiedUnit.Cooldown * (1 - amount);
+                    modifiedUnit.Cooldown = Math.max(0.01, newCd);
+                }
+                break;
+            case "DefenseMirrorPercent":
+                if (typeof amount === 'number') {
+                    modifiedUnit.DefenseMirrorPercent = (typeof modifiedUnit.DefenseMirrorPercent === 'number' ? modifiedUnit.DefenseMirrorPercent : 0) + amount;
                 }
                 break;
             // Removed HPOffset, ShadowStepDistance, ShadowStepCooldown from here
@@ -458,7 +500,7 @@ function getUnitStatsAtLevel(baseUnit, level, selectedMods) {
     // Store original N/A status for numerical stats
     const originalNAStatus = {};
     const numericalStats = ['HP', 'Damage', 'Cooldown', 'Distance', 'CritChance', 'CritDamage',
-                            'AttackEffectLifesteal', 'Knockback', 'Accuracy', 'EvadeChance', 'DPS'];
+        'AttackEffectLifesteal', 'Knockback', 'Accuracy', 'EvadeChance', 'DPS', 'AttackEffectDamage', 'AttackEffectCount', 'AttackEffectRate', 'DefenseMirrorPercent'];
 
     numericalStats.forEach(statKey => {
         if (calculatedUnit[statKey] === 'N/A' || calculatedUnit[statKey] === null || calculatedUnit[statKey] === undefined) {
@@ -501,7 +543,20 @@ function getUnitStatsAtLevel(baseUnit, level, selectedMods) {
 
     // Calculate DPS after all other relevant stats have been updated
     if (typeof calculatedUnit.Damage === 'number' && typeof calculatedUnit.Cooldown === 'number' && calculatedUnit.Cooldown > 0) {
-        calculatedUnit.DPS = calculatedUnit.Damage / calculatedUnit.Cooldown;
+        // Base DPS from direct damage per attack
+        let dps = calculatedUnit.Damage / calculatedUnit.Cooldown;
+
+        // If the unit has a periodic attack effect (damage over time), approximate its DPS contribution
+        // In-game periodic damage is: AttackEffectDamage dealt AttackEffectCount times every AttackEffectRate seconds
+        // Approximate DPS contribution = (AttackEffectDamage * AttackEffectCount) / AttackEffectRate
+        if (typeof calculatedUnit.AttackEffectDamage === 'number' && calculatedUnit.AttackEffectDamage > 0 &&
+            typeof calculatedUnit.AttackEffectCount === 'number' && calculatedUnit.AttackEffectCount > 0 &&
+            typeof calculatedUnit.AttackEffectRate === 'number' && calculatedUnit.AttackEffectRate > 0) {
+            const dotDPS = (calculatedUnit.AttackEffectDamage * calculatedUnit.AttackEffectCount) / calculatedUnit.AttackEffectRate;
+            dps += dotDPS;
+        }
+
+        calculatedUnit.DPS = dps;
     } else {
         calculatedUnit.DPS = 0; // Set to 0 if calculation is not possible or results in non-positive cooldown
     }
@@ -930,34 +985,49 @@ function updateAppliedStats(baseUnit, selectedMods, listElement, showMaxStats, s
     unitToDisplay = getUnitStatsAtLevel(baseUnit, levelForCalculation, selectedMods);
 
     // Render allUnitStatsForDropdown in the dropdown's "Stats with Mods" section
+    // We'll compare level-adjusted base stats (without mods) to the current unitToDisplay (with mods)
+    const baseAtLevel = getUnitStatsAtLevel(baseUnit, levelForCalculation, []);
     allUnitStatsForDropdown.forEach(key => {
         const li = document.createElement('li');
         let displayValue = unitToDisplay[key];
-        // Apply specific formatting for percentages and numbers
-        if (['Cooldown', 'HP', 'Damage', 'Distance', 'CritChance', 'CritDamage', 'AttackEffectLifesteal', 'Knockback', 'Accuracy', 'EvadeChance', 'DPS'].includes(key)) { // Added DPS here
-            displayValue = typeof displayValue === 'number' ? displayValue.toFixed(2) : displayValue;
-        }
-        // Special formatting for percentage values
-        if (['CritChance', 'EvadeChance', 'Accuracy'].includes(key) && typeof displayValue === 'number') {
-            displayValue = (displayValue * 100).toFixed(2) + '%';
-        }
-        li.textContent = `${key}: ${displayValue !== undefined ? displayValue : 'N/A'}`;
 
-        // Highlight changes from base stats (considering the level calculation)
-        // This logic needs to compare against the original baseUnit, not the one processed by getUnitStatsAtLevel
-        const originalBaseValue = baseUnit[key];
+        // Numeric formatting
+        if (['Cooldown', 'HP', 'Damage', 'Distance', 'CritChance', 'CritDamage', 'AttackEffectLifesteal', 'Knockback', 'Accuracy', 'EvadeChance', 'DPS'].includes(key)) {
+            if (typeof displayValue === 'number') displayValue = displayValue.toFixed(2);
+        }
+        // Percentage formatting
+        if (['CritChance', 'EvadeChance', 'Accuracy'].includes(key) && typeof unitToDisplay[key] === 'number') {
+            displayValue = (unitToDisplay[key] * 100).toFixed(2) + '%';
+        }
 
-        // Only highlight if the original base value was a number or N/A, and the current displayed value is different
-        if (
-            (typeof originalBaseValue === 'number' || originalBaseValue === 'N/A') &&
-            (typeof displayValue === 'number' || displayValue === 'N/A') &&
-            originalBaseValue !== displayValue // Compare directly
-        ) {
-            li.classList.add('font-bold', 'text-blue-600', 'dark:text-blue-300');
-        } else if (typeof originalBaseValue === 'string' && typeof displayValue === 'string' && originalBaseValue !== displayValue) {
-            // For string changes (like AttackEffect becoming 'Fire, Frost')
+        // Compute delta against baseAtLevel for numeric stats when possible
+        let deltaText = '';
+        const baseValue = baseAtLevel[key];
+        if (typeof baseValue === 'number' && typeof unitToDisplay[key] === 'number') {
+            const diff = unitToDisplay[key] - baseValue;
+            if (Math.abs(diff) > 0.0001) {
+                // For percent displays like CritChance, show percentage points
+                if (['CritChance', 'EvadeChance', 'Accuracy'].includes(key)) {
+                    deltaText = ` (${diff * 100 >= 0 ? '+' : ''}${(diff * 100).toFixed(2)}%)`;
+                } else if (key === 'Cooldown') {
+                    // Show absolute change in seconds and percent
+                    const pct = (unitToDisplay[key] / baseValue - 1) * 100;
+                    deltaText = ` (${diff >= 0 ? '+' : ''}${diff.toFixed(2)}s, ${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%)`;
+                } else {
+                    const pct = (unitToDisplay[key] / baseValue - 1) * 100;
+                    deltaText = ` (${diff >= 0 ? '+' : ''}${diff.toFixed(2)}, ${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%)`;
+                }
+            }
+        }
+
+        li.textContent = `${key}: ${displayValue !== undefined ? displayValue : 'N/A'}${deltaText}`;
+
+        // Highlight if changed from baseAtLevel
+        if ((typeof baseValue === 'number' && typeof unitToDisplay[key] === 'number' && Math.abs(unitToDisplay[key] - baseValue) > 0.0001) ||
+            (typeof baseValue === 'string' && baseValue !== unitToDisplay[key])) {
             li.classList.add('font-bold', 'text-blue-600', 'dark:text-blue-300');
         }
+
         listElement.appendChild(li);
     });
 
@@ -1202,7 +1272,7 @@ async function switchTab(tabId) { // Made async to await fetchTierListData
 // --- Initialization ---
 
 // Event Listeners
-window.onload = async function() { // Made onload async
+window.onload = async function () { // Made onload async
     initializeDarkMode(); // Set initial dark mode state
 
     loadingSpinner.classList.remove('hidden'); // Show spinner for units
