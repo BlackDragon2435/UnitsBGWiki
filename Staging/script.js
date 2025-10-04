@@ -51,6 +51,7 @@ const tierListTableContainer = document.getElementById('tierListTableContainer')
 const noTierListMessage = document.getElementById('noTierListMessage'); // New No Tier List Message
 
 let expandedUnitRowId = null; // To keep track of the currently expanded row
+let unitToggleLock = false; // Prevent immediate re-toggle during DOM reflow
 
 // Define the order of rarities for consistent filtering and display
 const rarityOrder = ["Common", "Uncommon", "Rare", "Epic", "Legendary", "Mythic", "Demonic", "Ancient"];
@@ -579,7 +580,7 @@ function getUnitStatsAtLevel(baseUnit, level, selectedMods) {
  * @returns {string} The formatted string.
  */
 function formatDisplayValue(value) {
-    if (value === 'N/A') return 'N/A';
+    if (value === 'N/A' || value === null || value === undefined) return '-';
     if (typeof value === 'number') {
         // Format percentages for CritChance, EvadeChance, Accuracy
         if (['CritChance', 'EvadeChance', 'Accuracy'].includes(currentSortColumn)) { // This check is not ideal for general formatting
@@ -669,10 +670,20 @@ function renderUnitTable(dataToRender) {
             } else {
                 cell.classList.add('text-base'); // Default size for other stats
             }
-            cell.textContent = displayValue !== undefined ? displayValue : 'N/A';
+            // Use formatter so missing values show a clean placeholder
+            cell.textContent = formatDisplayValue(displayValue !== undefined ? displayValue : null);
         });
 
-        row.addEventListener('click', () => toggleUnitDetails(unit, row, index));
+        row.addEventListener('click', (e) => {
+            // Ignore clicks that originate from interactive elements inside the row
+            if (e.target.closest('input, button, a, label, select')) return;
+            // Prevent rapid re-toggle that can accidentally select the row below due to DOM changes
+            if (unitToggleLock) return;
+            unitToggleLock = true;
+            // Release lock shortly after to allow normal interaction
+            setTimeout(() => { unitToggleLock = false; }, 220);
+            toggleUnitDetails(unit, row, index);
+        });
     });
 }
 
@@ -701,7 +712,7 @@ function renderModTable(dataToRender) {
             } else {
                 cell.classList.add('text-gray-500', 'dark:text-gray-300');
             }
-            cell.textContent = mod[key] !== undefined ? mod[key] : 'N/A';
+            cell.textContent = formatDisplayValue(mod[key] !== undefined ? mod[key] : null);
         });
     });
 }
@@ -756,9 +767,124 @@ function renderTierListTable(dataToRender) {
                 // If no tier info found, display N/A
                 cell.classList.add('text-gray-500', 'dark:text-gray-400');
             }
-            cell.textContent = displayValue;
+            // If this is the NumericalRank column, add vote buttons
+            if (key === 'NumericalRank') {
+                const rankSpan = document.createElement('span');
+                rankSpan.textContent = formatDisplayValue(displayValue);
+                rankSpan.classList.add('mr-2');
+                cell.appendChild(rankSpan);
+
+                // Upvote button
+                const up = document.createElement('button');
+                up.textContent = '▲';
+                up.title = 'Upvote (increase rank)';
+                up.classList.add('mx-1', 'px-2', 'py-1', 'rounded', 'text-green-700');
+                up.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    handleVote(unit.Label || unit.UnitName, 1, rankSpan);
+                });
+                cell.appendChild(up);
+
+                // Downvote button
+                const down = document.createElement('button');
+                down.textContent = '▼';
+                down.title = 'Downvote (decrease rank)';
+                down.classList.add('mx-1', 'px-2', 'py-1', 'rounded', 'text-red-700');
+                down.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    handleVote(unit.Label || unit.UnitName, -1, rankSpan);
+                });
+                cell.appendChild(down);
+            } else {
+                cell.textContent = formatDisplayValue(displayValue);
+            }
         });
     });
+}
+
+/**
+ * Handle up/down vote for a unit. Uses localStorage to limit one vote per user per unit.
+ * Attempts to POST to a local vote server (tools/vote_server.js). If that fails, shows a fallback console message.
+ */
+function handleVote(unitName, delta, rankSpan) {
+    try {
+        const key = `ubg_vote_${unitName.replace(/\s+/g, '_')}`;
+        const prev = localStorage.getItem(key);
+        if (prev) {
+            alert('You have already voted for this unit.');
+            return;
+        }
+
+        // Update UI immediately (optimistic)
+        const current = parseInt(rankSpan.textContent) || 0;
+        const newVal = Math.max(0, current + delta);
+        rankSpan.textContent = String(newVal.toFixed ? newVal.toFixed(0) : newVal);
+
+        // Persist vote locally to prevent repeat
+        localStorage.setItem(key, JSON.stringify({ delta, at: Date.now() }));
+
+        // POST to local server
+        fetch('http://localhost:3456/vote', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ unit: unitName, delta })
+        }).then(r => r.json()).then(data => {
+            // Show confirmation modal with server response and undo option
+            const message = data && data.result ? JSON.stringify(data.result) : JSON.stringify(data);
+            const modal = createConfirmModal(`Vote recorded for ${unitName}`, `Server response: <pre class="mt-2 p-2 bg-gray-100 dark:bg-gray-800 text-sm">${escapeHtml(message)}</pre>`, () => {
+                // Undo callback: send inverse vote
+                fetch('http://localhost:3456/vote', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ unit: unitName, delta: -delta })
+                }).then(() => {
+                    // revert UI and localStorage
+                    rankSpan.textContent = String(Math.max(0, (parseInt(rankSpan.textContent) || 0) - delta));
+                    localStorage.removeItem(`ubg_vote_${unitName.replace(/\s+/g, '_')}`);
+                    modal.close();
+                }).catch(err => {
+                    console.warn('Undo failed', err);
+                    alert('Undo failed. You can manually run the CLI to revert.');
+                });
+            });
+            // Auto-close modal after 6 seconds
+            setTimeout(() => { try { modal.close(); } catch (e) { } }, 6000);
+        }).catch(err => {
+            console.warn('Could not reach vote server:', err);
+            alert('Vote server unreachable. To apply votes manually run the CLI tool: tools/apply_vote_to_xlsx.js');
+        });
+    } catch (e) {
+        console.error('Vote failed', e);
+        alert('Vote failed: ' + e.message);
+    }
+}
+
+// Minimal modal helper used for vote confirmations (independent of ui_onboard)
+function createConfirmModal(title, html, onUndo) {
+    const overlay = document.createElement('div');
+    overlay.className = 'fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50';
+    const panel = document.createElement('div');
+    panel.className = 'w-full max-w-lg p-4 bg-white dark:bg-gray-800 rounded shadow-lg';
+    panel.innerHTML = `
+        <div class="flex justify-between items-center">
+            <h3 class="font-semibold">${title}</h3>
+            <button id="_close" class="px-2">✕</button>
+        </div>
+        <div class="mt-3 text-sm text-gray-700 dark:text-gray-200">${html}</div>
+        <div class="mt-4 flex justify-end gap-2">
+            <button id="_undo" class="px-3 py-1 rounded bg-yellow-100 text-yellow-800">Undo</button>
+            <button id="_ok" class="px-3 py-1 rounded bg-blue-600 text-white">OK</button>
+        </div>
+    `;
+    overlay.appendChild(panel);
+    document.body.appendChild(overlay);
+    const close = () => overlay.remove();
+    panel.querySelector('#_close').addEventListener('click', close);
+    panel.querySelector('#_ok').addEventListener('click', close);
+    panel.querySelector('#_undo').addEventListener('click', () => { if (onUndo) onUndo(); });
+    return { overlay, close };
+}
+
+function escapeHtml(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 }
 
 
@@ -805,6 +931,8 @@ function toggleUnitDetails(unit, clickedRow, index) {
 
     const detailCell = detailRow.insertCell(0);
     detailCell.colSpan = unitColumnOrder.length + 1; // Span all columns (including image)
+    // Prevent clicks inside detail content from bubbling up to the row click handler
+    detailCell.addEventListener('click', (e) => e.stopPropagation());
     detailCell.classList.add('p-4', 'pt-2');
 
     const detailContent = document.createElement('div');
@@ -830,7 +958,9 @@ function toggleUnitDetails(unit, clickedRow, index) {
         if (['CritChance', 'EvadeChance', 'Accuracy'].includes(key) && typeof displayValue === 'number') {
             displayValue = (displayValue * 100).toFixed(2) + '%';
         }
-        li.textContent = `${key}: ${displayValue !== undefined ? displayValue : 'N/A'}`;
+        // Skip N/A values for base stats to reduce visual clutter
+        if (displayValue === 'N/A' || displayValue === null || displayValue === undefined) return;
+        li.textContent = `${key}: ${formatDisplayValue(displayValue)}`;
         baseStatsList.appendChild(li);
     });
 
@@ -988,9 +1118,12 @@ function updateAppliedStats(baseUnit, selectedMods, listElement, showMaxStats, s
     // We'll compare level-adjusted base stats (without mods) to the current unitToDisplay (with mods)
     const baseAtLevel = getUnitStatsAtLevel(baseUnit, levelForCalculation, []);
     allUnitStatsForDropdown.forEach(key => {
-        const li = document.createElement('li');
-        let displayValue = unitToDisplay[key];
+        const displayRaw = unitToDisplay[key];
+        // Skip displaying N/A or unset stats to reduce clutter
+        if (displayRaw === 'N/A' || displayRaw === null || displayRaw === undefined) return;
 
+        const li = document.createElement('li');
+        let displayValue = displayRaw;
         // Numeric formatting
         if (['Cooldown', 'HP', 'Damage', 'Distance', 'CritChance', 'CritDamage', 'AttackEffectLifesteal', 'Knockback', 'Accuracy', 'EvadeChance', 'DPS'].includes(key)) {
             if (typeof displayValue === 'number') displayValue = displayValue.toFixed(2);
@@ -1006,11 +1139,9 @@ function updateAppliedStats(baseUnit, selectedMods, listElement, showMaxStats, s
         if (typeof baseValue === 'number' && typeof unitToDisplay[key] === 'number') {
             const diff = unitToDisplay[key] - baseValue;
             if (Math.abs(diff) > 0.0001) {
-                // For percent displays like CritChance, show percentage points
                 if (['CritChance', 'EvadeChance', 'Accuracy'].includes(key)) {
                     deltaText = ` (${diff * 100 >= 0 ? '+' : ''}${(diff * 100).toFixed(2)}%)`;
                 } else if (key === 'Cooldown') {
-                    // Show absolute change in seconds and percent
                     const pct = (unitToDisplay[key] / baseValue - 1) * 100;
                     deltaText = ` (${diff >= 0 ? '+' : ''}${diff.toFixed(2)}s, ${pct >= 0 ? '+' : ''}${pct.toFixed(2)}%)`;
                 } else {
@@ -1020,8 +1151,7 @@ function updateAppliedStats(baseUnit, selectedMods, listElement, showMaxStats, s
             }
         }
 
-        li.textContent = `${key}: ${displayValue !== undefined ? displayValue : 'N/A'}${deltaText}`;
-
+        li.textContent = `${key}: ${displayValue !== undefined ? displayValue : '-'}${deltaText}`;
         // Highlight if changed from baseAtLevel
         if ((typeof baseValue === 'number' && typeof unitToDisplay[key] === 'number' && Math.abs(unitToDisplay[key] - baseValue) > 0.0001) ||
             (typeof baseValue === 'string' && baseValue !== unitToDisplay[key])) {
